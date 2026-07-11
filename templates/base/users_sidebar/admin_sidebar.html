@@ -1,0 +1,205 @@
+{% load static %}
+{% load crispy_forms_tags %}
+{% with role=request.user.staffprofile.role_type %}
+
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="{% url 'index' %}" class="brand-link">
+        <img src="{% static 'dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo"
+             class="brand-image img-circle elevation-3" style="opacity: .8">
+        <span class="brand-text font-weight-light">Business Assistant</span>
+    </a>
+
+    <div class="sidebar">
+        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+            <div class="image">
+                {% if business.logo %}
+                <img src="{{ business.logo.url}}" class="img-circle elevation-2" alt="User Image">
+                {% else %}
+<!--                <div class="avatar-fallback">-->
+                    {{ business.name|slice:":2" }}
+<!--                </div>-->
+            {% endif %}
+            </div>
+            <div class="info">
+                {% if not squeryset.image %}
+                {{ user.first_name }} {{ user.last_name }}
+<!--                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}-->
+                {% endif %}
+<!--                <a href="#" class="d-block">{{user.first_name}} {{user.last_name}}</a>-->
+            </div>
+        </div>
+
+
+        <div class="sidebar-search-modern">
+
+    <div class="input-group"
+         data-widget="sidebar-search">
+
+        <input
+            class="form-control form-control-sidebar"
+            type="search"
+            placeholder="Search menu...">
+
+        <div class="input-group-append">
+
+            <button class="btn btn-sidebar">
+
+                <i class="fas fa-search"></i>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+        <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+                <li class="nav-item">
+                    <a href="{% url 'index' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                        <i class="nav-icon fas fa-chart-pie"></i> <p>Dashboard</p>
+                    </a>
+                </li>
+
+<li class="nav-item {% if request.resolver_match.url_name in 'register_staff staff_list' %}menu-open{% endif %}">
+                    <a href="#"
+                       class="nav-link {% if request.resolver_match.url_name in 'register_staff staff_list ' %}active{% endif %}">
+                        <i class="nav-icon fas fa-users-cog"></i> <p>Manage Staff <i class="fas fa-angle-left right"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'register_staff' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'register_staff' %}active{% endif %}">
+                                <i class="fas fa-user-plus nav-icon"></i> <p>Add Staff</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'staff_list' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}">
+                                <i class="fas fa-address-book nav-icon"></i> <p>View Staff</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item {% if request.resolver_match.url_name in 'create_supplier supplier_list' %}menu-open{% endif %}">
+                    <a href="#"
+                       class="nav-link {% if request.resolver_match.url_name in 'create_supplier supplier_list' %}active{% endif %}">
+                        <i class="nav-icon fas fa-truck"></i> <p>Manage Suppliers <i class="fas fa-angle-left right"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'create_supplier' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'create_supplier' %}active{% endif %}">
+                                <i class="fas fa-plus-circle nav-icon"></i>
+                                <p>Add Supplier</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'supplier_list' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">
+                                <i class="fas fa-list-ul nav-icon"></i>
+                                <p>View Suppliers</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item {% if request.resolver_match.url_name in 'create_purchase ' %}menu-open{% endif %}">
+                    <a href="#"
+                       class="nav-link {% if request.resolver_match.url_name in 'create_purchase ' %}active{% endif %}">
+                        <i class="nav-icon fas fa-file-invoice-dollar"></i> <p>Manage Purchases <i class="fas fa-angle-left right"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'create_purchase' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'create_purchase' %}active{% endif %}">
+                                <i class="fas fa-shopping-cart nav-icon"></i> <p>New Purchase</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item {% if request.resolver_match.url_name in 'inventory view_inventory inventory_history' %}menu-open{% endif %}">
+                    <a href="#"
+                       class="nav-link {% if request.resolver_match.url_name in 'inventory view_inventory inventory_history' %}active{% endif %}">
+                        <i class="nav-icon fas fa-boxes"></i> <p>Manage Inventory <i class="fas fa-angle-left right"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{% url 'inventory' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">
+                                <i class="fas fa-box nav-icon"></i>
+                                <p>Add Product</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'view_inventory' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'view_inventory' %}active{% endif %}">
+                                <i class="fas fa-clipboard-list nav-icon"></i> <p>View Inventory</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'inventory_history' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'inventory_history' %}active{% endif %}">
+                                <i class="fas fa-history nav-icon"></i> <p>Inventory History</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item {% if request.resolver_match.url_name in 'sales view_sales' %}menu-open{% endif %}">
+                    <a href="#"
+                       class="nav-link {% if request.resolver_match.url_name in 'sales view_sales' %}active{% endif %}">
+                        <i class="nav-icon fas fa-cash-register"></i> <p>Manage Sales <i class="fas fa-angle-left right"></i></p>
+                    </a>
+                    <ul class="nav nav-treeview">
+
+                        <li class="nav-item">
+                            <a href="{% url 'tax_list' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'tax_list' %}active{% endif %}">
+                                <i class="fas fa-percent nav-icon"></i> <p>Tax</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'discount_list' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'discount_list' %}active{% endif %}">
+                                <i class="fas fa-tags nav-icon"></i> <p>Discounts</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'sales' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}">
+                                <i class="fas fa-receipt nav-icon"></i> <p>New Sale</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'view_sales' %}"
+                               class="nav-link {% if request.resolver_match.url_name == 'view_sales' %}active{% endif %}">
+                                <i class="fas fa-history nav-icon"></i> <p>View Sales</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'customers' %}"
+                       class="nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+                        <i class="nav-icon fas fa-user-friends"></i> <p>Customers</p>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+</aside>
+
+{% endwith %}
+{% block main_content %}
+{% endblock %}

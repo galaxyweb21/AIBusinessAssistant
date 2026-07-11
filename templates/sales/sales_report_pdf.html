@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <style>
+
+        body{
+            font-family: Helvetica;
+            font-size:12px;
+            color:#222;
+        }
+
+        h1{
+            text-align:center;
+            margin-bottom:24px;
+        }
+
+        .meta{
+            margin-bottom:20px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th{
+            background:#f3f4f6;
+            padding:10px;
+            border:1px solid #ddd;
+            text-align:left;
+        }
+
+        td{
+            padding:10px;
+            border:1px solid #ddd;
+        }
+
+        .right{
+            text-align:right;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1> {{business.name}} - Sales Report</h1>
+    <hr>
+
+    <div class="meta">
+
+        <p>
+            <strong>Filter:</strong>
+            {{ tab|title }}
+        </p>
+
+        <p>
+            <strong>Total Revenue:</strong>
+            Gh¢{{ total_revenue }}
+        </p>
+
+        <p>
+            <strong>Total Profit:</strong>
+            Gh¢{{ total_profit }}
+        </p>
+
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Receipt</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Profit</th>
+                <th>Date</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for sale in sales %}
+
+            <tr>
+
+                <td>
+                    {{ sale.receipt_number }}
+                </td>
+
+                <td>
+
+                    {% if sale.customer %}
+                        {{ sale.customer.full_name }}
+                    {% else %}
+                        Walk-in Customer
+                    {% endif %}
+
+                </td>
+
+                <td>
+                    {{ sale.status }}
+                </td>
+
+                <td>
+                    Gh¢{{ sale.total }}
+                </td>
+
+                <td>
+                    Gh¢{{ sale.total_profit|floatformat:2 }}
+                </td>
+
+                <td>
+                    {{ sale.created_at|date:"d M Y H:i" }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</body>
+</html>

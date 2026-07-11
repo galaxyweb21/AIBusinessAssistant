@@ -1,0 +1,242 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+.inventory-wrapper{
+    padding:24px;
+}
+
+.inventory-card{
+    max-width:900px;
+    margin:auto;
+
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+
+    box-shadow:0 15px 40px rgba(0,0,0,0.08);
+}
+
+.inventory-header{
+    padding:28px;
+
+    background:linear-gradient(135deg,#6366f1,#4f46e5);
+
+    color:#fff;
+}
+
+.inventory-header h2{
+    font-size:26px;
+    font-weight:800;
+}
+
+.inventory-body{
+    padding:28px;
+}
+
+/* GRID */
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.full-width{
+    grid-column:span 2;
+}
+
+.form-group label{
+    margin-bottom:8px;
+    font-weight:600;
+    color:var(--text-main);
+}
+
+/* INPUTS */
+.form-group input{
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    transition:.25s ease;
+}
+
+.form-group input:focus{
+    outline:none;
+    border-color:#6366f1;
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+}
+
+/* STOCK BADGE */
+.stock-badge{
+    display:inline-block;
+    padding:8px 14px;
+    border-radius:20px;
+    font-weight:700;
+    background:#10b981;
+    color:#fff;
+}
+
+/* BUTTON */
+.submit-btn{
+    width:100%;
+    margin-top:24px;
+    border:none;
+    padding:15px;
+    border-radius:16px;
+    font-weight:700;
+    color:#fff;
+    background:linear-gradient(135deg,#6366f1,#4f46e5);
+    transition:.25s ease;
+}
+
+.submit-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* HISTORY */
+.history-box{
+    margin-top:28px;
+    border-top:1px solid var(--border);
+    padding-top:18px;
+}
+
+.history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:12px;
+    margin-bottom:10px;
+
+    border-radius:12px;
+    background:rgba(0,0,0,0.03);
+}
+
+body.dark-mode .history-item{
+    background:rgba(255,255,255,0.05);
+}
+
+.history-left strong{
+    font-size:15px;
+}
+
+.history-left small{
+    display:block;
+    opacity:0.7;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .full-width{
+        grid-column:span 1;
+    }
+}
+
+</style>
+
+<div class="content-wrapper">
+
+<section class="content inventory-wrapper">
+
+<div class="inventory-card">
+
+    <!-- HEADER -->
+    <div class="inventory-header">
+
+        <h2>
+            Restock Inventory
+        </h2>
+
+        <p class="mb-0">
+            {{ item.product_name }} • Current Stock:
+            <span class="stock-badge">
+                {{ item.stock_quantity }}
+            </span>
+        </p>
+
+    </div>
+
+    <!-- BODY -->
+    <div class="inventory-body">
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-grid">
+
+                <div class="form-group full-width">
+                    <label>Quantity to Add</label>
+                    <input type="number"
+                           name="quantity"
+                           min="1"
+                           required>
+                </div>
+
+            </div>
+
+
+    {% include 'partials/_alerts.html' %}
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-boxes me-2"></i>
+                Restock Product
+            </button>
+
+        </form>
+
+        <!-- HISTORY -->
+        <div class="history-box">
+
+            <h5 class="mb-3">Stock Movement History</h5>
+
+            {% for h in item_history %}
+
+                <div class="history-item">
+
+                    <div class="history-left">
+                        <strong>+{{ h.quantity_changed }}</strong>
+                        <small>{{ h.action_type|title }} • {{ h.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+
+                    <div>
+                        <small class="text-muted">
+                            {{ h.previous_stock }} → {{ h.new_stock }}
+                        </small>
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <p class="text-muted">
+                    No stock movement history yet.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+</div>
+
+{% endblock %}

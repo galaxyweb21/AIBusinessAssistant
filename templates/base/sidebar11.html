@@ -1,0 +1,43 @@
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% if squeryset.role == 'Admin' %}
+
+{% include 'base/users_sidebar/admin_sidebar.html' %}
+
+{% elif squeryset.role == 'Manager' %}
+
+{% include 'base/users_sidebar/manager_sidebar.html' %}
+
+{% elif squeryset.role == 'Receptionist' %}
+
+{% include 'base/users_sidebar/receptionist_sidebar.html' %}
+
+{% elif squeryset.role == 'Accountant' %}
+
+{% include 'base/users_sidebar/accounts_sidebar.html' %}
+
+{% elif squeryset.role == 'Restaurant' %}
+
+{% include 'base/users_sidebar/restaurant_sidebar.html' %}
+
+{% elif squeryset.role == 'Kitchen' %}
+
+{% include 'base/users_sidebar/kitchen_sidebar.html' %}
+
+{% elif squeryset.role == 'Store' %}
+
+{% include 'base/users_sidebar/store_sidebar.html' %}
+
+{% elif squeryset.role == 'Staff' %}
+
+{% include 'base/users_sidebar/staff_sidebar.html' %}
+
+
+{% endif %}
+
+{% block main_content %}
+
+{% endblock %}
+

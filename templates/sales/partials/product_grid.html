@@ -1,0 +1,55 @@
+{% for product in products %}
+
+<div class="product-card {% if product.stock_quantity <= 0 %}disabled{% endif %}"
+     data-barcode="{{ product.barcode|default:'' }}"
+
+     {% if product.stock_quantity > 0 %}
+     onclick="selectProduct(
+        '{{ product.id }}',
+        '{{ product.product_name }}',
+        '{{ product.selling_price }}',
+        '{{ product.stock_quantity }}'
+     )"
+     {% endif %}>
+
+    <!-- STOCK BADGE -->
+    {% if product.stock_quantity > 5 %}
+        <div class="stock-badge stock-top stock-success">
+            In Stock
+        </div>
+
+    {% elif product.stock_quantity > 0 %}
+        <div class="stock-badge stock-top stock-warning stock-flash">
+            Low Stock
+        </div>
+
+    {% else %}
+        <div class="stock-badge stock-top stock-danger">
+            Out of Stock
+        </div>
+    {% endif %}
+
+    <!-- IMAGE -->
+    <div class="product-image-wrapper">
+
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
+        {% else %}
+            <div class="no-image">No Image</div>
+        {% endif %}
+
+    </div>
+
+    <!-- NAME -->
+    <div class="product-name">
+        {{ product.product_name }}
+    </div>
+
+    <!-- PRICE -->
+    <div class="product-price">
+        GH¢{{ product.selling_price }}
+    </div>
+
+</div>
+
+{% endfor %}GH¢

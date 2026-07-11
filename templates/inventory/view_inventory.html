@@ -1,0 +1,962 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* =========================================
+   INVENTORY TABLE PAGE
+========================================= */
+
+.inventory-wrapper{
+    padding:24px;
+}
+
+/* HEADER */
+.inventory-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:18px;
+
+    margin-bottom:24px;
+}
+
+.inventory-title h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+    margin-bottom:6px;
+}
+
+.inventory-title p{
+    color:var(--text-muted);
+    margin:0;
+}
+
+/* ACTIONS */
+.inventory-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.inventory-btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    font-weight:600;
+    transition:.25s ease;
+    cursor:pointer;
+    text-decoration:none !important;
+}
+
+.inventory-btn-primary{
+    background:linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+    color:#fff !important;
+}
+
+.inventory-btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 30px rgba(99,102,241,0.25);
+}
+
+.inventory-btn-light{
+    background:var(--bg-card);
+    color:var(--text-main) !important;
+    border:1px solid var(--border);
+}
+
+.inventory-btn-light:hover{
+    background:var(--hover-bg);
+}
+
+/* CARD */
+.inventory-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+}
+
+/* TOP BAR */
+.inventory-toolbar{
+    padding:22px;
+    border-bottom:1px solid var(--border);
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:15px;
+}
+
+/* SEARCH */
+.inventory-search{
+    position:relative;
+    width:320px;
+    max-width:100%;
+}
+
+.inventory-search i{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+}
+
+.inventory-search input{
+    width:100%;
+    height:48px;
+
+    border-radius:14px;
+    border:1px solid var(--border);
+
+    background:var(--bg-main);
+    color:var(--text-main);
+
+    padding:0 16px 0 46px;
+
+    transition:.25s ease;
+}
+
+.inventory-search input:focus{
+    outline:none;
+    border-color:#6366f1;
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+}
+
+/* TABLE */
+.inventory-table-wrap{
+    overflow-x:auto;
+}
+
+.inventory-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.inventory-table thead{
+    background:rgba(99,102,241,0.05);
+}
+
+.inventory-table th{
+    padding:18px 20px;
+    color:var(--text-main);
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    border-bottom:1px solid var(--border);
+}
+
+.inventory-table td{
+    padding:18px 20px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-main);
+    vertical-align:middle;
+}
+
+.inventory-table tbody tr{
+    transition:.2s ease;
+}
+
+.inventory-table tbody tr:hover{
+    background:rgba(99,102,241,0.03);
+}
+
+/* PRODUCT */
+.product-info{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.product-icon{
+    width:46px;
+    height:46px;
+
+    border-radius:14px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(99,102,241,0.1);
+
+    color:#6366f1;
+    font-size:18px;
+}
+
+/* BADGES */
+.stock-badge{
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.stock-good{
+    background:rgba(16,185,129,0.12);
+    color:#10b981;
+}
+
+.stock-low{
+    background:rgba(239,68,68,0.12);
+    color:#ef4444;
+}
+
+/* ACTION BUTTONS */
+.action-group{
+    display:flex;
+    gap:10px;
+}
+
+.action-btn{
+    width:40px;
+    height:40px;
+
+    border:none;
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    transition:.25s ease;
+    text-decoration:none !important;
+}
+
+.edit-btn{
+    background:rgba(59,130,246,0.12);
+    color:#3b82f6;
+}
+
+.delete-btn{
+    background:rgba(239,68,68,0.12);
+    color:#ef4444;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* EMPTY */
+.empty-state{
+    padding:70px 20px;
+    text-align:center;
+}
+
+.empty-state i{
+    font-size:60px;
+    margin-bottom:20px;
+    color:var(--text-muted);
+}
+
+.empty-state h4{
+    color:var(--text-main);
+    font-weight:700;
+}
+
+.empty-state p{
+    color:var(--text-muted);
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+
+    .inventory-wrapper{
+        padding:14px;
+    }
+
+    .inventory-toolbar{
+        flex-direction:column;
+        align-items:stretch;
+    }
+
+    .inventory-search{
+        width:100%;
+    }
+
+    .inventory-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+/* ==========================
+   PAGINATION
+========================== */
+
+.inventory-pagination{
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+
+    padding:24px;
+
+    border-top:1px solid var(--border);
+
+}
+
+.page-btn{
+
+    min-width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:12px;
+
+    text-decoration:none !important;
+
+    border:1px solid var(--border);
+
+    background:var(--bg-card);
+
+    color:var(--text-main);
+
+    font-weight:700;
+
+    transition:.25s ease;
+
+}
+
+.page-btn:hover{
+
+    transform:translateY(-2px);
+
+    background:rgba(99,102,241,.08);
+
+}
+
+.active-page{
+
+    background:linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.inventory-toolbar form{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.inventory-search{
+    min-width:320px;
+    flex:1;
+}
+
+@media(max-width:768px){
+
+    .inventory-toolbar form{
+        width:100%;
+    }
+
+    .inventory-search{
+        width:100%;
+        min-width:100%;
+    }
+}
+/* ==========================
+   MODERN THEME-AWARE ACTIONS
+========================== */
+
+.action-group{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.action-group .dropdown-menu{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:8px;
+    min-width:180px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.08);
+
+    overflow:hidden;
+}
+
+.action-group .dropdown-item{
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:12px 14px;
+
+    border-radius:12px;
+
+    color:var(--text-main);
+
+    font-size:13px;
+    font-weight:600;
+
+    transition:.25s ease;
+}
+
+.action-group .dropdown-item i{
+    width:18px;
+}
+
+/* Hover adapts to theme */
+
+.action-group .dropdown-item:hover{
+
+    background:rgba(99,102,241,.08);
+
+    color:var(--text-main);
+
+    transform:translateX(3px);
+}
+
+/* Restock */
+
+.action-group .dropdown-item.text-success{
+    color:#10b981 !important;
+}
+
+/* Damaged */
+
+.action-group .dropdown-item.text-warning{
+    color:#f59e0b !important;
+}
+
+/* Delete */
+
+.action-group .dropdown-item.text-danger{
+    color:#ef4444 !important;
+}
+
+/* More button */
+
+.action-group .dropdown .action-btn{
+
+    background:var(--bg-main) !important;
+
+    color:var(--text-main) !important;
+
+    border:1px solid var(--border);
+
+}
+
+.action-group .dropdown .action-btn:hover{
+
+    background:rgba(99,102,241,.08) !important;
+
+    transform:translateY(-2px);
+}
+</style>
+
+<div class="content-wrapper">
+
+<section class="content inventory-wrapper">
+
+    <!-- HEADER -->
+    <div class="inventory-header">
+
+        <div class="inventory-title">
+            <h2>Inventory Management</h2>
+            <p>
+                Manage and monitor your business inventory.
+            </p>
+        </div>
+
+        <div class="inventory-actions">
+
+            <a href="{% url 'inventory' %}"
+               class="inventory-btn inventory-btn-primary">
+
+                <i class="fas fa-plus me-2"></i>
+                Add Inventory
+
+            </a>
+
+            <!-- CSV EXPORT -->
+            <button onclick="exportTableToCSV()"
+                    class="inventory-btn inventory-btn-light">
+
+                <i class="fas fa-file-csv me-2"></i>
+                Export CSV
+
+            </button>
+
+            <!-- PDF EXPORT -->
+            <button onclick="exportTableToPDF()"
+                    class="inventory-btn inventory-btn-light">
+
+                <i class="fas fa-file-pdf me-2"></i>
+                Export PDF
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- CARD -->
+    <div class="inventory-card">
+
+        <!-- TOOLBAR -->
+      <div class="inventory-toolbar">
+
+    <form method="GET"
+          class="d-flex align-items-center gap-2 flex-wrap">
+
+
+        <div class="inventory-search">
+
+            <i class="fas fa-search"></i>
+
+            <input
+                id="inventorySearch"
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="Search inventory..." style="flex:1;"
+            >
+
+        </div>
+
+        <!-- SEARCH BUTTON -->
+        <button
+            type="submit"
+            class="inventory-btn inventory-btn-primary">
+
+            <i class="fas fa-search me-2"></i>
+
+            Search
+
+        </button>
+
+        <!-- CLEAR BUTTON -->
+        {% if search %}
+        <a href="{% url 'view_inventory' %}"
+           class="inventory-btn inventory-btn-light">
+
+            <i class="fas fa-times me-2"></i>
+
+            Clear
+
+        </a>
+        {% endif %}
+
+    </form>
+
+    {% include 'partials/_alerts.html' %}
+
+</div>
+
+        <!-- TABLE -->
+        <div class="inventory-table-wrap">
+
+            <table class="inventory-table" id="inventoryTable">
+
+                <thead>
+
+                    <tr>
+                        <th>Product</th>
+                        <th>Stock</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="inventoryTableBody">
+
+                {% for item in queryset %}
+
+                    <tr>
+
+                        <td>
+
+                            <div class="product-info">
+
+                                <div class="product-icon">
+                                    <i class="fas fa-box"></i>
+                                </div>
+
+                                <div>
+                                    <strong>
+                                        {{ item.product_name }}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            {% if item.stock_quantity <= 5 %}
+
+                                <span class="stock-badge stock-low">
+                                    Low Stock ({{ item.stock_quantity }})
+                                </span>
+
+                            {% else %}
+
+                                <span class="stock-badge stock-good">
+                                    {{ item.stock_quantity }} In Stock
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            Gh¢{{ item.cost_price }}
+                        </td>
+
+                        <td>
+                            Gh¢{{ item.selling_price }}
+                        </td>
+
+                        <td>
+                            {{ item.updated_at|date:"d M Y" }}
+                        </td>
+
+                        <td>
+
+                           <div class="action-group">
+
+    <!-- PRIMARY: EDIT -->
+    <a href="{% url 'update_inventory' item.id %}"
+       class="action-btn edit-btn"
+       title="Edit">
+
+        <i class="fas fa-edit"></i>
+
+    </a>
+
+    <!-- MORE MENU (SECONDARY ACTIONS) -->
+    <div class="dropdown">
+
+        <button class="action-btn"
+                style="background:rgba(99,102,241,0.12); color:#6366f1;"
+                data-toggle="dropdown">
+
+            <i class="fas fa-ellipsis-v"></i>
+
+        </button>
+
+        <div class="dropdown-menu dropdown-menu-right">
+
+            <a class="dropdown-item text-success"
+               href="{% url 'restock_inventory' item.id %}">
+
+                <i class="fas fa-plus-circle mr-2"></i>
+                Restock
+
+            </a>
+
+            <a class="dropdown-item text-warning"
+               href="{% url 'damaged_inventory' item.id %}">
+
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Mark Damaged
+
+            </a>
+
+            <div class="dropdown-divider"></div>
+
+            <a class="dropdown-item text-danger"
+               data-toggle="modal"
+               data-target="#deleteModal{{ item.id }}">
+
+                <i class="fas fa-trash mr-2"></i>
+                Delete
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+                        </td>
+
+                    </tr>
+
+                    <!-- DELETE MODAL -->
+                    <div class="modal fade"
+                         id="deleteModal{{ item.id }}"
+                         tabindex="-1">
+
+                        <div class="modal-dialog modal-dialog-centered">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        Delete Inventory
+                                    </h5>
+
+                                    <button type="button"
+                                            class="close"
+                                            data-dismiss="modal">
+
+                                        <span>&times;</span>
+
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+
+                                    Are you sure you want to delete
+                                    <strong>
+                                        {{ item.product_name }}
+                                    </strong>?
+
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-dismiss="modal">
+
+                                        No
+
+                                    </button>
+
+                                    <a href="{% url 'delete_inventory' item.id %}"
+                                       class="btn btn-danger">
+
+                                        Yes Delete
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <tr>
+
+                        <td colspan="6">
+
+                            <div class="empty-state">
+
+                                <i class="fas fa-box-open"></i>
+
+                                <h4>
+                                    No Inventory Found
+                                </h4>
+
+                                <p>
+                                    Start by adding your first inventory item.
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% if queryset.has_other_pages %}
+
+<div class="inventory-pagination">
+
+    {% if queryset.has_previous %}
+
+        <a href="?page={{ queryset.previous_page_number }}&search={{ search }}"
+           class="page-btn">
+
+            <i class="fas fa-chevron-left"></i>
+
+        </a>
+
+    {% endif %}
+
+
+    {% for num in queryset.paginator.page_range %}
+
+        {% if queryset.number == num %}
+
+            <span class="page-btn active-page">
+
+                {{ num }}
+
+            </span>
+
+        {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+
+            <a href="?page={{ num }}&search={{ search }}"
+               class="page-btn">
+
+                {{ num }}
+
+            </a>
+
+        {% endif %}
+
+    {% endfor %}
+
+
+    {% if queryset.has_next %}
+
+        <a href="?page={{ queryset.next_page_number }}&search={{ search }}"
+           class="page-btn">
+
+            <i class="fas fa-chevron-right"></i>
+
+        </a>
+
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+
+</div>
+
+<!-- =========================================
+     EXPORT CSV
+========================================= -->
+<script>
+
+function exportTableToCSV() {
+
+    let csv = [];
+
+    const rows = document.querySelectorAll("table tr");
+
+    rows.forEach(row => {
+
+        let cols = row.querySelectorAll("td, th");
+
+        let rowData = [];
+
+        cols.forEach(col => {
+
+            rowData.push(
+                '"' + col.innerText.replace(/"/g, '""') + '"'
+            );
+
+        });
+
+        csv.push(rowData.join(","));
+
+    });
+
+    const csvFile = new Blob(
+        [csv.join("\n")],
+        { type: "text/csv" }
+    );
+
+    const downloadLink = document.createElement("a");
+
+    downloadLink.download = "inventory.csv";
+
+    downloadLink.href =
+        window.URL.createObjectURL(csvFile);
+
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+
+    downloadLink.click();
+
+}
+
+</script>
+
+<!-- =========================================
+     EXPORT PDF
+========================================= -->
+
+<script>
+
+async function exportTableToPDF() {
+
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+
+    doc.text("Inventory Report", 14, 20);
+
+    let rows = [];
+
+    document.querySelectorAll("#inventoryTable tbody tr")
+    .forEach(row => {
+
+        let cols = row.querySelectorAll("td");
+
+        if(cols.length){
+
+            rows.push([
+                cols[0].innerText,
+                cols[1].innerText,
+                cols[2].innerText,
+                cols[3].innerText,
+                cols[4].innerText
+            ]);
+
+        }
+
+    });
+
+    let y = 35;
+
+    rows.forEach(row => {
+
+        doc.text(row.join(" | "), 14, y);
+
+        y += 10;
+
+    });
+
+    doc.save("inventory.pdf");
+
+}
+
+</script>
+
+{% endblock %}

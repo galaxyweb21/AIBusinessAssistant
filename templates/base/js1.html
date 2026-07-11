@@ -1,0 +1,37 @@
+{% load static %}
+
+<!-- Page specific script -->
+<script>
+
+// Event Utilization Chart
+
+new Chart(document.getElementById('eventChart'),{
+
+type:'doughnut',
+
+data:{
+labels: {{ event_months|safe }},
+datasets:[{
+data: {{ event_totals|safe }},
+backgroundColor:[
+"#3498db",
+"#2ecc71",
+"#e74c3c",
+"#9b59b6",
+"#f1c40f"
+]
+}]
+},
+
+options:{
+responsive:true
+}
+
+})
+
+
+</script>
+
+{% block script %}
+
+{% endblock %}

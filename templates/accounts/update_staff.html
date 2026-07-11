@@ -1,0 +1,389 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* ============================
+UPDATE STAFF (MATCH REGISTER UI)
+============================ */
+
+.staff-wrapper{
+    padding:24px;
+}
+
+.staff-header{
+    margin-bottom:20px;
+}
+
+.staff-header h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.staff-header p{
+    color:var(--text-muted);
+}
+
+/* GRID (SAME AS REGISTER) */
+.staff-grid{
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:24px;
+    align-items:start;
+}
+
+/* CARDS */
+.staff-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+}
+
+.staff-card-title{
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:18px;
+    color:var(--text-main);
+}
+
+/* FORM */
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    font-weight:600;
+    display:block;
+    margin-bottom:6px;
+    color:var(--text-main);
+}
+
+/* INPUTS */
+.auth-input,
+select.auth-input,
+input,
+select,
+textarea{
+    width:100%;
+    height:52px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    padding:0 14px;
+    outline:none;
+    transition:.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* ROLE PREVIEW */
+.role-preview{
+    margin-top:10px;
+    font-size:13px;
+    padding:10px;
+    border-radius:12px;
+    background:rgba(99,102,241,.06);
+    color:var(--text-muted);
+}
+
+/* PASSWORD FIELD */
+.password-field{
+    position:relative;
+}
+
+.password-field i{
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:var(--text-muted);
+}
+
+/* STRENGTH BAR */
+.password-strength-container{
+    margin-top:8px;
+}
+
+.strength-bar{
+    height:7px;
+    border-radius:999px;
+    background:var(--border);
+    overflow:hidden;
+}
+
+#strengthFill{
+    height:100%;
+    width:0%;
+    transition:.3s;
+}
+
+/* RULES */
+.password-rules{
+    list-style:none;
+    padding:0;
+    margin-top:10px;
+    font-size:13px;
+}
+
+.password-rules li{
+    color:var(--text-muted);
+}
+
+.password-rules li.valid{
+    color:var(--success);
+}
+
+.password-rules li.invalid{
+    color:var(--danger);
+}
+
+/* BUTTON */
+.staff-btn{
+    width:100%;
+    height:54px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    font-weight:700;
+    margin-top:10px;
+    transition:.2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+}
+
+.staff-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* RIGHT PANEL */
+.staff-summary{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+.summary-box{
+    padding:14px;
+    border-radius:14px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+}
+
+/* ANALYTICS */
+.analytics-box{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.analytics-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:14px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+}
+
+.analytics-item span{
+    font-size:13px;
+    color:var(--text-muted);
+}
+
+.analytics-item strong{
+    font-size:20px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.analytics-item.total strong{ color:var(--primary); }
+.analytics-item.admin strong{ color:#ef4444; }
+.analytics-item.cashier strong{ color:#10b981; }
+.analytics-item.today strong{ color:#f59e0b; }
+
+/* ROLE ITEMS */
+.role-item{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    font-size:13px;
+    color:var(--text-main);
+    border-bottom:1px dashed var(--border);
+}
+
+.role-item:last-child{
+    border-bottom:none;
+}
+
+/* RESPONSIVE */
+@media(max-width:991px){
+    .staff-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+
+<div class="content-wrapper">
+<section class="content staff-wrapper">
+
+<!-- HEADER -->
+<div class="staff-header">
+    <h2>{{title}}</h2>
+    <p>Edit staff account and role settings</p>
+</div>
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="staff-grid">
+
+<!-- LEFT -->
+<div class="staff-card">
+
+    <div class="staff-card-title">Update Staff Information</div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Username</label>
+            {{ form.username }}
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            {{ form.email }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>First Name</label>
+            {{ form.first_name }}
+        </div>
+
+        <div class="form-group">
+            <label>Last Name</label>
+            {{ form.last_name }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Address</label>
+            {{ pform.address }}
+        </div>
+
+        <div class="form-group">
+            <label>Phone</label>
+            {{ pform.contact }}
+        </div>
+    </div>
+
+    <!-- ROLE -->
+    <div class="form-group">
+        <label>Role</label>
+        {{ pform.role_type }}
+
+        <div id="rolePreview" class="role-preview">
+            Select role to preview permissions
+        </div>
+    </div>
+
+    <button type="submit" class="staff-btn">
+        <i class="fas fa-save"></i>
+        Update Staff
+    </button>
+
+</div>
+
+<!-- RIGHT -->
+<div class="staff-summary">
+
+    <div class="staff-card">
+        <div class="staff-card-title">Business</div>
+        <div class="summary-box">
+            <strong>{{ business.name }}</strong>
+        </div>
+    </div>
+
+    <div class="staff-card">
+        <div class="staff-card-title">Roles Available</div>
+
+        <div class="summary-box">
+
+            <div class="role-item">
+                <span>Cashier</span>
+                <span>Sales only</span>
+            </div>
+
+            <div class="role-item">
+                <span>Sales</span>
+                <span>Customers + Sales</span>
+            </div>
+
+            <div class="role-item">
+                <span>Admin</span>
+                <span>Full access</span>
+            </div>
+
+            <div class="role-item">
+                <span>Branch Manager</span>
+                <span>Reports + Staff</span>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+</form>
+
+</section>
+</div>
+
+<!-- ROLE PREVIEW SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const role = document.getElementById("id_role_type");
+    const preview = document.getElementById("rolePreview");
+
+    if(role){
+        role.addEventListener("change", function(){
+            const map = {
+                Cashier:"Sales only access",
+                Sales:"Sales + customers",
+                Admin:"Full access",
+                "Branch Manager":"Reports + staff control"
+            };
+            preview.innerText = map[this.value] || "Select role to preview permissions";
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

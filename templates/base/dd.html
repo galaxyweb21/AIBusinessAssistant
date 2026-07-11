@@ -1,0 +1,706 @@
+The below code with the chat works without error.
+
+1. chart Works without error.
+
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+
+<div class="content-wrapper px-3">
+    <section class="content-header">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="font-weight-bold mb-0">Operations Command</h4>
+                <p class="text-muted small">Property status as of {{ today|date:"M d, Y" }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="#" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm"><i class="fas fa-plus mr-1"></i> New Booking</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+<!--KPI Row-->
+
+<div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 id="revenue">0</h3>
+                        <p>Total Revenue</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3 id="profit">0</h3>
+                        <p>Total Profit</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-6">
+                <div style="height:300px;">
+    <canvas id="salesChart"></canvas>
+</div>
+            </div>
+
+                <div class="col-lg-6 col-6">
+                <div style="height:300px;">
+    <canvas id="topProductsChart"></canvas>
+</div>
+            </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-6 col-6">
+               <div class="card">
+    <div class="card-header">
+        <h5>AI Business Insights</h5>
+    </div>
+    <div class="card-body">
+        <ul id="insightsList"></ul>
+    </div>
+</div>
+            </div>
+
+                <div class="col-lg-6 col-6">
+                <div style="height:300px;">
+    <canvas id="profitChart"></canvas>
+</div>
+            </div>
+
+
+            </div>
+
+            <div class="row">
+                <div class="col-lg-12 col-12">
+                <div class="card">
+       <div class="d-flex justify-content-between mb-2">
+    <strong>AI Assistant</strong>
+    <small class="text-muted">Online</small>
+</div>
+
+    <div class="card-body">
+
+        <div id="chatBox" class="chat-box"></div>
+
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input id="chatInput" class="form-control mt-2" placeholder="Ask your business AI...">
+        <button onclick="sendMessage()" class="btn btn-primary mt-2">Send</button>
+    </div>
+</div>
+                </div>
+            </div>
+            </div>
+    </section>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ================================
+    // DASHBOARD SUMMARY
+    // ================================
+    fetch('/api/dashboard/', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+        const revenueEl = document.getElementById('revenue');
+        const profitEl = document.getElementById('profit');
+
+        if (revenueEl) revenueEl.innerText = data.total_revenue ?? 0;
+        if (profitEl) profitEl.innerText = data.total_profit ?? 0;
+    })
+    .catch(err => console.error("Dashboard Error:", err));
+
+
+    // ================================
+    // SALES CHART
+    // ================================
+    fetch('/api/sales-chart/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        const canvas = document.getElementById('salesChart');
+        if (!canvas) return;
+
+        if (!data.labels || data.labels.length === 0) {
+            canvas.outerHTML = "<p>No sales data</p>";
+            return;
+        }
+
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Sales',
+                    data: (data.data || []).map(v => Number(v) || 0),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13,110,253,0.15)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
+        });
+
+    })
+    .catch(err => console.error("Sales Chart Error:", err));
+
+
+    // ================================
+    // TOP PRODUCTS
+    // ================================
+    fetch('/api/top-products/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        const canvas = document.getElementById('topProductsChart');
+        if (!canvas) return;
+
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: data.labels || [],
+                datasets: [{
+                    label: 'Quantity Sold',
+                    data: data.data || [],
+                    backgroundColor: '#0d6efd'
+                }]
+            }
+        });
+
+    })
+    .catch(err => console.error("Top Products Error:", err));
+
+
+    // ================================
+    // AI INSIGHTS
+    // ================================
+    fetch('/api/ai-insights/', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        const list = document.getElementById('insightsList');
+        if (!list) return;
+
+        list.innerHTML = "";
+
+        (data.insights || []).forEach(text => {
+            const li = document.createElement('li');
+            li.innerText = text;
+            list.appendChild(li);
+        });
+
+    })
+    .catch(err => console.error("AI Insights Error:", err));
+
+
+    // ================================
+    // PROFIT CHART
+    // ================================
+    fetch('/api/profit-analytics/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        const canvas = document.getElementById('profitChart');
+        if (!canvas) return;
+
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: data.labels || [],
+                datasets: [
+                    { label: 'Revenue', data: data.revenue || [], borderColor: 'blue' },
+                    { label: 'Cost', data: data.cost || [], borderColor: 'red' },
+                    { label: 'Profit', data: data.profit || [], borderColor: 'green' }
+                ]
+            }
+        });
+
+    })
+    .catch(err => console.error("Profit Chart Error:", err));
+
+});
+
+
+// ================================
+// CSRF HELPER
+// ================================
+function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
+
+// ================================
+// AI CHAT FUNCTION (FIXED + SAFE + USERNAME FIX)
+// ================================
+function sendMessage() {
+
+    const input = document.getElementById("chatInput");
+    const chatBox = document.getElementById("chatBox");
+
+    if (!input || !chatBox) return;
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    // =========================
+    // USER MESSAGE (RIGHT SIDE)
+    // =========================
+    const userBubble = document.createElement("div");
+    userBubble.className = "chat-msg chat-user";
+    userBubble.innerText = message;
+
+    chatBox.appendChild(userBubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    input.value = "";
+
+    fetch('/api/ai-chat/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const reply = data.reply || "No response from AI.";
+
+        // =========================
+        // AI MESSAGE (LEFT SIDE)
+        // =========================
+        const aiBubble = document.createElement("div");
+        aiBubble.className = "chat-msg chat-ai";
+        aiBubble.innerText = reply;
+
+        chatBox.appendChild(aiBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    })
+    .catch(err => {
+
+        const errorBubble = document.createElement("div");
+        errorBubble.className = "chat-msg chat-ai";
+        errorBubble.style.color = "red";
+        errorBubble.innerText = "AI Error: " + err.message;
+
+        chatBox.appendChild(errorBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+</script>
+{% endblock %}
+
+2. chat with error
+
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<div class="content-wrapper px-3">
+
+    <!-- =========================
+         HEADER (ENTERPRISE STYLE)
+    ========================== -->
+    <section class="content-header mb-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-bold mb-0">Operations Command Center</h4>
+                <p class="text-muted small mb-0">
+                    Property status as of {{ today|date:"M d, Y" }}
+                </p>
+            </div>
+
+            <a href="#" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                <i class="fas fa-plus me-1"></i> New Booking
+            </a>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+
+            <!-- =========================
+                 KPI CARDS (MODERN)
+            ========================== -->
+            <div class="row g-3 mb-3">
+
+                <div class="col-lg-3 col-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <small class="text-muted">Total Revenue</small>
+                            <h3 class="fw-bold mb-0" id="revenue">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <small class="text-muted">Total Profit</small>
+                            <h3 class="fw-bold mb-0" id="profit">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- =========================
+                 CHART ROW
+            ========================== -->
+ <!-- CHARTS ROW (FIXED HEIGHT SYSTEM) -->
+<div class="row mt-3 g-3">
+
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm border-0 chart-card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Sales Trend</h6>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm border-0 chart-card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Top Products</h6>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- INSIGHTS + PROFIT (MATCH HEIGHT) -->
+<div class="row mt-3 g-3">
+
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm border-0 chart-card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">AI Insights</h6>
+            </div>
+            <div class="card-body">
+                <ul id="insightsList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-12">
+        <div class="card shadow-sm border-0 chart-card">
+            <div class="card-header bg-transparent">
+                <h6 class="mb-0">Profit Analytics</h6>
+            </div>
+            <div class="card-body chart-container">
+                <canvas id="profitChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+            <!-- =========================
+                 AI CHAT (COMMAND CENTER)
+            ========================== -->
+            <div class="row">
+                <div class="col-lg-12">
+
+                    <div class="card shadow-sm border-0">
+
+                        <div class="card-header d-flex justify-content-between align-items-center bg-transparent">
+                            <strong>AI Command Center</strong>
+                            <span class="badge bg-success">Online</span>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div id="chatBox" class="chat-box mb-3"></div>
+
+                            <div class="input-group">
+                                <input id="chatInput"
+                                       class="form-control"
+                                       placeholder="Ask your business AI...">
+
+                                <button onclick="sendMessage()" class="btn btn-primary">
+                                    Send
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+/* =========================
+   ENTERPRISE DASHBOARD FIXED JS
+========================= */
+
+let charts = {}; // 🔥 prevents duplicate Chart.js instances
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* =========================
+       GLOBAL CHART CONFIG (FIXED HEIGHT + MODERN LOOK)
+    ========================= */
+    const baseChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false, // 🔥 CRITICAL FIX FOR HEIGHT
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#6b7280",
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: "#6b7280" },
+                grid: { display: false }
+            },
+            y: {
+                ticks: { color: "#6b7280" },
+                grid: { color: "rgba(0,0,0,0.05)" }
+            }
+        }
+    };
+
+    /* =========================
+       DASHBOARD SUMMARY
+    ========================= */
+    fetch('/api/dashboard/', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('revenue').innerText = data.total_revenue ?? 0;
+        document.getElementById('profit').innerText = data.total_profit ?? 0;
+    });
+
+
+    /* =========================
+       SAFE CHART INIT FUNCTION (IMPORTANT FIX)
+    ========================= */
+    function renderChart(id, config) {
+
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+
+        // destroy old chart if exists (🔥 prevents glitches)
+        if (charts[id]) {
+            charts[id].destroy();
+        }
+
+        charts[id] = new Chart(canvas, config);
+    }
+
+
+    /* =========================
+       SALES CHART
+    ========================= */
+    fetch('/api/sales-chart/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        renderChart('salesChart', {
+            type: 'line',
+            data: {
+                labels: data.labels || [],
+                datasets: [{
+                    label: 'Sales',
+                    data: data.data || [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.15)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3
+                }]
+            },
+            options: baseChartOptions
+        });
+
+    });
+
+
+    /* =========================
+       TOP PRODUCTS
+    ========================= */
+    fetch('/api/top-products/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        renderChart('topProductsChart', {
+            type: 'bar',
+            data: {
+                labels: data.labels || [],
+                datasets: [{
+                    label: 'Quantity Sold',
+                    data: data.data || [],
+                    backgroundColor: '#6366f1',
+                    borderRadius: 6
+                }]
+            },
+            options: baseChartOptions
+        });
+
+    });
+
+
+    /* =========================
+       AI INSIGHTS
+    ========================= */
+    fetch('/api/ai-insights/', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        const list = document.getElementById('insightsList');
+        if (!list) return;
+
+        list.innerHTML = "";
+
+        (data.insights || []).forEach(i => {
+            const li = document.createElement("li");
+            li.className = "mb-2 text-muted";
+            li.innerText = "• " + i;
+            list.appendChild(li);
+        });
+
+    });
+
+
+    /* =========================
+       PROFIT CHART
+    ========================= */
+    fetch('/api/profit-analytics/?period=7days', { credentials: 'same-origin' })
+    .then(res => res.json())
+    .then(data => {
+
+        renderChart('profitChart', {
+            type: 'line',
+            data: {
+                labels: data.labels || [],
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: data.revenue || [],
+                        borderColor: '#3b82f6',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Cost',
+                        data: data.cost || [],
+                        borderColor: '#ef4444',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Profit',
+                        data: data.profit || [],
+                        borderColor: '#22c55e',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: baseChartOptions
+        });
+
+    });
+
+});
+
+
+/* =========================
+   CHAT SYSTEM (STABLE + ENTERPRISE UI READY)
+========================= */
+
+function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
+function sendMessage() {
+
+    const input = document.getElementById("chatInput");
+    const chatBox = document.getElementById("chatBox");
+
+    if (!input || !chatBox) return;
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    /* USER MESSAGE */
+    const userBubble = document.createElement("div");
+    userBubble.className = "chat-msg chat-user";
+    userBubble.innerText = message;
+
+    chatBox.appendChild(userBubble);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    input.value = "";
+
+    fetch('/api/ai-chat/', {
+    method: 'POST',
+    credentials: 'include', // 🔥 CHANGE THIS (important)
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken()
+    },
+    body: JSON.stringify({ message })
+})
+    .then(res => {
+        if (!res.ok) throw new Error("Server error " + res.status);
+        return res.json();
+    })
+    .then(data => {
+
+        const aiBubble = document.createElement("div");
+        aiBubble.className = "chat-msg chat-ai";
+        aiBubble.innerText = data.reply || "No response";
+
+        chatBox.appendChild(aiBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    })
+    .catch(err => {
+
+        const errBubble = document.createElement("div");
+        errBubble.className = "chat-msg chat-ai";
+        errBubble.style.color = "red";
+        errBubble.innerText = "AI Error: " + err.message;
+
+        chatBox.appendChild(errBubble);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+</script>
+
+{% endblock %}

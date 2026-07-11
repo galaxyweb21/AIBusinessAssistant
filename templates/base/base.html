@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+{% load static %}
+{% load crispy_forms_tags %}
+<html lang="en">
+
+<head>
+    {% include 'base/header.html' %}
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% block custom_css %}{% endblock custom_css %}
+
+    <!-- THEME INIT -->
+    <script>
+    (function () {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        if (savedTheme === "dark") {
+            document.documentElement.classList.add("dark-mode");
+        }
+    })();
+    </script>
+
+    <style>
+    body { overflow-x: hidden; }
+
+    .content-wrapper {
+        padding: 15px;
+    }
+
+    /* Cards */
+    .card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* Tables */
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    /* Sidebar FIX */
+    @media (max-width: 768px) {
+
+        .main-sidebar {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 260px;
+            height: 100%;
+            z-index: 1055;
+            transition: 0.3s ease;
+        }
+
+        body.sidebar-open .main-sidebar {
+            left: 0;
+        }
+
+        .content-wrapper {
+            margin-left: 0 !important;
+        }
+
+        /* Prevent overlay issues */
+        body.sidebar-open::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 1050;
+        }
+
+        /* GRID FIX (CRITICAL FIX) */
+        .row {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .col-lg-3,
+        .col-lg-4,
+        .col-lg-6,
+        .col-md-6,
+        .col-md-4 {
+            margin-bottom: 15px;
+        }
+
+        /* Charts fix */
+        canvas {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Buttons */
+        .btn {
+            width: auto;
+        }
+    }
+    </style>
+
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+
+<div class="wrapper">
+
+    {% include 'base/navbar.html' %}
+    {% include 'base/sidebar.html' %}
+
+    {% block main_content %}
+    {% endblock %}
+
+    {% include 'base/footer.html' %}
+
+    {% include 'base/js.html' %}
+    {% include 'base/js1.html' %}
+
+    {% block custom_js %}
+    {% endblock %}
+
+</div>
+
+<!-- Sidebar Toggle -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.querySelector('[data-widget="pushmenu"]');
+
+    if (toggle) {
+        toggle.addEventListener("click", function () {
+            document.body.classList.toggle("sidebar-open");
+        });
+    }
+
+    // Close sidebar when clicking outside
+    document.addEventListener("click", function(e){
+        if (!e.target.closest('.main-sidebar') && !e.target.closest('[data-widget="pushmenu"]')) {
+            document.body.classList.remove("sidebar-open");
+        }
+    });
+});
+</script>
+
+<!-- Theme Toggle -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.getElementById("themeToggle");
+
+    if (!toggle) return;
+
+    toggle.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.toggle("dark-mode");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    });
+});
+</script>
+
+</body>
+</html>

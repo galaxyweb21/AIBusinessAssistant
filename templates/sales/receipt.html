@@ -1,0 +1,1048 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+    --success:#10b981;
+    --danger:#ef4444;
+}
+
+.receipt-wrapper{
+    max-width:1000px;
+    margin:auto;
+    padding:24px;
+}
+
+.receipt-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:28px;
+    overflow:hidden;
+    box-shadow:0 10px 35px rgba(0,0,0,.05);
+}
+
+/* =========================
+HEADER
+========================= */
+
+.receipt-header{
+    padding:40px;
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+    color:#fff;
+}
+
+.receipt-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:20px;
+}
+
+.brand-title{
+    font-size:34px;
+    font-weight:900;
+    margin-bottom:8px;
+}
+
+.brand-subtitle{
+    opacity:.9;
+    font-size:15px;
+}
+
+.receipt-badge{
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.2);
+    padding:14px 18px;
+    border-radius:18px;
+    backdrop-filter:blur(10px);
+}
+
+.receipt-badge-label{
+    font-size:12px;
+    opacity:.8;
+}
+
+.receipt-badge-value{
+    font-size:20px;
+    font-weight:800;
+    margin-top:4px;
+}
+
+/* =========================
+BODY
+========================= */
+
+.receipt-body{
+    padding:35px;
+}
+
+.info-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+    margin-bottom:30px;
+}
+
+.info-card{
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:20px;
+}
+
+.info-label{
+    color:var(--text-muted);
+    font-size:13px;
+    margin-bottom:8px;
+}
+
+.info-value{
+    font-size:18px;
+    font-weight:700;
+    color:var(--text-main);
+}
+
+/* =========================
+TABLE
+========================= */
+
+.table-wrapper{
+    overflow:auto;
+    border:1px solid var(--border);
+    border-radius:22px;
+}
+
+.receipt-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.receipt-table thead{
+    background:rgba(99,102,241,.08);
+}
+
+.receipt-table thead th{
+    padding:18px;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--text-muted);
+    border-bottom:1px solid var(--border);
+}
+
+.receipt-table tbody td{
+    padding:18px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-main);
+    vertical-align:middle;
+}
+
+.receipt-table tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.product-name{
+    font-weight:700;
+}
+
+.qty-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:38px;
+    height:38px;
+    border-radius:12px;
+    background:rgba(99,102,241,.1);
+    color:var(--primary);
+    font-weight:700;
+}
+
+/* =========================
+SUMMARY
+========================= */
+
+.summary-section{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:30px;
+}
+
+.summary-card{
+    width:100%;
+    max-width:380px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:28px;
+}
+
+.summary-title{
+    font-size:20px;
+    font-weight:800;
+    margin-bottom:20px;
+    color:var(--text-main);
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    color:var(--text-main);
+}
+
+.summary-item strong{
+    font-size:17px;
+}
+
+.summary-total{
+    margin-top:20px;
+    padding-top:20px;
+    border-top:1px dashed var(--border);
+    font-size:26px;
+    font-weight:900;
+}
+
+/* =========================
+PAYMENT STATUS
+========================= */
+.payment-status{
+
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    padding:12px 18px;
+
+    border-radius:14px;
+
+    font-size:14px;
+    font-weight:700;
+
+    margin-top:18px;
+}
+
+/* COMPLETED */
+.payment-status.completed{
+
+    background:rgba(16,185,129,.12);
+    color:#10b981;
+}
+
+/* REFUNDED */
+.payment-status.refunded{
+
+    background:rgba(239,68,68,.12);
+    color:#ef4444;
+}
+
+/* PENDING */
+.payment-status.pending{
+
+    background:rgba(245,158,11,.12);
+    color:#f59e0b;
+}
+.payment-status.proforma{
+
+    background:rgba(59,130,246,.12);
+
+    color:#3b82f6;
+}
+
+.payment-status.partially-refunded{
+
+    background:rgba(245,158,11,.12);
+
+    color:#f59e0b;
+}
+
+/* =========================
+FOOTER
+========================= */
+
+.receipt-footer{
+    margin-top:35px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:14px;
+}
+
+/* =========================
+ACTIONS
+========================= */
+
+.receipt-actions{
+    margin-top:35px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+}
+
+.print-btn{
+    height:56px;
+    border:none;
+    padding:0 28px;
+    border-radius:18px;
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+    color:#fff;
+    font-weight:700;
+}
+
+.back-btn{
+    height:56px;
+    padding:0 28px;
+    border-radius:18px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    color:var(--text-main);
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    text-decoration:none;
+}
+.pos-print-only{
+    display:none;
+}
+
+/* =========================
+PRINT
+========================= */
+
+@media print{
+
+    @page{
+    size:80mm auto;
+    margin:1.5mm;
+}
+
+    body{
+        margin:0;
+        padding:0;
+    }
+
+    .receipt-card,
+    .receipt-actions,
+    .main-sidebar,
+    .main-header,
+    .main-footer{
+        display:none !important;
+    }
+
+    .pos-print-only{
+    display:block !important;
+    width:76mm;
+    margin:0 auto;
+    color:#000;
+    font-family:'Courier New', monospace;
+    font-size:11px;
+    line-height:1.4;
+}
+
+.pos-header{
+    text-align:center;
+    padding-bottom:8px;
+    border-bottom:1px dashed #000;
+}
+
+.pos-logo{
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.pos-document{
+    font-size:12px;
+    font-weight:700;
+    margin-top:4px;
+}
+
+.pos-meta{
+    width:100%;
+    margin-top:8px;
+    border-collapse:collapse;
+}
+
+.pos-meta td{
+    padding:2px 0;
+    vertical-align:top;
+}
+
+.pos-meta td:last-child{
+    text-align:right;
+}
+
+.pos-items{
+    width:100%;
+    margin-top:8px;
+    border-collapse:collapse;
+}
+
+.pos-items th{
+    text-align:left;
+    padding:5px 0;
+    border-top:1px dashed #000;
+    border-bottom:1px dashed #000;
+    font-size:11px;
+}
+
+.pos-items td{
+    padding:5px 0;
+    vertical-align:top;
+}
+
+.item-name{
+    font-weight:700;
+}
+
+.item-price{
+    font-size:10px;
+}
+
+.pos-summary{
+    width:100%;
+    margin-top:8px;
+    border-collapse:collapse;
+}
+
+.pos-summary td{
+    padding:3px 0;
+}
+
+.pos-summary td:last-child{
+    text-align:right;
+}
+
+.grand-total td{
+    border-top:1px dashed #000;
+    border-bottom:1px dashed #000;
+    padding:8px 0;
+    font-size:15px;
+    font-weight:900;
+}
+
+.pos-status{
+    text-align:center;
+    font-weight:700;
+    margin-top:10px;
+    padding:5px;
+    border:1px dashed #000;
+}
+
+.pos-footer{
+    margin-top:12px;
+    padding-top:8px;
+    border-top:1px dashed #000;
+    text-align:center;
+    font-size:10px;
+}
+
+.pos-thankyou{
+    font-weight:700;
+    margin-bottom:4px;
+}
+
+.pos-note{
+    font-size:9px;
+}
+
+.pos-powered{
+    margin-top:8px;
+    font-size:9px;
+}
+}
+
+/* =========================
+MOBILE
+========================= */
+
+@media(max-width:768px){
+
+    .receipt-header,
+    .receipt-body{
+        padding:24px;
+    }
+
+    .brand-title{
+        font-size:26px;
+    }
+
+    .summary-section{
+        justify-content:stretch;
+    }
+
+    .summary-card{
+        max-width:100%;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+</style>
+
+<div class="content-wrapper">
+
+    <section class="content receipt-wrapper">
+
+        <div class="receipt-card">
+
+            <!-- HEADER -->
+
+            <div class="receipt-header">
+
+                <div class="receipt-top">
+
+                    <div>
+
+                        <div class="brand-title">
+                            {{ sale.business.name }}
+                        </div>
+
+                        <div class="brand-subtitle">
+
+                            {% if sale.status == "Proforma" %}
+
+                            PRO-FORMA INVOICE (NOT A TAX RECEIPT)
+
+                            {% else %}
+
+                            ENTERPRISE POINT OF SALE RECEIPT
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <div class="receipt-badge">
+
+                        <div class="receipt-badge-label">
+
+                            {% if sale.status == "Proforma" %}
+                            Invoice Number
+                            {% else %}
+                            Receipt Number
+                            {% endif %}
+
+                        </div>
+
+                        <div class="receipt-badge-value">
+
+                            {% if sale.status == "Proforma" %}
+                            {{ sale.invoice_number }}
+                            {% else %}
+                            {{ sale.receipt_number }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- BODY -->
+
+            <div class="receipt-body">
+
+                <!-- INFO -->
+
+                <div class="info-grid">
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Document Number
+                        </div>
+
+                        <div class="info-value">
+
+                            {% if sale.status == "Proforma" %}
+                            {{ sale.invoice_number }}
+                            {% else %}
+                            {{ sale.receipt_number }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Customer
+                        </div>
+
+                        <div class="info-value">
+                            {{ sale.customer }}
+                        </div>
+
+                    </div>
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Payment Method
+                        </div>
+
+                        <div class="info-value">
+                            {{ sale.payment_method }}
+                        </div>
+
+                    </div>
+
+                    <div class="info-card">
+
+                        <div class="info-label">
+                            Transaction Date
+                        </div>
+
+                        <div class="info-value">
+                            {{ sale.created_at|date:"d M Y h:i A" }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- PRODUCTS -->
+
+                <div class="table-wrapper">
+
+                    <table class="receipt-table">
+
+                        <thead>
+
+                        <tr>
+
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+
+                        </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for item in sale_items %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="product-name">
+                                    {{ item.product.product_name }}
+                                </div>
+
+                            </td>
+
+                            <td>
+
+                                <span class="qty-badge">
+                                    {{ item.quantity }}
+                                </span>
+
+                            </td>
+
+                            <td>
+                                GH¢{{ item.price }}
+                            </td>
+
+                            <td>
+                                <strong>
+                                    GH¢{{ item.total }}
+                                </strong>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- SUMMARY -->
+
+                <div class="summary-section">
+
+                    <div class="summary-card">
+
+                        <div class="summary-title">
+
+                            {% if sale.status == "Proforma" %}
+                            Invoice Summary
+                            {% else %}
+                            Payment Summary
+                            {% endif %}
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <span>Subtotal</span>
+
+                            <strong>
+                                GH¢{{ subtotal }}
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <span>Tax</span>
+
+                            <strong>
+                                GH¢{{ tax_amount }}
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <span>Discount</span>
+
+                            <strong>
+                                - GH¢{{ discount_amount }}
+                            </strong>
+
+                        </div>
+
+                        {% if sale.status != "Proforma" %}
+
+                        <div class="summary-item">
+
+                            <span>Amount Paid</span>
+
+                            <strong>
+                                GH¢{{ sale.amount_paid }}
+                            </strong>
+
+                        </div>
+
+                        <div class="summary-item">
+
+                            <span>Change</span>
+
+                            <strong>
+                                GH¢{{ sale.change }}
+                            </strong>
+
+                        </div>
+
+                        {% endif %}
+
+                        <div class="summary-item summary-total">
+
+                            <span>Total</span>
+
+                            <span>
+                            GH¢{{ sale.total }}
+                        </span>
+
+                        </div>
+
+                        {% with status=computed_status|lower %}
+
+                        <div class="payment-status {{ status|slugify }}">
+
+                            {% if status == 'completed' %}
+
+                            <i class="fas fa-check-circle me-2"></i>
+                            Payment Completed
+
+                            {% elif status == 'proforma' %}
+
+                            <i class="fas fa-file-invoice me-2"></i>
+                            Pro-forma Invoice
+
+                            {% elif status == 'refunded' %}
+
+                            <i class="fas fa-undo-alt me-2"></i>
+                            Refunded
+
+                            {% elif status == 'partially refunded' %}
+
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Partially Refunded
+
+                            {% else %}
+
+                            <i class="fas fa-clock me-2"></i>
+                            Pending
+
+                            {% endif %}
+
+                        </div>
+
+                        {% endwith %}
+
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+
+                <div class="receipt-footer">
+
+                    {% if sale.status == "Proforma" %}
+
+                    This Pro-forma Invoice is issued for quotation purposes only.
+                    It does not constitute proof of payment.
+
+                    {% else %}
+
+                    Thank you for your purchase.
+                    This receipt serves as proof of payment.
+
+                    {% endif %}
+
+                </div>
+
+                <!-- ACTIONS -->
+
+                <div class="receipt-actions">
+
+                    <button onclick="window.print()"
+                            class="print-btn">
+
+                        <i class="fas fa-print me-2"></i>
+                        {% if sale.status == "Proforma" %}
+                        Print Pro-forma
+                        {% else %}
+                        Print Receipt
+                        {% endif %}
+
+                    </button>
+
+                    <a href="{% url 'sales' %}"
+                       class="back-btn">
+
+                        <i class="fas fa-arrow-left me-2"></i>
+
+                        Back To POS
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="pos-print-only">
+
+    <div class="pos-header">
+
+        <div class="pos-logo">
+            {{ sale.business.name|upper }}
+        </div>
+
+        <div class="pos-document">
+
+            {% if sale.status == "Proforma" %}
+                PRO-FORMA INVOICE
+            {% else %}
+                SALES RECEIPT
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <table class="pos-meta">
+
+        <tr>
+            <td>No.</td>
+            <td>
+                {% if sale.status == "Proforma" %}
+                    {{ sale.invoice_number }}
+                {% else %}
+                    {{ sale.receipt_number }}
+                {% endif %}
+            </td>
+        </tr>
+
+        <tr>
+            <td>Date</td>
+            <td>{{ sale.created_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+
+        <tr>
+            <td>Cashier</td>
+            <td>{{ sale.staff|default:"System" }}</td>
+        </tr>
+
+        <tr>
+            <td>Customer</td>
+            <td>{{ sale.customer|default:"Walk-in" }}</td>
+        </tr>
+
+        <tr>
+            <td>Payment</td>
+            <td>{{ sale.payment_method|default:"N/A" }}</td>
+        </tr>
+
+    </table>
+
+    <table class="pos-items">
+
+        <thead>
+
+            <tr>
+                <th>Item</th>
+                <th style="text-align:center;">Qty</th>
+                <th style="text-align:right;">Total</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% for item in sale_items %}
+
+            <tr>
+
+                <td>
+
+                    <div class="item-name">
+                        {{ item.product.product_name|truncatechars:24 }}
+                    </div>
+
+                    <div class="item-price">
+                        {{ item.quantity }} × GH¢{{ item.price }}
+                    </div>
+
+                </td>
+
+                <td style="text-align:center;">
+                    {{ item.quantity }}
+                </td>
+
+                <td style="text-align:right;">
+                    GH¢{{ item.total }}
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+    <table class="pos-summary">
+
+        <tr>
+            <td>Subtotal</td>
+            <td>GH¢{{ subtotal }}</td>
+        </tr>
+
+        <tr>
+            <td>Tax</td>
+            <td>GH¢{{ tax_amount }}</td>
+        </tr>
+
+        <tr>
+            <td>Discount</td>
+            <td>-GH¢{{ discount_amount }}</td>
+        </tr>
+
+        {% if sale.status != "Proforma" %}
+
+        <tr>
+            <td>Paid</td>
+            <td>GH¢{{ sale.amount_paid }}</td>
+        </tr>
+
+        <tr>
+            <td>Change</td>
+            <td>GH¢{{ sale.change }}</td>
+        </tr>
+
+        {% endif %}
+
+        <tr class="grand-total">
+            <td>TOTAL</td>
+            <td>GH¢{{ sale.total }}</td>
+        </tr>
+
+    </table>
+
+    <div class="pos-status">
+
+        {% if sale.status == "Proforma" %}
+            PRO-FORMA • NOT A TAX RECEIPT
+        {% elif computed_status == "Refunded" %}
+            REFUNDED
+        {% elif computed_status == "Partially Refunded" %}
+            PARTIALLY REFUNDED
+        {% else %}
+            PAYMENT COMPLETED
+        {% endif %}
+
+    </div>
+
+    <div class="pos-footer">
+
+        {% if sale.status == "Proforma" %}
+
+            <div class="pos-thankyou">
+                THIS DOCUMENT IS FOR QUOTATION PURPOSES ONLY
+            </div>
+
+            <div class="pos-note">
+                Stock has not been deducted.
+            </div>
+
+        {% else %}
+
+            <div class="pos-thankyou">
+                THANK YOU FOR YOUR PURCHASE
+            </div>
+
+            <div class="pos-note">
+                Please keep this receipt for future reference.
+            </div>
+
+        {% endif %}
+
+        <div class="pos-powered">
+            Generated on {{ sale.created_at|date:"d M Y H:i" }}
+        </div>
+
+    </div>
+
+</div>
+
+    </section>
+
+</div>
+
+{% endblock %}

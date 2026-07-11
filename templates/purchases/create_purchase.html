@@ -1,0 +1,654 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+/* ===============================
+   MODERN PURCHASE TABLE HEADER
+================================ */
+
+#purchaseTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+/* HEADER */
+#purchaseTable thead.purchase-thead th {
+
+    background: linear-gradient(
+        135deg,
+        rgba(99,102,241,0.12),
+        rgba(99,102,241,0.04)
+    );
+
+    color: var(--text-main);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    padding: 14px 12px;
+
+    border-bottom: 1px solid var(--border);
+
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+/* DARK MODE HEADER FIX */
+.dark-mode #purchaseTable thead.purchase-thead th {
+
+    background: linear-gradient(
+        135deg,
+        rgba(99,102,241,0.18),
+        rgba(99,102,241,0.06)
+    );
+
+    color: #e5e7eb;
+}
+
+/* BODY ROWS */
+#purchaseTable tbody td {
+
+    padding: 12px;
+
+    border-bottom: 1px solid var(--border);
+
+    color: var(--text-main);
+}
+
+/* ROW HOVER */
+#purchaseTable tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+/* INPUT CLEAN STYLE */
+#purchaseTable .form-control {
+    border-radius: 10px;
+    height: 42px;
+}
+
+/* REMOVE UGLY BUTTON LOOK */
+#purchaseTable .btn-danger {
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+
+
+
+
+
+
+</style>
+<div class="content-wrapper">
+    <section class="content">
+
+        <div class="staff-card p-4">
+
+            <h3>New Purchase (ERP Mode)</h3>
+
+            <form method="POST" id="purchaseForm">
+                {% csrf_token %}
+
+                <!-- SUPPLIER -->
+                <div class="mb-3">
+                    <label>Supplier</label>
+                    <select name="supplier" class="form-control" required>
+                        <option value="">Select Supplier</option>
+                        {% for s in suppliers %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- ODOO GRID -->
+                <table class="table table-bordered" id="purchaseTable">
+
+                    <thead class="purchase-thead">
+                    <tr>
+
+                        <th style="width:30%">Product</th>
+
+                        <th>Qty</th>
+
+                        <th>Unit Cost</th>
+
+                        <th>Discount</th>
+
+                        <th>Tax %</th>
+
+                        <th>Total</th>
+
+                        <th></th>
+
+                    </tr>
+                    </thead>
+
+                    <tbody id="lines">
+
+                    <tr>
+
+                        <td>
+
+                            <select class="form-control product">
+
+                                <option value="">Select Product</option>
+
+                                {% for p in products %}
+                                <option
+                                        value="{{ p.id }}"
+                                        data-cost="{{ p.selling_price|default:'0' }}"
+                                >
+                                    {{ p.product_name }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                    type="number"
+                                    class="form-control qty"
+                                    value="1"
+                                    min="1"
+                            >
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                    type="number"
+                                    class="form-control cost"
+                                    value="0"
+                                    step="0.01"
+                            >
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                    type="number"
+                                    class="form-control discount"
+                                    value="0"
+                                    step="0.01"
+                            >
+
+                        </td>
+
+                        <td>
+
+                            <input
+                                    type="number"
+                                    class="form-control tax"
+                                    value="0"
+                                    step="0.01"
+                            >
+
+                        </td>
+
+                        <td class="line-total">
+
+                            0.00
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm remove">
+
+                                <i class="fas fa-times"></i>
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+                <div class="row mt-4">
+
+                    <div class="col-md-3">
+
+                        <label>Purchase Discount</label>
+
+                        <input
+                                type="number"
+                                class="form-control"
+                                id="purchaseDiscount"
+                                name="purchase_discount"
+                                value="0"
+                                step="0.01">
+
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Purchase Tax %</label>
+
+                        <input
+                                type="number"
+                                class="form-control"
+                                id="purchaseTax"
+                                name="purchase_tax"
+                                value="0"
+                                step="0.01">
+
+                    </div>
+
+                </div>
+
+                <!-- TOTAL BAR -->
+
+                <div class="total-card mt-3">
+
+                    <div>
+
+                        <small>Subtotal</small>
+                        <h5 id="subtotalDisplay">
+                            0.00
+                        </h5>
+
+                    </div>
+
+                    <div>
+
+                        <small>Grand Total</small>
+
+                        <h3 id="grandTotal">
+
+                            0.00
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+                <input type="hidden" name="items_json" id="items_json">
+
+                <button type="button" class="btn btn-secondary" id="addRow">
+                    + Add Line
+                </button>
+
+                <button type="submit" class="btn btn-primary">
+                    Save Purchase
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const tbody = document.getElementById("lines");
+    const addBtn = document.getElementById("addRow");
+    const form = document.getElementById("purchaseForm");
+    const totalDisplay = document.getElementById("grandTotal");
+
+    // ============================
+    // SINGLE ROW CALCULATION
+    // ============================
+    function calcRow(row){
+
+        let qty =
+        parseFloat(
+            row.querySelector(".qty").value
+        ) || 0;
+
+        let cost =
+        parseFloat(
+            row.querySelector(".cost").value
+        ) || 0;
+
+        let discount =
+        parseFloat(
+            row.querySelector(".discount")?.value
+        ) || 0;
+
+        let tax =
+        parseFloat(
+            row.querySelector(".tax")?.value
+        ) || 0;
+
+        let subtotal = qty * cost;
+
+        if(discount > subtotal){
+            discount = subtotal;
+        }
+
+        let afterDiscount =
+        subtotal - discount;
+
+        let taxAmount =
+        afterDiscount * (tax / 100);
+
+        let total =
+        afterDiscount + taxAmount;
+
+        row.querySelector(
+            ".line-total"
+        ).innerText =
+        total.toFixed(2);
+
+        updateGrandTotal();
+    }
+
+
+    // ============================
+    // GRAND TOTAL
+    // ============================
+    function updateGrandTotal(){
+
+        let subtotal = 0;
+
+        document
+        .querySelectorAll("#lines tr")
+        .forEach(row=>{
+
+            subtotal += parseFloat(
+                row.querySelector(
+                    ".line-total"
+                ).innerText
+            ) || 0;
+
+        });
+
+        let purchaseDiscount =
+        parseFloat(
+            document.getElementById(
+                "purchaseDiscount"
+            )?.value
+        ) || 0;
+
+        let purchaseTax =
+        parseFloat(
+            document.getElementById(
+                "purchaseTax"
+            )?.value
+        ) || 0;
+
+        let taxAmount =
+        (subtotal-purchaseDiscount)
+        * (purchaseTax/100);
+
+        let grandTotal =
+        subtotal
+        - purchaseDiscount
+        + taxAmount;
+
+        document.getElementById(
+            "subtotalDisplay"
+        ).innerText =
+        subtotal.toFixed(2);
+
+        totalDisplay.innerText =
+        grandTotal.toFixed(2);
+    }
+
+
+    // ============================
+    // BIND EVENTS TO ROW
+    // ============================
+    function bindRow(row){
+
+        const qty =
+        row.querySelector(".qty");
+
+        const cost =
+        row.querySelector(".cost");
+
+        const product =
+        row.querySelector(".product");
+
+        const discount =
+        row.querySelector(".discount");
+
+        const tax =
+        row.querySelector(".tax");
+
+        function recalc(){
+            calcRow(row);
+        }
+
+        qty.addEventListener(
+            "input",
+            recalc
+        );
+
+        cost.addEventListener(
+            "input",
+            recalc
+        );
+
+        product.addEventListener(
+            "change",
+            recalc
+        );
+
+        if(discount){
+            discount.addEventListener(
+                "input",
+                recalc
+            );
+        }
+
+        if(tax){
+            tax.addEventListener(
+                "input",
+                recalc
+            );
+        }
+
+        // Product auto price
+        product.addEventListener(
+            "change",
+            function(){
+
+                let selected =
+                this.options[
+                    this.selectedIndex
+                ];
+
+                let price =
+                selected.dataset.cost || 0;
+
+                cost.value = price;
+
+                calcRow(row);
+
+            }
+        );
+
+        // Remove row
+        row.querySelector(
+            ".remove"
+        ).onclick=function(){
+
+            row.remove();
+
+            updateGrandTotal();
+        };
+
+        calcRow(row);
+
+    }
+
+
+    // ============================
+    // ADD ROW
+    // ============================
+    addBtn.addEventListener(
+        "click",
+        function(){
+
+            let firstRow =
+            tbody.querySelector("tr");
+
+            let newRow =
+            firstRow.cloneNode(true);
+
+            newRow.querySelector(
+                ".product"
+            ).value="";
+
+            newRow.querySelector(
+                ".qty"
+            ).value=1;
+
+            newRow.querySelector(
+                ".cost"
+            ).value=0;
+
+            if(newRow.querySelector(".discount")){
+                newRow.querySelector(".discount").value=0;
+            }
+
+            if(newRow.querySelector(".tax")){
+                newRow.querySelector(".tax").value=0;
+            }
+
+            newRow.querySelector(
+                ".line-total"
+            ).innerText="0.00";
+
+            tbody.appendChild(
+                newRow
+            );
+
+            bindRow(
+                newRow
+            );
+
+            updateGrandTotal();
+
+        }
+    );
+
+
+    // ============================
+    // PURCHASE LEVEL EVENTS
+    // ============================
+    document
+    .getElementById(
+        "purchaseDiscount"
+    )?.addEventListener(
+        "input",
+        updateGrandTotal
+    );
+
+    document
+    .getElementById(
+        "purchaseTax"
+    )?.addEventListener(
+        "input",
+        updateGrandTotal
+    );
+
+
+    // ============================
+    // INITIALIZE
+    // ============================
+    bindRow(
+        tbody.querySelector("tr")
+    );
+
+    updateGrandTotal();
+
+
+    // ============================
+    // SUBMIT JSON
+    // ============================
+    form.addEventListener(
+        "submit",
+        function(){
+
+            let items=[];
+
+            document
+            .querySelectorAll(
+                "#lines tr"
+            )
+            .forEach(row=>{
+
+                let product =
+                row.querySelector(
+                    ".product"
+                ).value;
+
+                let qty =
+                row.querySelector(
+                    ".qty"
+                ).value;
+
+                let cost =
+                row.querySelector(
+                    ".cost"
+                ).value;
+
+                if(
+                    product &&
+                    qty &&
+                    cost
+                ){
+
+                    items.push({
+
+                        product_id:
+                        product,
+
+                        qty:
+                        qty,
+
+                        cost:
+                        cost,
+
+                        discount:
+                        row.querySelector(
+                            ".discount"
+                        )?.value || 0,
+
+                        tax:
+                        row.querySelector(
+                            ".tax"
+                        )?.value || 0
+                    });
+
+                }
+
+            });
+
+            document
+            .getElementById(
+                "items_json"
+            ).value=
+            JSON.stringify(items);
+
+        }
+    );
+
+});
+
+
+</script>
+
+{% endblock %}

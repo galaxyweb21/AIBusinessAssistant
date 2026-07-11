@@ -1,0 +1,652 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* ============================
+STAFF REGISTER ENTERPRISE UX v2
+============================ */
+
+.staff-wrapper{
+    padding:24px;
+}
+
+.staff-header{
+    margin-bottom:20px;
+}
+
+.staff-header h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.staff-header p{
+    color:var(--text-muted);
+}
+
+/* GRID FIX */
+.staff-grid{
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:24px;
+    align-items:start;
+}
+
+/* CARDS */
+.staff-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+}
+
+.staff-card-title{
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:18px;
+    color:var(--text-main);
+}
+
+/* FORM LAYOUT */
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    font-weight:600;
+    display:block;
+    margin-bottom:6px;
+    color:var(--text-main);
+}
+
+/* INPUTS */
+.auth-input,
+select.auth-input{
+    width:100%;
+    height:52px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    padding:0 14px;
+    outline:none;
+    transition:.2s;
+}
+
+.auth-input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* PASSWORD FIELD */
+.password-field{
+    position:relative;
+}
+
+.password-field i{
+    position:absolute;
+    right:14px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:var(--text-muted);
+}
+
+/* STRENGTH BAR */
+.password-strength-container{
+    margin-top:8px;
+}
+
+.strength-bar{
+    height:7px;
+    border-radius:999px;
+    background:var(--border);
+    overflow:hidden;
+}
+
+#strengthFill{
+    height:100%;
+    width:0%;
+    transition:.3s;
+}
+
+/* RULES */
+.password-rules{
+    list-style:none;
+    padding:0;
+    margin-top:10px;
+    font-size:13px;
+}
+
+.password-rules li{
+    color:var(--text-muted);
+}
+
+.password-rules li.valid{
+    color:var(--success);
+}
+
+.password-rules li.invalid{
+    color:var(--danger);
+}
+
+/* ROLE PREVIEW */
+.role-preview{
+    margin-top:10px;
+    font-size:13px;
+    padding:10px;
+    border-radius:12px;
+    background:rgba(99,102,241,.06);
+    color:var(--text-muted);
+}
+
+/* BUTTON */
+.staff-btn{
+    width:100%;
+    height:54px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    font-weight:700;
+    margin-top:10px;
+    transition:.2s;
+}
+
+.staff-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* RIGHT PANEL */
+.staff-summary{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+
+/* ============================
+STAFF ANALYTICS (ENTERPRISE UI)
+============================ */
+
+.analytics-box{
+    margin-top:10px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+/* ============================
+DASHBOARD RIGHT COLUMN (UNIFIED)
+============================ */
+
+.staff-summary .staff-card{
+    transition:.2s ease;
+}
+
+/* CARD HOVER CONSISTENCY */
+.staff-summary .staff-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--primary);
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+/* SUMMARY BOX (BUSINESS + ROLES) */
+.summary-box{
+    padding:14px;
+    border-radius:14px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+}
+
+/* TEXT CLEANING */
+.summary-box h3{
+    font-size:18px;
+    font-weight:800;
+    color:var(--text-main);
+    margin:0;
+}
+
+.summary-box h6{
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+}
+
+/* ROLE LIST STYLE */
+.role-item{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    font-size:13px;
+    color:var(--text-main);
+    border-bottom:1px dashed var(--border);
+}
+
+.role-item:last-child{
+    border-bottom:none;
+}
+
+/* ANALYTICS ENHANCED */
+.analytics-box{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.analytics-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:14px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    transition:.2s;
+}
+
+.analytics-item:hover{
+    transform:translateY(-2px);
+    border-color:var(--primary);
+}
+
+.analytics-item span{
+    font-size:13px;
+    color:var(--text-muted);
+}
+
+.analytics-item strong{
+    font-size:20px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+/* COLOR TAGS */
+.analytics-item.total strong{ color:var(--primary); }
+.analytics-item.admin strong{ color:#ef4444; }
+.analytics-item.cashier strong{ color:#10b981; }
+.analytics-item.today strong{ color:#f59e0b; }
+
+
+/* ICON BADGE (optional future upgrade) */
+.analytics-icon{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-right:10px;
+    background:rgba(99,102,241,.1);
+    color:var(--primary);
+}
+
+/* RESPONSIVE */
+@media(max-width:991px){
+    .staff-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+
+<div class="content-wrapper">
+<section class="content staff-wrapper">
+
+<div class="staff-header">
+    <h2>Register Staff</h2>
+    <p>Create employee accounts and assign roles</p>
+</div>
+
+{% include 'partials/_alerts.html' %}
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="staff-grid">
+
+<!-- ================= LEFT ================= -->
+<div class="staff-card">
+
+    <div class="staff-card-title">Staff Information</div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>Username</label>
+            {{ form.username }}
+            {{ form.username.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label>First Name</label>
+            {{ form.first_name }}
+            {{ form.first_name.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Last Name</label>
+            {{ form.last_name }}
+            {{ form.last_name.errors }}
+        </div>
+    </div>
+
+
+    <!-- ADDRESS -->
+    <div class="form-row">
+        <div class="form-group">
+            <label>Address</label>
+            {{ pform.address }}
+            {{ pform.address.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>Phone</label>
+            {{ pform.contact }}
+            {{ pform.contact.errors }}
+        </div>
+    </div>
+
+    <!-- ROLE -->
+    <div class="form-group">
+        <label>Role</label>
+        {{ pform.role_type }}
+        <div id="rolePreview" class="role-preview">
+            Select role to preview permissions
+        </div>
+    </div>
+
+    <!-- PASSWORD -->
+
+    <div class="form-row">
+    <div class="form-group">
+        <label>Password</label>
+
+        <div class="password-field">
+            {{ form.password1 }}
+            <i class="fas fa-eye toggle-pass" data-target="id_password1"></i>
+        </div>
+
+        {{ form.password1.errors }}
+
+        <div class="password-strength-container" id="strengthContainer" style="display:none;">
+            <div class="strength-bar">
+                <div id="strengthFill"></div>
+            </div>
+        </div>
+
+        <small id="strengthText"></small>
+
+        <ul class="password-rules">
+            <li id="rule-length">At least 8 characters</li>
+            <li id="rule-upper">One uppercase letter</li>
+            <li id="rule-lower">One lowercase letter</li>
+            <li id="rule-number">One number</li>
+            <li id="rule-special">One special character</li>
+        </ul>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="form-group">
+        <label>Confirm Password</label>
+
+        <div class="password-field">
+            {{ form.password2 }}
+            <i class="fas fa-eye toggle-pass" data-target="id_password2"></i>
+        </div>
+
+        {{ form.password2.errors }}
+
+        <small id="matchText"></small>
+    </div>
+    </div>
+
+    <button type="submit" class="staff-btn">
+        <i class="fas fa-user-plus"></i> Create Staff Account
+    </button>
+
+</div>
+
+<!-- ================= RIGHT ================= -->
+<div class="staff-summary">
+
+    <div class="staff-card">
+        <div class="staff-card-title">Business</div>
+        <div class="summary-box">
+            <strong>{{ business.name }}</strong>
+        </div>
+    </div>
+
+    <div class="staff-card">
+
+    <div class="staff-card-title">Roles Available</div>
+
+    <div class="summary-box">
+
+        <div class="role-item">
+            <span>Cashier</span>
+            <span>Sales only</span>
+        </div>
+
+        <div class="role-item">
+            <span>Sales</span>
+            <span>Customers + Sales</span>
+        </div>
+
+        <div class="role-item">
+            <span>Admin</span>
+            <span>Full access</span>
+        </div>
+
+        <div class="role-item">
+            <span>Branch Manager</span>
+            <span>Reports + Staff</span>
+        </div>
+
+    </div>
+
+</div>
+
+    <div class="staff-card">
+
+    <div class="staff-card-title">
+        Staff Analytics
+    </div>
+
+    <div class="analytics-box">
+
+        <div class="analytics-item total">
+            <span>Total Staff</span>
+            <strong>{{ total_staff|default:0 }}</strong>
+        </div>
+
+        <div class="analytics-item admin">
+            <span>Admins</span>
+            <strong>{{ admin_count|default:0 }}</strong>
+        </div>
+
+        <div class="analytics-item cashier">
+            <span>Cashiers</span>
+            <strong>{{ cashier_count|default:0 }}</strong>
+        </div>
+
+        <div class="analytics-item today">
+            <span>Today Created</span>
+            <strong>{{ today_staff|default:0 }}</strong>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+</form>
+
+</section>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const pass = document.getElementById("id_password1");
+    const confirm = document.getElementById("id_password2");
+
+    const fill = document.getElementById("strengthFill");
+    const text = document.getElementById("strengthText");
+    const bar = document.getElementById("strengthContainer");
+    const matchText = document.getElementById("matchText");
+
+    const rules = {
+        length: document.getElementById("rule-length"),
+        upper: document.getElementById("rule-upper"),
+        lower: document.getElementById("rule-lower"),
+        number: document.getElementById("rule-number"),
+        special: document.getElementById("rule-special"),
+    };
+
+    function toggleRules(password){
+
+        const checks = {
+            length: password.length >= 8,
+            upper: /[A-Z]/.test(password),
+            lower: /[a-z]/.test(password),
+            number: /[0-9]/.test(password),
+            special: /[^A-Za-z0-9]/.test(password),
+        };
+
+        Object.keys(checks).forEach(k=>{
+            if(rules[k]){
+                rules[k].classList.toggle("valid", checks[k]);
+                rules[k].classList.toggle("invalid", !checks[k]);
+            }
+        });
+
+        return Object.values(checks).filter(Boolean).length;
+    }
+
+    pass.addEventListener("input", function(){
+
+        const v = this.value;
+
+        if(!v){
+            bar.style.display="none";
+            fill.style.width="0%";
+            text.innerText="";
+            return;
+        }
+
+        bar.style.display="block";
+
+        const score = toggleRules(v);
+
+        const levels = [
+            ["0%","",""],
+            ["20%","#ef4444","Weak"],
+            ["40%","#f59e0b","Fair"],
+            ["60%","#3b82f6","Good"],
+            ["80%","#10b981","Strong"],
+            ["100%","#059669","Very Strong"]
+        ];
+
+        fill.style.width = levels[score][0];
+        fill.style.background = levels[score][1];
+        text.innerText = levels[score][2];
+
+        checkMatch();
+    });
+
+    confirm.addEventListener("input", checkMatch);
+
+    function checkMatch(){
+
+        if(!confirm.value){
+            matchText.innerText="";
+            return;
+        }
+
+        matchText.innerText =
+            pass.value === confirm.value
+            ? "✓ Match"
+            : "✗ Not matching";
+
+        matchText.style.color =
+            pass.value === confirm.value ? "#10b981" : "#ef4444";
+    }
+
+    document.querySelectorAll(".toggle-pass").forEach(icon=>{
+        icon.addEventListener("click", function(){
+            const t = document.getElementById(this.dataset.target);
+            t.type = t.type === "password" ? "text" : "password";
+        });
+    });
+
+    const role = document.getElementById("id_role_type");
+    const preview = document.getElementById("rolePreview");
+
+    if(role){
+        role.addEventListener("change", function(){
+            const map = {
+                Cashier:"Sales only access",
+                Sales:"Sales + customers",
+                Admin:"Full access",
+                "Branch Manager":"Reports + staff control"
+            };
+            preview.innerText = map[this.value] || "Select role";
+        });
+    }
+
+});
+
+function animateCounter(el, target, duration = 900) {
+
+    if (!el) return;
+
+    let start = 0;
+    let increment = target / (duration / 16);
+
+    function update() {
+        start += increment;
+
+        if (start >= target) {
+            el.innerText = target;
+        } else {
+            el.innerText = Math.floor(start);
+            requestAnimationFrame(update);
+        }
+    }
+
+    update();
+}
+
+/* RUN COUNTERS */
+const total = document.querySelector(".analytics-item.total strong");
+const admin = document.querySelector(".analytics-item.admin strong");
+const cashier = document.querySelector(".analytics-item.cashier strong");
+const today = document.querySelector(".analytics-item.today strong");
+
+animateCounter(total, parseInt(total?.innerText || 0));
+animateCounter(admin, parseInt(admin?.innerText || 0));
+animateCounter(cashier, parseInt(cashier?.innerText || 0));
+animateCounter(today, parseInt(today?.innerText || 0));
+</script>
+
+{% endblock %}

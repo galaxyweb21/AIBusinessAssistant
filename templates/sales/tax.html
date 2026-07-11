@@ -1,0 +1,290 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* =========================
+   SUPPLIER CREATE (ENTERPRISE UI)
+========================= */
+
+.supplier-wrapper{
+    padding:24px;
+}
+
+/* HEADER */
+.supplier-header{
+    margin-bottom:20px;
+}
+
+.supplier-header h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.supplier-header p{
+    color:var(--text-muted);
+}
+
+/* GRID */
+.supplier-grid{
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:24px;
+    align-items:start;
+}
+
+/* CARD */
+.supplier-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+}
+
+/* TITLE */
+.supplier-card-title{
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:18px;
+    color:var(--text-main);
+}
+
+/* FORM */
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-bottom:14px;
+}
+
+.form-group{
+    margin-bottom:14px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+    color:var(--text-main);
+}
+
+/* INPUTS (UNIFIED WITH STAFF UI) */
+.auth-input,
+select.auth-input,
+textarea.auth-input{
+
+    width:100%;
+    height:52px;
+
+    border-radius:14px;
+    border:1px solid var(--border);
+
+    background:var(--bg-main);
+    color:var(--text-main);
+
+    padding:0 14px;
+
+    outline:none;
+    transition:.2s;
+}
+
+textarea.auth-input{
+    height:120px;
+    padding:14px;
+    resize:none;
+}
+
+.auth-input:focus{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* CHECKBOX */
+.form-check{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:10px;
+}
+
+/* BUTTON */
+.supplier-btn{
+    width:100%;
+    height:54px;
+
+    border:none;
+    border-radius:16px;
+
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+
+    font-weight:700;
+
+    margin-top:10px;
+
+    transition:.2s;
+}
+
+.supplier-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* RIGHT PANEL */
+.supplier-summary{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+}
+
+/* SUMMARY BOX */
+.summary-box{
+    padding:14px;
+    border-radius:14px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+}
+
+.summary-box h3{
+    font-size:16px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 0;
+    font-size:13px;
+    color:var(--text-main);
+    border-bottom:1px dashed var(--border);
+}
+
+.summary-item:last-child{
+    border:none;
+}
+
+/* RESPONSIVE */
+@media(max-width:991px){
+    .supplier-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+</style>
+
+<div class="content-wrapper">
+<section class="content supplier-wrapper">
+
+<!-- HEADER -->
+<div class="supplier-header">
+    <h2>Create Tax</h2>
+    <p>Add Tax details for Sales</p>
+</div>
+
+{% include 'partials/_alerts.html' %}
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="supplier-grid">
+
+    <!-- ================= LEFT ================= -->
+    <div class="supplier-card">
+
+        <div class="supplier-card-title">Tax Information</div>
+
+        <!-- NAME + PHONE -->
+        <div class="form-row">
+
+            <div class="form-group">
+                <label>Name</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+
+            <div class="form-group">
+                <label>Tax percentage</label>
+                {{ form.tax_percentage }}
+                {{ form.tax_percentage.errors }}
+            </div>
+
+        </div>
+
+        <!-- ACTIVE -->
+        <div class="form-check">
+            {{ form.active }}
+            <label>Active Tax</label>
+        </div>
+
+        <!-- BUTTON -->
+        <button type="submit" class="supplier-btn">
+            <i class="fas fa-plus"></i> Create Tax
+        </button>
+
+    </div>
+
+    <!-- ================= RIGHT ================= -->
+    <div class="supplier-summary">
+
+        <div class="supplier-card">
+
+            <div class="supplier-card-title">Business</div>
+
+            <div class="summary-box">
+                <h3>{{ business.name }}</h3>
+            </div>
+
+        </div>
+
+        <div class="supplier-card">
+
+            <div class="supplier-card-title">Quick Info</div>
+
+            <div class="summary-box">
+
+                <div class="summary-item">
+                    <span>Fields</span>
+                    <strong>3</strong>
+                </div>
+
+                <div class="summary-item">
+                    <span>Required</span>
+                    <strong>2+</strong>
+                </div>
+
+                <div class="summary-item">
+                    <span>Status</span>
+                    <strong>Active</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</form>
+
+</section>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    // auto-style Django widgets if not already styled
+    document.querySelectorAll("input, select, textarea").forEach(el=>{
+        if(!el.classList.contains("auth-input") && el.type !== "checkbox"){
+            el.classList.add("auth-input");
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

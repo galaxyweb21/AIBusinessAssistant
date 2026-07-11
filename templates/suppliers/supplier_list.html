@@ -1,0 +1,1021 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* =========================
+SUPPLIER LIST (ENTERPRISE UI)
+========================= */
+
+.supplier-wrapper{
+    padding:24px;
+}
+
+/* HEADER */
+.supplier-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:24px;
+}
+
+.supplier-title h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.supplier-title p{
+    color:var(--text-muted);
+}
+
+/* CARD */
+.supplier-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+}
+
+/* TOOLBAR */
+.supplier-toolbar{
+    padding:18px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+/* SEARCH */
+.supplier-search{
+    position:relative;
+    min-width:260px;
+}
+
+.supplier-search input{
+    width:100%;
+    height:46px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    padding:0 44px 0 16px;
+}
+
+.supplier-search i{
+    position:absolute;
+    right:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+}
+
+/* TABLE */
+.supplier-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.supplier-table th{
+    padding:16px;
+    font-size:12px;
+    text-transform:uppercase;
+    color:var(--text-main);
+    border-bottom:1px solid var(--border);
+}
+
+.supplier-table td{
+    padding:16px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-main);
+}
+
+.supplier-table tbody tr:hover{
+    background:rgba(99,102,241,.04);
+}
+
+/* ACTION */
+.action-group{
+    display:flex;
+    gap:10px;
+}
+
+.action-btn{
+    width:40px;
+    height:40px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid var(--border);
+    background:var(--bg-card);
+    color:var(--text-main);
+}
+
+/* =========================================
+   SUPPLIER DRAWER (MATCH STAFF EXACTLY)
+========================================= */
+
+.supplier-row{
+    cursor:pointer;
+    transition:.25s ease;
+}
+
+.supplier-row:hover{
+    background:rgba(99,102,241,.05) !important;
+}
+
+/* Overlay */
+
+.drawer-overlay{
+
+    position:fixed;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+
+    background:rgba(0,0,0,.45);
+
+    backdrop-filter:blur(6px);
+
+    opacity:0;
+    visibility:hidden;
+
+    transition:.3s ease;
+    z-index:1040;
+}
+
+.drawer-overlay.show{
+    opacity:1;
+    visibility:visible;
+}
+
+/* Drawer */
+
+.supplier-drawer{
+
+    position:fixed;
+
+    top:0;
+    right:-450px;
+
+    width:430px;
+    height:100vh;
+
+    background:var(--bg-card);
+
+    border-left:1px solid var(--border);
+
+    z-index:1050;
+
+    transition:.35s ease;
+
+    overflow-y:auto;
+
+    box-shadow:-10px 0 35px rgba(0,0,0,.15);
+}
+
+.supplier-drawer.show{
+    right:0;
+}
+
+/* Header */
+
+.drawer-header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:25px;
+
+    border-bottom:1px solid var(--border);
+}
+
+.drawer-header h4{
+
+    margin:0;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.drawer-close{
+
+    width:38px;
+    height:38px;
+
+    border:none;
+    border-radius:10px;
+
+    background:rgba(239,68,68,.12);
+
+    color:#ef4444;
+
+    transition:.25s;
+}
+
+.drawer-close:hover{
+
+    transform:rotate(90deg);
+}
+
+/* BODY */
+
+.drawer-body{
+    padding:25px;
+}
+
+/* Profile */
+
+.supplier-profile{
+
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.supplier-avatar{
+
+    width:85px;
+    height:85px;
+
+    border-radius:50%;
+
+    margin:auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:30px;
+
+    background:linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+    color:white;
+
+    margin-bottom:15px;
+}
+
+.supplier-profile h5{
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.supplier-profile p{
+    color:var(--text-muted);
+}
+
+/* Info cards */
+
+.drawer-box{
+
+    background:var(--bg-main);
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    padding:16px;
+
+    margin-bottom:15px;
+}
+
+.drawer-item{
+
+    display:flex;
+    justify-content:space-between;
+
+    padding:12px 0;
+
+    border-bottom:1px dashed var(--border);
+}
+
+.drawer-item:last-child{
+    border:none;
+}
+
+.drawer-item span{
+    color:var(--text-muted);
+}
+
+.drawer-item strong{
+    color:var(--text-main);
+}
+
+@media(max-width:768px){
+
+    .supplier-drawer{
+
+        width:100%;
+        max-width:100%;
+        right:-100%;
+    }
+
+    .supplier-drawer.show{
+        right:0;
+    }
+
+}
+
+/* =========================
+   SUPPLIER ACTION BUTTONS
+   (MATCH STAFF LIST EXACTLY)
+========================= */
+
+.action-group{
+    display:flex;
+    align-items:center;
+    gap:10px; /* same as staff */
+}
+
+/* base button (copy of staff-action-btn) */
+.supplier-action-btn{
+    width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:12px;
+    border:1px solid var(--border);
+
+    background:var(--bg-card);
+    color:var(--text-main);
+
+    cursor:pointer;
+    transition:.25s ease;
+
+    text-decoration:none !important;
+}
+
+/* hover (same feel as staff) */
+.supplier-action-btn:hover{
+    transform:translateY(-2px);
+    background:rgba(99,102,241,.08);
+}
+
+/* EDIT (blue) */
+.supplier-action-edit{
+    background:rgba(59,130,246,.12);
+    color:#3b82f6;
+    border:1px solid rgba(59,130,246,.2);
+}
+
+/* PAYMENT HISTORY (INFO / PREMIUM BLUE-GRAY) */
+.supplier-action-history{
+    background:rgba(99,102,241,.10);
+    color:#6366f1;
+    border:1px solid rgba(99,102,241,.25);
+}
+
+.supplier-action-history:hover{
+    background:rgba(99,102,241,.18);
+    transform:translateY(-2px);
+}
+
+/* DEACTIVATE (yellow) */
+.supplier-action-deactivate{
+    background:rgba(245,158,11,.12);
+    color:#f59e0b;
+    border:1px solid rgba(245,158,11,.2);
+}
+
+/* DELETE (red) */
+.supplier-action-delete{
+    background:rgba(239,68,68,.12);
+    color:#ef4444;
+    border:1px solid rgba(239,68,68,.2);
+}
+
+/* REACTIVATE (green) */
+.supplier-action-reactivate{
+    background:rgba(16,185,129,.12);
+    color:#10b981;
+    border:1px solid rgba(16,185,129,.2);
+}
+
+/* DARK MODE SAFETY (same as staff) */
+body.dark-mode .supplier-action-btn{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+}
+
+/* =========================
+   SUPPLIER BUTTONS
+   MATCH STAFF BUTTON STYLE
+========================= */
+
+.supplier-btn{
+
+    border:none;
+    border-radius:14px;
+
+    padding:12px 18px;
+
+    font-weight:600;
+
+    transition:.25s ease;
+
+    cursor:pointer;
+
+    text-decoration:none !important;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:8px;
+
+    white-space:nowrap;
+}
+
+/* Primary */
+
+.supplier-btn-primary{
+
+    background:
+    linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+    color:#fff !important;
+}
+
+.supplier-btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 12px 30px
+    rgba(
+        99,
+        102,
+        241,
+        .25
+    );
+}
+
+/* Mobile */
+
+@media(max-width:768px){
+
+    .supplier-btn{
+        width:100%;
+    }
+
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.supplier-empty-cell{
+    padding:0 !important;
+    text-align:center;
+}
+
+.empty-state{
+
+    min-height:420px;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+    justify-content:center;
+
+    gap:12px;
+
+    padding:40px 20px;
+}
+
+.empty-icon{
+
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:linear-gradient(
+        135deg,
+        rgba(99,102,241,.12),
+        rgba(99,102,241,.05)
+    );
+
+    border:1px solid rgba(99,102,241,.15);
+
+    margin-bottom:10px;
+}
+
+.empty-icon i{
+
+    font-size:38px;
+    color:#6366f1;
+}
+
+.empty-state h4{
+
+    margin:0;
+
+    font-size:22px;
+    font-weight:800;
+
+    color:var(--text-main);
+}
+
+.empty-state p{
+
+    margin:0;
+
+    color:var(--text-muted);
+
+    font-size:15px;
+}
+
+.empty-state .supplier-btn{
+    margin-top:12px;
+}
+
+
+</style>
+
+<div class="content-wrapper">
+    <section class="content supplier-wrapper">
+
+        <!-- HEADER -->
+        <div class="supplier-header">
+
+            <div class="supplier-title">
+                <h2>Suppliers</h2>
+                <p>{{ business.name }} • Supplier Management</p>
+            </div>
+
+            <a href="{% url 'create_supplier' %}"
+               class="supplier-btn supplier-btn-primary">
+
+                <i class="fas fa-plus"></i>
+                Add Supplier
+
+            </a>
+
+        </div>
+
+        {% include 'partials/_alerts.html' %}
+
+        <!-- CARD -->
+        <div class="supplier-card">
+
+            <!-- TOOLBAR -->
+            <div class="supplier-toolbar">
+
+                <div class="supplier-search">
+
+                    <input
+                            type="text"
+                            id="supplierSearch"
+                            placeholder="Search suppliers...">
+
+                    <i class="fas fa-search"></i>
+
+                </div>
+
+            </div>
+
+            <!-- TABLE -->
+            <div style="overflow-x:auto;">
+
+                <table class="supplier-table">
+
+                    <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for s in suppliers %}
+
+                    <tr class="supplier-row"
+                        data-name="{{ s.name }}"
+                        data-company="{{ s.address }}"
+                        data-phone="{{ s.phone }}"
+                        data-email="{{ s.email }}"
+                        data-address="{{ s.address }}">
+
+                        <td>{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{% url 'supplier_detail' s.id %}"
+                               class="supplier-link">
+
+                                {{ s.name }}
+
+                            </a>
+                        </td>
+                        <td>{% if s.address == '' %} No Address {% else %}{{ s.address }}{% endif %}</td>
+                        <td>{{ s.phone }}</td>
+                        <td>{{ s.email }}</td>
+
+                        <td>
+
+                            <div class="action-group">
+
+                                <!-- EDIT -->
+                                <a href="{% url 'update_supplier' s.id %}"
+                                   class="supplier-action-btn supplier-action-edit">
+
+                                    <i class="fas fa-edit"></i>
+
+                                </a>
+
+                                <!-- DELETE -->
+                                <button
+                                        type="button"
+                                        class="supplier-action-btn supplier-action-delete"
+                                        data-toggle="modal"
+                                        data-target="#deleteSupplier{{ s.id }}">
+
+                                    <i class="fas fa-trash"></i>
+
+                                </button>
+
+                                <a href="{% url 'supplier_payment_history' %}"
+                                   class="supplier-action-btn supplier-action-history"
+                                   title="Payment History">
+
+                                    <i class="fas fa-history"></i>
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    <!-- DELETE MODAL MUST STAY OUTSIDE <tr> -->
+                    <div class="modal fade"
+                         id="deleteSupplier{{ s.id }}"
+                         tabindex="-1"
+                         role="dialog"
+                         aria-hidden="true">
+
+                        <div class="modal-dialog modal-dialog-centered">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h5 class="modal-title text-danger">
+                                        Delete Supplier
+                                    </h5>
+
+                                    <button type="button"
+                                            class="close"
+                                            data-dismiss="modal">
+
+                                        <span>&times;</span>
+
+                                    </button>
+
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <p>
+                                        This action is <strong>permanent</strong>.
+                                    </p>
+
+                                    <p>
+                                        Delete
+                                        <strong>{{ s.name }}</strong>?
+                                    </p>
+
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button type="button"
+                                            class="btn btn-secondary"
+                                            data-dismiss="modal">
+
+                                        Cancel
+
+                                    </button>
+
+                                    <form method="POST"
+                                          action="{% url 'delete_supplier' s.id %}">
+
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="btn btn-danger">
+
+                                            Yes, Delete
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="supplier-empty-cell">
+
+                            <div class="empty-state">
+
+                                <div class="empty-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+
+                                <h4>No Suppliers Found</h4>
+
+                                <p>
+                                    Add your first supplier to begin
+                                </p>
+
+                                <a href="{% url 'create_supplier' %}"
+                                   class="supplier-btn supplier-btn-primary">
+
+                                    <i class="fas fa-plus"></i>
+                                    Add Supplier
+
+                                </a>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- DRAWER -->
+        <div class="drawer-overlay"></div>
+
+        <div class="supplier-drawer">
+
+            <div class="drawer-header">
+
+                <h4>Supplier Details</h4>
+
+                <button class="drawer-close">
+
+                    <i class="fas fa-times"></i>
+
+                </button>
+
+            </div>
+
+            <div class="drawer-body">
+
+                <div class="supplier-profile">
+
+                    <div class="supplier-avatar">
+
+                        <i class="fas fa-truck"></i>
+
+                    </div>
+
+                    <h5 id="dName"></h5>
+
+                    <p id="dCompany"></p>
+
+                </div>
+
+                <div class="drawer-box">
+
+                    <div class="drawer-item">
+
+                        <span>Phone</span>
+
+                        <strong id="dPhone"></strong>
+
+                    </div>
+
+                    <div class="drawer-item">
+
+                        <span>Email</span>
+
+                        <strong id="dEmail"></strong>
+
+                    </div>
+
+                    <div class="drawer-item">
+
+                        <span>Address</span>
+
+                        <strong id="dAddress"></strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded",function(){
+
+    const drawer=
+        document.querySelector(".supplier-drawer");
+
+    const overlay=
+        document.querySelector(".drawer-overlay");
+
+    /* Drawer */
+
+    document
+    .querySelectorAll(".supplier-row")
+    .forEach(row=>{
+
+        row.addEventListener(
+            "click",
+            function(e){
+
+            if(
+                e.target.closest("button")
+                ||
+                e.target.closest("a")
+            ){
+                return;
+            }
+
+            document.getElementById(
+                "dName"
+            ).textContent=
+            this.dataset.name || "-";
+
+            document.getElementById(
+                "dCompany"
+            ).textContent=
+            this.dataset.company || "-";
+
+            document.getElementById(
+                "dPhone"
+            ).textContent=
+            this.dataset.phone || "-";
+
+            document.getElementById(
+                "dEmail"
+            ).textContent=
+            this.dataset.email || "-";
+
+            document.getElementById(
+                "dAddress"
+            ).textContent=
+            this.dataset.address || "-";
+
+            drawer.classList.add(
+                "show"
+            );
+
+            overlay.classList.add(
+                "show"
+            );
+
+        });
+
+    });
+
+    function closeDrawer(){
+
+        drawer.classList.remove(
+            "show"
+        );
+
+        overlay.classList.remove(
+            "show"
+        );
+
+    }
+
+    document
+    .querySelector(".drawer-close")
+    .addEventListener(
+        "click",
+        closeDrawer
+    );
+
+    overlay.addEventListener(
+        "click",
+        closeDrawer
+    );
+
+
+    /* Live Search */
+
+    const searchInput=
+        document.getElementById(
+            "supplierSearch"
+        );
+
+    if(searchInput){
+
+        let timer;
+
+        searchInput.addEventListener(
+            "input",
+            function(){
+
+                clearTimeout(timer);
+
+                let value=
+                this.value
+                .toLowerCase()
+                .trim();
+
+                timer=
+                setTimeout(()=>{
+
+                    document
+                    .querySelectorAll(
+                        ".supplier-row"
+                    )
+                    .forEach(row=>{
+
+                        let name=
+                        (row.dataset.name||"")
+                        .toLowerCase();
+
+                        let company=
+                        (row.dataset.company||"")
+                        .toLowerCase();
+
+                        let phone=
+                        (row.dataset.phone||"")
+                        .toLowerCase();
+
+                        let email=
+                        (row.dataset.email||"")
+                        .toLowerCase();
+
+                        let match=
+
+                        name.includes(value)
+                        ||
+                        company.includes(value)
+                        ||
+                        phone.includes(value)
+                        ||
+                        email.includes(value);
+
+                        row.style.display=
+                        match ? "" : "none";
+
+                    });
+
+                },150);
+
+            }
+        );
+
+    }
+
+});
+
+
+</script>
+
+{% endblock %}

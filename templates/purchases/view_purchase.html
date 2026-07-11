@@ -1,0 +1,695 @@
+{% extends 'base/base.html' %}
+{% block main_content %}
+
+<style>
+
+/* ======================================
+   PURCHASE ERP PAGE
+====================================== */
+
+.purchase-wrapper{
+    padding:15px;
+    width:100%;
+    max-width:100%;
+    overflow:hidden;
+}
+
+
+/* MAIN CARD */
+
+.purchase-card{
+
+    width:100%;
+
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:25px;
+
+    overflow:hidden;
+
+    animation:fadeIn .4s ease;
+}
+
+
+/* HEADER */
+
+.purchase-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+    flex-wrap:wrap;
+
+    gap:15px;
+}
+
+.purchase-title h3{
+
+    margin:0;
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.purchase-title small{
+
+    color:var(--text-muted);
+}
+
+
+/* STATUS */
+
+.status-badge{
+
+    padding:10px 18px;
+
+    border-radius:30px;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    white-space:nowrap;
+}
+
+.status-pending{
+    background:rgba(245,158,11,.15);
+    color:#f59e0b;
+}
+
+.status-partial{
+    background:rgba(59,130,246,.15);
+    color:#3b82f6;
+}
+
+.status-paid{
+    background:rgba(16,185,129,.15);
+    color:#10b981;
+}
+
+.status-received{
+    background:rgba(99,102,241,.15);
+    color:#6366f1;
+}
+
+
+/* KPI */
+
+.purchase-kpi{
+
+    display:grid;
+
+    grid-template-columns:repeat(
+        auto-fit,
+        minmax(240px,1fr)
+    );
+
+    gap:18px;
+
+    margin-bottom:30px;
+}
+
+.purchase-kpi-card{
+
+    position:relative;
+
+    background:linear-gradient(
+        145deg,
+        var(--bg-card),
+        var(--bg-main)
+    );
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    padding:20px;
+
+    overflow:hidden;
+
+    transition:.3s;
+}
+
+.purchase-kpi-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.purchase-kpi-card i{
+
+    position:absolute;
+
+    top:15px;
+
+    right:15px;
+
+    opacity:.1;
+
+    font-size:24px;
+}
+
+.purchase-kpi-card small{
+
+    color:var(--text-muted);
+}
+
+.purchase-kpi-card h4{
+
+    margin-top:12px;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:var(--text-main);
+
+    word-break:break-word;
+}
+
+.kpi-blue{
+border-left:4px solid #3b82f6;
+}
+
+.kpi-purple{
+border-left:4px solid #6366f1;
+}
+
+.kpi-orange{
+border-left:4px solid #f59e0b;
+}
+
+.kpi-green{
+border-left:4px solid #10b981;
+}
+
+
+
+/* TABLE */
+
+.purchase-table-container{
+
+    width:100%;
+
+    overflow-x:auto;
+
+    border-radius:14px;
+
+    border:1px solid var(--border);
+}
+
+.purchase-table{
+
+    width:100%;
+
+    min-width:700px;
+
+    border-collapse:collapse;
+}
+
+.purchase-table thead{
+
+    background:rgba(99,102,241,.06);
+}
+
+.purchase-table th{
+
+    padding:16px;
+
+    color:var(--text-main);
+
+    font-size:13px;
+
+    font-weight:700;
+}
+
+.purchase-table td{
+
+    padding:16px;
+
+    color:var(--text-main);
+
+    border-top:1px solid var(--border);
+}
+
+.purchase-table tbody tr:hover{
+
+    background:var(--hover-bg);
+}
+
+
+
+/* TOTAL */
+
+.total-card{
+
+    margin-top:25px;
+
+    padding:20px;
+
+    border-radius:16px;
+
+    border:1px solid var(--border);
+
+    background:linear-gradient(
+        135deg,
+        rgba(99,102,241,.08),
+        rgba(99,102,241,.02)
+    );
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+}
+
+.total-card h4{
+margin:0;
+}
+
+
+/* BUTTONS */
+
+.purchase-actions{
+
+    margin-top:25px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    flex-wrap:wrap;
+}
+
+.purchase-btn{
+
+    padding:12px 18px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    border:none;
+
+    text-decoration:none;
+
+    transition:.3s;
+}
+
+.purchase-btn:hover{
+
+    transform:translateY(-2px);
+}
+
+.purchase-primary{
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+
+    color:#fff;
+}
+
+.purchase-success{
+
+    background:rgba(16,185,129,.15);
+
+    color:#10b981;
+}
+
+.purchase-success:hover{
+
+    background:#10b981;
+    color:white;
+}
+
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.purchase-card{
+padding:18px;
+}
+
+.purchase-actions{
+justify-content:center;
+}
+
+}
+
+
+</style>
+
+
+<div class="content-wrapper">
+
+    <div class="purchase-card">
+
+
+{% include 'partials/_alerts.html' %}
+
+        <!-- HEADER -->
+
+        <div class="purchase-header">
+
+            <div class="purchase-title">
+
+                <h3>
+                    Purchase {{ purchase.reference_number }}
+                </h3>
+
+                <small>
+                    Purchase Details
+                </small>
+
+            </div>
+
+            <span class="status-badge status-{{ purchase.status }}">
+{{ purchase.status }}
+</span>
+
+        </div>
+
+
+        <!-- KPI -->
+
+        <div class="purchase-kpi">
+
+            <div class="purchase-kpi-card kpi-blue">
+
+                <i class="fas fa-truck"></i>
+
+                <small>Supplier</small>
+
+                <h4>{{ purchase.supplier.name }}</h4>
+
+            </div>
+
+
+            <div class="purchase-kpi-card kpi-purple">
+
+                <i class="fas fa-user"></i>
+
+                <small>Created By</small>
+
+                <h4>{{ purchase.created_by.username }}</h4>
+
+            </div>
+
+
+            <div class="purchase-kpi-card kpi-orange">
+
+                <i class="fas fa-calendar"></i>
+
+                <small>Date</small>
+
+                <h4>{{ purchase.created_at|date:"d M Y" }}</h4>
+
+            </div>
+
+
+            <div class="purchase-kpi-card kpi-green">
+
+                <i class="fas fa-money-bill-wave"></i>
+
+                <small>Total Cost</small>
+
+                <h4>GHS {{ purchase.total_cost }}</h4>
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE -->
+
+        <div class="purchase-table-container">
+
+            <table class="purchase-table">
+
+                <thead>
+
+                <tr>
+
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for i in items %}
+
+                <tr>
+
+                    <td>{{ i.product.product_name }}</td>
+
+                    <td>{{ i.quantity }}</td>
+
+                    <td>GHS {{ i.unit_cost }}</td>
+
+                    <td>GHS {{ i.total_cost }}</td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="4" class="text-center">
+
+                        No purchase items found
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- PAYMENT SUMMARY -->
+
+<div class="purchase-kpi mt-4">
+
+    <div class="purchase-kpi-card kpi-blue">
+
+        <i class="fas fa-wallet"></i>
+
+        <small>Total Cost</small>
+
+        <h4>
+
+            GHS {{ purchase.total_cost }}
+
+        </h4>
+
+    </div>
+
+    <div class="purchase-kpi-card kpi-green">
+
+        <i class="fas fa-check-circle"></i>
+
+        <small>Paid Amount</small>
+
+        <h4>
+
+            GHS {{ purchase.paid_amount }}
+
+        </h4>
+
+    </div>
+
+    <div class="purchase-kpi-card kpi-orange">
+
+        <i class="fas fa-clock"></i>
+
+        <small>Balance Due</small>
+
+        <h4>
+
+            GHS {{ purchase.balance }}
+
+        </h4>
+
+    </div>
+
+    <div class="purchase-kpi-card kpi-purple">
+
+        <i class="fas fa-chart-pie"></i>
+
+        <small>Payment Status</small>
+
+        <h4>
+
+            {{ purchase.payment_status|title }}
+
+            ({{ purchase.payment_percentage }}%)
+
+        </h4>
+
+    </div>
+
+</div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="purchase-actions">
+
+    {% if purchase.status != "received" %}
+
+    <a href="{% url 'post_purchase' purchase.id %}"
+       class="purchase-btn purchase-primary">
+
+        <i class="fas fa-check-circle"></i>
+
+        Receive Purchase
+
+    </a>
+
+    {% endif %}
+
+
+    {% if purchase.balance > 0 %}
+
+    <a href="{% url 'supplier_payment' purchase.id %}"
+       class="purchase-btn purchase-success">
+
+        <i class="fas fa-money-bill-wave"></i>
+
+        Pay Supplier
+
+    </a>
+
+    {% endif %}
+
+
+    <a href="{% url 'supplier_list' %}"
+       class="purchase-btn purchase-success">
+
+        <i class="fas fa-arrow-left"></i>
+
+        Back
+
+    </a>
+
+</div>
+
+        <div class="purchase-card mt-4">
+
+<h5 class="mb-3">
+
+    Supplier Payment History
+
+</h5>
+
+<div class="purchase-table-container">
+
+<table class="purchase-table">
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+<th>Method</th>
+<th>Reference</th>
+<th>Amount</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for payment in purchase.payments.all %}
+
+<tr>
+
+<td>
+
+{{ payment.created_at|date:"d M Y H:i" }}
+
+</td>
+
+<td>
+
+{{ payment.get_payment_method_display }}
+
+</td>
+
+<td>
+
+{{ payment.reference|default:"-" }}
+
+</td>
+
+<td>
+
+GHS {{ payment.amount_paid }}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="4" class="text-center">
+
+No payment history found
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

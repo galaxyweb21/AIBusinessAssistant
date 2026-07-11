@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <style>
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .header {
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .meta {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .box {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table th {
+            background: #f3f4f6;
+            padding: 8px;
+            font-size: 11px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+        }
+
+        .summary {
+            margin-top: 20px;
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .row {
+            margin-bottom: 5px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            font-size: 10px;
+            border-radius: 10px;
+        }
+
+        .completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .refunded {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="title">SALE INVOICE</div>
+
+        <div class="meta">
+            Receipt: {{ sale.receipt_number }} <br>
+            Invoice: {{ sale.invoice_number }}
+        </div>
+    </div>
+
+    <!-- CUSTOMER -->
+    <div class="box">
+        <strong>Customer:</strong>
+        {{ sale.customer.full_name|default:"Walk-in Customer" }}
+    </div>
+
+    <div class="box">
+        <strong>Status:</strong>
+
+        <span class="badge {% if sale.status == 'Completed' %}completed{% else %}refunded{% endif %}">
+            {{ sale.status }}
+        </span>
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in sale.items.all %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>Gh¢ {{ item.total }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- SUMMARY -->
+    <div class="summary">
+
+        <div class="row"><strong>Subtotal:</strong> Gh¢ {{ sale.subtotal }}</div>
+        <div class="row"><strong>Total:</strong> Gh¢ {{ sale.total }}</div>
+        <div class="row"><strong>Profit:</strong> Gh¢ {{ sale.total_profit }}</div>
+
+        {% if sale.tax %}
+        <div class="row"><strong>Tax:</strong> {{ sale.tax }}</div>
+        {% endif %}
+
+        {% if sale.discount %}
+        <div class="row"><strong>Discount:</strong> {{ sale.discount }}</div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+{% include 'base/announcement_style.html' %}
+{% load static %}
+<style>
+    /* =========================================
+   MODERN USER DROPDOWN
+========================================= */
+
+.user-dropdown-pro{
+    width: 320px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border: none !important;
+    border-radius: 20px !important;
+
+    background: var(--bg-card) !important;
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,0.18),
+        0 0 0 1px var(--border);
+
+    animation: dropdownFade .25s ease;
+}
+
+/* DARK MODE */
+.dark-mode .user-dropdown-pro{
+    background: #111827 !important;
+
+    box-shadow:
+        0 25px 60px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* TOP SECTION */
+.dropdown-user-top{
+    position: relative;
+
+    padding: 24px;
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #4f46e5
+        );
+
+    overflow: hidden;
+}
+
+.dropdown-user-top::before{
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,0.08);
+
+    top: -80px;
+    right: -60px;
+}
+
+/* AVATAR */
+.dropdown-avatar{
+    position: relative;
+    z-index: 2;
+
+    width: 62px;
+    height: 62px;
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    background: rgba(255,255,255,0.15);
+
+    color: #fff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    backdrop-filter: blur(8px);
+}
+
+.dropdown-avatar img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* USER INFO */
+.dropdown-user-info{
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-user-info strong{
+    color: #fff;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    margin-bottom: 4px;
+}
+
+.dropdown-user-info small{
+    color: rgba(255,255,255,0.78);
+
+    font-size: 13px;
+
+    word-break: break-word;
+}
+
+/* DIVIDER */
+.user-dropdown-pro .dropdown-divider{
+    margin: 0;
+
+    border-top: 1px solid var(--border);
+}
+
+/* ===============================
+   USER AVATAR HOVER
+================================= */
+
+.user-avatar,
+.dropdown-avatar,
+.avatar-container {
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+/* HOVER EFFECT */
+.user-avatar:hover,
+.dropdown-avatar:hover,
+.avatar-container:hover {
+
+    transform: translateY(-2px) scale(1.04);
+
+    box-shadow:
+        0 10px 25px rgba(99,102,241,0.25);
+}
+
+/* IMAGE SMOOTH */
+.user-avatar img,
+.dropdown-avatar img,
+.avatar-container img {
+    transition: all 0.25s ease;
+}
+
+.user-avatar:hover img,
+.dropdown-avatar:hover img,
+.avatar-container:hover img {
+    transform: scale(1.06);
+}
+
+/* MENU ITEMS */
+.user-dropdown-pro .dropdown-item{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 15px 22px;
+
+    color: var(--text-main) !important;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    transition: all .25s ease;
+
+    border-radius: 0;
+}
+
+/* ICON */
+.user-dropdown-pro .dropdown-item i{
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(99,102,241,0.1);
+
+    color: #6366f1;
+
+    font-size: 14px;
+
+    transition: all .25s ease;
+}
+
+/* HOVER */
+.user-dropdown-pro .dropdown-item:hover{
+    background:
+        rgba(99,102,241,0.06);
+
+    color: #6366f1 !important;
+
+    padding-left: 28px;
+}
+
+.user-dropdown-pro .dropdown-item:hover i{
+    transform: scale(1.08);
+}
+
+/* LOGOUT */
+.user-dropdown-pro .dropdown-item.text-danger{
+    color: #ef4444 !important;
+}
+
+.user-dropdown-pro .dropdown-item.text-danger i{
+    background:
+        rgba(239,68,68,0.12);
+
+    color: #ef4444;
+}
+
+.user-dropdown-pro .dropdown-item.text-danger:hover{
+    background:
+        rgba(239,68,68,0.08);
+}
+
+/* ANIMATION */
+@keyframes dropdownFade{
+
+    from{
+        opacity: 0;
+        transform: translateY(10px) scale(.98);
+    }
+
+    to{
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+</style>
+
+<nav class="main-header navbar navbar-expand">
+
+    <!-- LEFT -->
+    <ul class="navbar-nav align-items-center">
+        <li class="nav-item">
+            <a class="nav-link nav-icon-btn" data-widget="pushmenu" href="#">
+                <i class="fas fa-bars"></i>
+            </a>
+        </li>
+
+        <li class="nav-item d-none d-md-block">
+            <div class="announcement-bar-modern">
+                🚧 System in development — Welcome back {{ user.first_name }}
+            </div>
+        </li>
+    </ul>
+
+    <!-- RIGHT -->
+    <ul class="navbar-nav ml-auto align-items-center">
+
+        <!-- USER DROPDOWN -->
+<li class="nav-item dropdown user-dropdown">
+    <a class="nav-link user-trigger modern-avatar" data-toggle="dropdown">
+
+        <div class="avatar-container">
+
+            {% if squeryset.image %}
+                <img src="{{ squeryset.image.url }}" class="avatar-img">
+            {% else %}
+                <div class="avatar-fallback">
+                    {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                </div>
+            {% endif %}
+
+            <span class="avatar-badge online"></span>
+
+        </div>
+
+    </a>
+
+    <!-- DROPDOWN -->
+    <div class="dropdown-menu dropdown-menu-right user-dropdown-pro">
+
+        <div class="dropdown-user-top">
+            <div class="dropdown-avatar">
+                {% if squeryset.image %}
+                    <img src="{{ squeryset.image.url }}">
+                {% else %}
+                    {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                {% endif %}
+            </div>
+
+            <div class="dropdown-user-info">
+                <strong>{{ user.get_full_name }}</strong>
+                <small>{{ user.email }}</small>
+            </div>
+        </div>
+
+        <div class="dropdown-divider"></div>
+        {% if squeryset.role_type == 'Admin' %}
+        <a href="{% url 'business_profile' %}" class="dropdown-item">
+            <i class="fas fa-user"></i> Profile
+        </a>
+      {% else %}
+        <a href="{% url 'staff_profile' %}" class="dropdown-item">
+            <i class="fas fa-user"></i> Profile
+        </a>
+      {% endif %}
+        <a href="{% url 'change_password' %}" class="dropdown-item">
+            <i class="fas fa-lock"></i> Change Password
+        </a>
+
+        <div class="dropdown-divider"></div>
+
+        <a href="{% url 'user-logout' %}" class="dropdown-item text-danger">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+
+    </div>
+</li>
+
+
+        <!-- FULLSCREEN -->
+        <li class="nav-item">
+            <a class="nav-link nav-icon-btn" data-widget="fullscreen">
+                <i class="fas fa-expand"></i>
+            </a>
+        </li>
+
+        <!-- THEME SWITCH -->
+<li class="nav-item">
+    <button id="themeToggle" class="theme-toggle-btn">
+        <i id="themeIcon" class="fas fa-moon"></i>
+    </button>
+</li>
+
+    </ul>
+
+</nav>
+
+<!--Banner-->
+<!--   <div class="alert alert-warning alert-dismissible fade show text-center mb-0">-->
+<!--    <i class="fas fa-exclamation-triangle"></i>-->
+<!--    <strong>System Notice:</strong> This application is still under development. Some features may be unstable.-->
+
+<!--    <button type="button" class="close" data-dismiss="alert">&times;</button>-->
+<!--</div>-->
+

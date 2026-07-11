@@ -1,0 +1,15 @@
+# Secrets
+.env
+backups/
+
+
+# Python
+__pycache__/
+*.pyc
+
+# Django
+*.log
+staticfiles/
+
+# Database
+*.sqlite3

@@ -1,0 +1,1533 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+    /* ==========================================
+   SAAS POS DESIGN SYSTEM v1
+========================================== */
+
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+
+    --success:#10b981;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+
+    --radius-sm:12px;
+    --radius-md:16px;
+    --radius-lg:20px;
+    --radius-xl:24px;
+
+    --shadow-sm:0 6px 18px rgba(0,0,0,.06);
+    --shadow-md:0 10px 30px rgba(0,0,0,.08);
+    --shadow-lg:0 18px 50px rgba(0,0,0,.12);
+}
+
+/* ==========================================
+   BASE LAYOUT
+========================================== */
+
+.pos-wrapper{
+    padding:24px;
+}
+
+.pos-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.pos-title-main h2{
+    font-size:28px;
+    font-weight:800;
+    margin:0;
+    color:var(--text-main);
+}
+
+.pos-title-main p{
+    margin:6px 0 0;
+    color:var(--text-muted);
+}
+
+/* ==========================================
+   GRID SYSTEM
+========================================== */
+
+.pos-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:24px;
+}
+
+.product-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:20px;
+}
+
+/* ==========================================
+   PRODUCT CARD (SAAS POLISH)
+========================================== */
+
+.product-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    padding:20px;
+    cursor:pointer;
+    transition:.25s ease;
+}
+
+.product-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--primary);
+    box-shadow:var(--shadow-sm);
+}
+
+.product-card.disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+.product-name{
+    font-size:17px;
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.product-price{
+    font-size:26px;
+    font-weight:800;
+    color:var(--primary);
+    margin-top:8px;
+}
+
+/* ==========================================
+   STOCK BADGES
+========================================== */
+
+.stock-badge{
+    margin-top:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.stock-success{ background:rgba(16,185,129,.12); color:var(--success); }
+.stock-warning{ background:rgba(245,158,11,.12); color:var(--warning); }
+.stock-danger{ background:rgba(239,68,68,.12); color:var(--danger); }
+
+/* ==========================================
+   POS PANEL
+========================================== */
+
+.pos-panel{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius-xl);
+    padding:22px;
+    position:sticky;
+    top:20px;
+}
+
+.pos-panel-title{
+    font-size:22px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.pos-panel-subtitle{
+    color:var(--text-muted);
+    margin-bottom:20px;
+}
+
+/* ==========================================
+   CART
+========================================== */
+
+.cart-item{
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+}
+
+.cart-item:last-child{
+    border-bottom:none;
+}
+
+.cart-product-title{
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.cart-product-meta{
+    color:var(--text-muted);
+    font-size:13px;
+}
+
+/* ==========================================
+   SALES SUMMARY
+========================================== */
+
+.sales-summary{
+    margin-top:18px;
+    padding:16px;
+    border-radius:var(--radius-lg);
+    background:rgba(99,102,241,.06);
+    border:1px dashed rgba(99,102,241,.2);
+}
+
+.sales-summary-item{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+    color:var(--text-main);
+    font-weight:600;
+}
+
+/* ==========================================
+   INPUT SYSTEM (FIXED - NO DOUBLE BORDER)
+========================================== */
+
+.pos-input-group{
+    position:relative;
+    display:flex;
+    align-items:center;
+    height:58px;
+
+    background:var(--bg-card);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-lg);
+
+    padding:0 16px;
+    transition:.25s ease;
+    overflow:hidden;
+}
+
+/* hover */
+.pos-input-group:hover{
+    border-color:rgba(99,102,241,.45);
+    box-shadow:var(--shadow-sm);
+}
+
+/* focus */
+.pos-input-group:focus-within{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(99,102,241,.12);
+    transform:translateY(-1px);
+}
+
+/* barcode variant */
+.pos-input-group.barcode{
+    background:linear-gradient(135deg,rgba(99,102,241,.04),rgba(16,185,129,.04));
+}
+
+/* ICON */
+.pos-icon{
+    color:var(--primary);
+    font-size:15px;
+    margin-right:10px;
+}
+
+/* INPUT (STRICT RESET = NO DOUBLE BORDER EVER) */
+.search-input,
+.pos-input{
+    flex:1;
+    border:0 !important;
+    outline:0 !important;
+    background:transparent !important;
+    font-size:15px;
+    color:var(--text-main);
+}
+
+.search-input::placeholder,
+.pos-input::placeholder{
+    color:var(--text-muted);
+}
+
+/* ==========================================
+   BUTTONS (SAAS STYLE)
+========================================== */
+
+.pos-btn-primary{
+    height:58px;
+    border:none;
+    border-radius:var(--radius-lg);
+    padding:0 20px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+    color:#fff;
+    font-weight:700;
+    cursor:pointer;
+    transition:.25s ease;
+}
+
+.pos-btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:var(--shadow-md);
+}
+
+.pos-btn-secondary{
+    height:58px;
+    border-radius:var(--radius-lg);
+    padding:0 18px;
+    border:1px solid var(--border);
+    background:var(--bg-card);
+    color:var(--text-main);
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s ease;
+}
+
+.pos-btn-secondary:hover{
+    border-color:var(--danger);
+    color:var(--danger);
+}
+
+/* ==========================================
+   BADGE
+========================================== */
+
+.pos-badge{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:80px;
+    height:30px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    background:rgba(16,185,129,.12);
+    color:var(--success);
+}
+
+/* ==========================================
+   SUGGESTIONS
+========================================== */
+
+.suggestions-box{
+    position:absolute;
+    top:62px;
+    left:0;
+    right:0;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    z-index:9999;
+    box-shadow:var(--shadow-lg);
+    overflow:hidden;
+}
+
+.suggestion-item{
+    padding:12px 14px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.suggestion-item:hover{
+    background:rgba(99,102,241,.08);
+}
+
+/* ==========================================
+   QTY CONTROLS
+========================================== */
+
+.qty-controls{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:4px 8px;
+}
+
+.qty-btn{
+    width:26px;
+    height:26px;
+    border:none;
+    border-radius:8px;
+    background:rgba(99,102,241,.1);
+    color:var(--primary);
+    cursor:pointer;
+}
+
+.qty-btn:hover{
+    background:var(--primary);
+    color:#fff;
+}
+
+.qty-value{
+    min-width:20px;
+    text-align:center;
+    font-weight:700;
+}
+
+/* ==========================================
+   REMOVE BUTTON
+========================================== */
+
+.cart-remove-btn{
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(239,68,68,.08);
+    color:var(--danger);
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.cart-remove-btn:hover{
+    background:var(--danger);
+    color:#fff;
+}
+
+/* ==========================================
+   UNDO TOAST
+========================================== */
+
+.undo-toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%) translateY(100px);
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    padding:12px 16px;
+    border-radius:14px;
+    display:flex;
+    gap:12px;
+    box-shadow:var(--shadow-lg);
+    opacity:0;
+    transition:.3s ease;
+}
+
+.undo-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+}
+
+.undo-toast button{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:6px 12px;
+    border-radius:10px;
+}
+
+/* ==========================================
+   DARK MODE
+========================================== */
+
+body.dark-mode .pos-input-group{
+    background:rgba(255,255,255,.03);
+    border-color:rgba(255,255,255,.08);
+}
+
+body.dark-mode .suggestions-box{
+    background:rgba(30,30,30,.96);
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media(max-width:991px){
+    .pos-grid{ grid-template-columns:1fr; }
+    .pos-panel{ position:relative; }
+}
+
+@media(max-width:768px){
+    .pos-input-group,
+    .pos-btn-primary,
+    .pos-btn-secondary{
+        height:54px;
+    }
+}
+</style>
+
+<div class="content-wrapper">
+
+    <section class="content pos-wrapper">
+
+        <div class="pos-header">
+
+            <div class="pos-title-main">
+
+                <h2>Enterprise POS</h2>
+
+                <p>
+                    Modern point of sale management
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- =========================
+MODERN POS COMMAND BAR (FIXED v2)
+========================= -->
+
+<form class="pos-command-card" id="productSearchForm">
+
+    <div class="pos-command-row">
+
+        <!-- SEARCH INPUT (LIVE FILTER) -->
+        <div class="pos-input-group flex-2">
+            <i class="fas fa-search pos-icon"></i>
+
+            <input type="text"
+                   id="productSearchInput"
+                   class="search-input"
+                   placeholder="Search products live..."
+                   autocomplete="off">
+
+            <div id="searchSuggestions" class="suggestions-box"></div>
+        </div>
+
+    </div>
+
+</form>
+        <br>
+
+<!-- BARCODE SECTION -->
+<div class="pos-barcode-row">
+
+    <div class="pos-input-group barcode">
+        <i class="fas fa-barcode pos-icon"></i>
+
+        <input type="text"
+               id="manualBarcodeInput"
+               class="pos-input"
+               placeholder="Scan barcode or type + Enter (POS mode)"
+               autocomplete="off">
+
+        <div class="pos-badge">LIVE SCAN</div>
+    </div>
+
+</div>
+<br>
+    {% include 'partials/_alerts.html' %}
+        <hr>
+
+        <div class="pos-grid">
+
+            <!-- PRODUCTS -->
+
+            <div>
+
+                <div class="product-grid">
+
+                    {% for product in products %}
+
+                    <div class="product-card {% if product.stock_quantity <= 0 %}disabled{% endif %}"
+
+                         data-barcode="{{ product.barcode|default:'' }}"
+
+                         {% if product.stock_quantity > 0 %}
+                        onclick="selectProduct(
+                        '{{ product.id }}',
+                        '{{ product.product_name }}',
+                        '{{ product.selling_price }}',
+                        '{{ product.stock_quantity }}'
+                        )"
+                        {% endif %}>
+
+                        <div class="product-name">
+                            {{ product.product_name }}
+                        </div>
+
+                        <div class="product-price">
+                            GH¢{{ product.selling_price }}
+                        </div>
+
+                        {% if product.stock_quantity > 5 %}
+
+                        <div class="stock-badge stock-success">
+                            {{ product.stock_quantity }} In Stock
+                        </div>
+
+                        {% elif product.stock_quantity > 0 %}
+
+                        <div class="stock-badge stock-warning">
+                            Low Stock ({{ product.stock_quantity }})
+                        </div>
+
+                        {% else %}
+
+                        <div class="stock-badge stock-danger">
+                            Out of Stock
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- CART -->
+
+            <div>
+
+                <div class="pos-panel">
+
+                    <div class="pos-panel-title">
+                        Shopping Cart
+                    </div>
+
+                    <div class="pos-panel-subtitle">
+                        Review products before checkout
+                    </div>
+
+                    <div id="cartItems"></div>
+
+                    <div class="sales-summary">
+
+                        <div class="sales-summary-item">
+
+                            <span>Items</span>
+
+                            <span id="cartCount">0</span>
+
+                        </div>
+
+                        <div class="sales-summary-item">
+
+                            <span>Subtotal</span>
+
+                            <span id="cartSubtotal">
+                            GH¢0.00
+                        </span>
+
+                        </div>
+
+                        <div class="sales-summary-item">
+
+                            <span>Tax</span>
+
+                            <span id="modalTax">
+                            GH¢0.00
+                        </span>
+
+                        </div>
+
+                        <div class="sales-summary-item">
+
+                            <span>Discount</span>
+
+                            <span id="modalDiscount">
+                            GH¢0.00
+                        </span>
+
+                        </div>
+
+                        <hr>
+
+                        <div class="sales-summary-item fw-bold">
+
+                            <span>Total</span>
+
+                            <span id="modalGrandTotal">
+                            GH¢0.00
+                        </span>
+
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            class="pos-btn"
+                            onclick="openCheckoutModal()">
+
+                        Proceed To Checkout
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CHECKOUT MODAL -->
+
+    <!-- =========================
+    CHECKOUT MODAL
+    ========================= -->
+
+    <div class="modal fade"
+         id="checkoutModal"
+         tabindex="-1">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
+            <div class="modal-content border-0 rounded-4">
+
+                <form method="POST"
+                      id="checkoutForm">
+
+                    {% csrf_token %}
+
+                    <div class="modal-header border-0">
+
+                        <h5 class="modal-title fw-bold">
+                            Complete Payment
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"></button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="row">
+
+                            <!-- HIDDEN CUSTOMER SELECT -->
+                            <div style="display:none;">
+                                {{ form.customer }}
+                            </div>
+
+                            <!-- CUSTOMER DISPLAY -->
+
+                            <div class="col-md-12 mb-4">
+
+                                <label class="fw-bold mb-2">
+                                    Customer
+                                </label>
+
+                                <div class="d-flex gap-2">
+
+                                    <div id="selectedCustomerName"
+                                         class="form-control sales-input d-flex align-items-center">
+
+                                        No customer selected
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="btn btn-primary px-3"
+                                            onclick="openCustomerModal()">
+
+                                        <i class="fas fa-user-plus"></i>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <!-- PAYMENT METHOD -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="fw-bold mb-2">
+                                    Payment Method
+                                </label>
+
+                                {{ form.payment_method }}
+
+                            </div>
+
+                            <!-- TOTAL -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="fw-bold mb-2">
+                                    Total Amount
+                                </label>
+
+                                <input type="text"
+                                       id="displayTotal"
+                                       class="form-control sales-input fw-bold"
+                                       readonly>
+
+                            </div>
+
+                            <!-- AMOUNT PAID -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="fw-bold mb-2">
+                                    Amount Paid
+                                </label>
+
+                                <input type="number"
+                                       step="0.01"
+                                       min="0"
+                                       name="amount_paid"
+                                       id="amountPaid"
+                                       class="form-control sales-input"
+                                       placeholder="Enter amount paid">
+
+                            </div>
+
+                            <!-- CHANGE -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="fw-bold mb-2">
+                                    Balance / Change
+                                </label>
+
+                                <input type="text"
+                                       id="balanceDisplay"
+                                       class="form-control sales-input fw-bold"
+                                       readonly>
+
+                            </div>
+
+                        </div>
+
+                        <!-- CART INPUTS -->
+
+                        <div id="hiddenCartInputs"></div>
+
+                    </div>
+
+                    <div class="modal-footer border-0">
+
+                        <button type="button"
+                                class="btn btn-light"
+                                data-bs-dismiss="modal">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary px-4">
+
+                            Complete Sale
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =========================
+    CUSTOMER MODAL
+    ========================= -->
+
+    <div class="modal fade"
+         id="customerModal"
+         tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content border-0 rounded-4">
+
+                <div class="modal-header border-0">
+
+                    <h5 class="modal-title fw-bold">
+                        Customer Information
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="mb-3">
+
+                        <label class="fw-bold mb-2">
+                            Customer Name
+                        </label>
+
+                        <input type="text"
+                               id="customer_name"
+                               class="form-control sales-input"
+                               placeholder="Enter customer name">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="fw-bold mb-2">
+                            Phone Number
+                        </label>
+
+                        <input type="text"
+                               id="customer_phone"
+                               class="form-control sales-input"
+                               placeholder="Enter phone number">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="fw-bold mb-2">
+                            Email Address
+                        </label>
+
+                        <input type="email"
+                               id="customer_email"
+                               class="form-control sales-input"
+                               placeholder="Enter email address">
+
+                    </div>
+
+                    <div id="customerCheckResult"></div>
+
+                </div>
+
+                <div class="modal-footer border-0">
+
+                    <button type="button"
+                            class="btn btn-light"
+                            data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="button"
+                            id="customerSubmitBtn"
+                            class="btn btn-primary">
+
+                        Continue
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+/* =========================================================
+POS v3 - CLEAN PRODUCTION VERSION (FIXED)
+========================================================= */
+
+let cart = JSON.parse(localStorage.getItem("pos_cart") || "[]");
+let checkoutModal = null;
+let customerModal = null;
+
+/* =========================================================
+SAVE CART
+========================================================= */
+function saveCart() {
+    localStorage.setItem("pos_cart", JSON.stringify(cart));
+}
+
+/* =========================================================
+GET TOTAL
+========================================================= */
+function getCartTotal() {
+    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+/* =========================================================
+SELECT PRODUCT
+========================================================= */
+function selectProduct(id, name, price, stock) {
+
+    stock = parseInt(stock || 0);
+
+    if (stock <= 0) {
+        alert("Out of stock");
+        return;
+    }
+
+    const existing = cart.find(i => i.id == id);
+
+    if (existing) {
+
+        if (existing.quantity >= stock) {
+            alert("Maximum stock reached");
+            return;
+        }
+
+        existing.quantity++;
+
+    } else {
+
+        cart.push({
+            id,
+            name,
+            price: parseFloat(price),
+            stock,
+            quantity: 1
+        });
+    }
+
+    saveCart();
+    renderCart();
+}
+
+/* =========================================================
+REMOVE ITEM
+========================================================= */
+let lastDeletedItem = null;
+
+function removeItem(index) {
+
+    const item = cart[index];
+    if (!item) return;
+
+    // store deleted item for undo
+    lastDeletedItem = {
+        item: item,
+        index: index
+    };
+
+    // remove with animation delay
+    const cartItems = document.querySelectorAll(".cart-item");
+
+    if (cartItems[index]) {
+        cartItems[index].classList.add("cart-remove-anim");
+    }
+
+    setTimeout(() => {
+
+        cart.splice(index, 1);
+        saveCart();
+        renderCart();
+        showUndoToast();
+
+    }, 250);
+}
+function undoDelete() {
+
+    if (!lastDeletedItem) return;
+
+    cart.splice(lastDeletedItem.index, 0, lastDeletedItem.item);
+
+    saveCart();
+    renderCart();
+
+    lastDeletedItem = null;
+
+    hideUndoToast();
+}
+function increaseQty(index) {
+
+    const item = cart[index];
+
+    if (!item) return;
+
+    if (item.quantity >= item.stock) {
+        alert("Maximum stock reached");
+        return;
+    }
+
+    item.quantity += 1;
+
+    saveCart();
+    renderCart();
+}
+
+function decreaseQty(index) {
+
+    const item = cart[index];
+
+    if (!item) return;
+
+    item.quantity -= 1;
+
+    if (item.quantity <= 0) {
+        cart.splice(index, 1);
+    }
+
+    saveCart();
+    renderCart();
+}
+/* =========================================================
+RENDER CART (STABLE + SAFE)
+========================================================= */
+function renderCart() {
+
+    const cartItems = document.getElementById("cartItems");
+    const hiddenInputs = document.getElementById("hiddenCartInputs");
+
+    if (!cartItems || !hiddenInputs) return;
+
+    cartItems.innerHTML = "";
+    hiddenInputs.innerHTML = "";
+
+    let subtotal = 0;
+    let count = 0;
+
+    if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                <p class="text-muted mb-0">Cart is empty</p>
+            </div>
+        `;
+    }
+
+    cart.forEach((item, index) => {
+
+        subtotal += item.price * item.quantity;
+        count += item.quantity;
+
+        cartItems.insertAdjacentHTML("beforeend", `
+            <div class="cart-item">
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <div>
+                        <div class="cart-product-title">${item.name}</div>
+                        <div class="cart-product-meta cart-qty-row">
+
+    <span>GH¢${item.price.toFixed(2)}</span>
+
+    <div class="qty-controls">
+
+        <button type="button"
+                class="qty-btn"
+                onclick="decreaseQty(${index})">
+            −
+        </button>
+
+        <span class="qty-value">${item.quantity}</span>
+
+        <button type="button"
+                class="qty-btn"
+                onclick="increaseQty(${index})">
+            +
+        </button>
+
+    </div>
+
+</div>
+                    </div>
+
+                    <button type="button"
+        class="cart-remove-btn"
+        onclick="removeItem(${index})"
+        title="Remove item">
+
+    <i class="fas fa-trash"></i>
+
+</button>
+
+                </div>
+            </div>
+        `);
+
+        hiddenInputs.insertAdjacentHTML("beforeend", `
+    <input type="hidden"
+           name="product_id"
+           value="${item.id}">
+
+    <input type="hidden"
+           name="quantity"
+           value="${item.quantity}">
+`);
+    });
+
+    document.getElementById("cartCount").innerText = count;
+    document.getElementById("cartSubtotal").innerText = "GH¢" + subtotal.toFixed(2);
+    document.getElementById("modalGrandTotal").innerText = "GH¢" + subtotal.toFixed(2);
+
+    const displayTotal = document.getElementById("displayTotal");
+    if (displayTotal) displayTotal.value = "GH¢" + subtotal.toFixed(2);
+
+    calculateBalance();
+}
+
+/* =========================================================
+BALANCE
+========================================================= */
+function calculateBalance() {
+
+    const total = getCartTotal();
+    const paid = parseFloat(document.getElementById("amountPaid")?.value || 0);
+
+    const el = document.getElementById("balanceDisplay");
+    if (!el) return;
+
+    const balance = paid - total;
+
+    el.value = balance >= 0
+        ? `Change: GH¢${balance.toFixed(2)}`
+        : `Balance: GH¢${Math.abs(balance).toFixed(2)}`;
+}
+
+/* =========================================================
+BARCODE SCAN
+========================================================= */
+function handleBarcodeScan(code) {
+
+    code = (code || "").trim();
+    if (!code) return;
+
+    const card = document.querySelector(`.product-card[data-barcode="${code}"]`);
+
+    if (card) {
+        card.click();
+        return;
+    }
+
+    fetch(`/api/product-by-barcode/?code=${code}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if (data.status === "success") {
+
+                selectProduct(
+                    data.id,
+                    data.name,
+                    data.price,
+                    data.stock
+                );
+
+            } else {
+                alert("Product not found");
+            }
+
+        })
+        .catch(() => alert("Barcode scan failed"));
+}
+
+/* =========================================================
+CHECKOUT MODAL
+========================================================= */
+function openCheckoutModal() {
+
+    if (cart.length === 0) {
+        alert("Cart is empty");
+        return;
+    }
+
+    renderCart();
+
+    checkoutModal = new bootstrap.Modal(
+        document.getElementById("checkoutModal"),
+        { backdrop: true, keyboard: true }
+    );
+
+    checkoutModal.show();
+}
+
+/* =========================================================
+CUSTOMER MODAL
+========================================================= */
+function openCustomerModal() {
+
+    customerModal = new bootstrap.Modal(
+        document.getElementById("customerModal"),
+        { backdrop: true, keyboard: true }
+    );
+
+    customerModal.show();
+}
+
+/* =========================================================
+INIT
+========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+
+    renderCart();
+
+    /* ALL YOUR INIT CODE HERE (customer, checkout, clear button) */
+
+});
+
+/* CUSTOMER */
+    const btn = document.getElementById("customerSubmitBtn");
+
+    if (btn) {
+
+        btn.addEventListener("click", function () {
+
+            const name = document.getElementById("customer_name").value.trim();
+            const phone = document.getElementById("customer_phone").value.trim();
+            const email = document.getElementById("customer_email").value.trim();
+
+            if (!name) {
+                alert("Customer name required");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = "Processing...";
+
+            fetch("{% url 'check_or_create_customer' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({ name, phone, email })
+            })
+            .then(r => r.json())
+            .then(data => {
+
+                if (data.status === "error") {
+                    alert(data.message);
+                    return;
+                }
+
+                const select = document.getElementById("id_customer");
+
+                if (select) {
+
+                    let opt = select.querySelector(`option[value="${data.customer_id}"]`);
+
+                    if (!opt) {
+                        opt = new Option(data.customer_name, data.customer_id, true, true);
+                        select.add(opt);
+                    }
+
+                    select.value = data.customer_id;
+                }
+
+                document.getElementById("selectedCustomerName").innerText =
+                    data.customer_name;
+
+                setTimeout(() => customerModal?.hide(), 600);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = "Continue";
+            });
+        });
+    }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const clearBtn = document.getElementById("clearSearchBtn");
+const searchInput = document.getElementById("productSearchInput");
+
+if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+
+        if (searchInput) {
+            searchInput.value = "";
+            searchInput.focus();
+        }
+
+        // clean URL without reload issues
+        const url = new URL(window.location.href);
+        url.searchParams.delete("search");
+
+        window.location.href = url.pathname;
+    });
+}
+
+    /* CHECKOUT */
+    const form = document.getElementById("checkoutForm");
+
+    if (form) {
+
+        form.addEventListener("submit", function (e) {
+
+            const customer = document.getElementById("id_customer")?.value;
+            const payment = document.getElementById("id_payment_method")?.value;
+
+            if (!customer || !payment || cart.length === 0) {
+                e.preventDefault();
+                alert("Complete all fields and ensure cart is not empty");
+                return;
+            }
+
+            localStorage.removeItem("pos_cart");
+        });
+    }
+
+});
+
+/* =========================================================
+AMOUNT PAID
+========================================================= */
+document.addEventListener("input", function (e) {
+    if (e.target.id === "amountPaid") {
+        calculateBalance();
+    }
+});
+
+/* =========================================================
+KEYBOARD BARCODE ENGINE (SAFE)
+========================================================= */
+
+let barcodeBuffer = "";
+let barcodeTimeout = null;
+
+document.addEventListener("keydown", function (e) {
+
+    const searchInput = document.getElementById("productSearchInput");
+    const manual = document.getElementById("manualBarcodeInput");
+
+    if (document.activeElement === searchInput) return;
+    if (document.activeElement === manual) return;
+
+    if (barcodeTimeout) clearTimeout(barcodeTimeout);
+
+    if (e.key === "Enter") {
+
+        if (barcodeBuffer.length > 0) {
+            handleBarcodeScan(barcodeBuffer);
+        }
+
+        barcodeBuffer = "";
+        return;
+    }
+
+    if (e.key.length === 1) {
+        barcodeBuffer += e.key;
+    }
+
+    barcodeTimeout = setTimeout(() => {
+        barcodeBuffer = "";
+    }, 180);
+});
+
+/* =========================================================
+MANUAL BARCODE INPUT
+========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("manualBarcodeInput");
+
+    if (!input) return;
+
+    input.addEventListener("keydown", function (e) {
+
+        if (e.key === "Enter") {
+
+            e.preventDefault();
+            handleBarcodeScan(this.value);
+            this.value = "";
+        }
+    });
+
+});
+
+let undoTimeout = null;
+
+function showUndoToast() {
+
+    const toast = document.getElementById("undoToast");
+    if (!toast) return;
+
+    toast.classList.add("show");
+
+    clearTimeout(undoTimeout);
+
+    undoTimeout = setTimeout(() => {
+        hideUndoToast();
+        lastDeletedItem = null;
+    }, 5000);
+}
+
+function hideUndoToast() {
+
+    const toast = document.getElementById("undoToast");
+    if (!toast) return;
+
+    toast.classList.remove("show");
+}
+
+/* =========================================================
+LIVE PRODUCT FILTER (NO RELOAD SEARCH)
+========================================================= */
+
+function normalizeText(text) {
+    return (text || "").toLowerCase().trim();
+}
+
+function filterProducts(query) {
+
+    const cards = document.querySelectorAll(".product-card");
+
+    query = normalizeText(query);
+
+    cards.forEach(card => {
+
+        const name = normalizeText(card.querySelector(".product-name")?.innerText);
+        const barcode = normalizeText(card.getAttribute("data-barcode"));
+
+        const match =
+            name.includes(query) ||
+            barcode.includes(query);
+
+        card.style.display = match ? "block" : "none";
+    });
+}
+
+/* DEBOUNCE for performance */
+function debounce(fn, delay) {
+    let timer;
+    return function (...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("productSearchInput");
+    const clearBtn = document.getElementById("clearSearchBtn");
+
+    if (input) {
+
+        const debouncedFilter = debounce(function (e) {
+            filterProducts(e.target.value);
+        }, 200);
+
+        input.addEventListener("input", debouncedFilter);
+    }
+
+    if (clearBtn && input) {
+
+        clearBtn.addEventListener("click", function () {
+
+            input.value = "";
+
+            filterProducts("");
+
+            input.focus();
+
+            // optional URL cleanup (no reload)
+            const url = new URL(window.location.href);
+            url.searchParams.delete("search");
+            window.history.replaceState({}, "", url);
+        });
+    }
+
+});
+</script>
+
+<div id="undoToast" class="undo-toast">
+    <span>Item removed</span>
+
+    <button onclick="undoDelete()">Undo</button>
+</div>
+{% endblock %}

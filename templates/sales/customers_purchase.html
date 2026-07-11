@@ -1,0 +1,857 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* ====================================
+   SALES PAGE
+==================================== */
+
+.sales-wrapper{
+    padding:24px;
+}
+
+/* TOP */
+.sales-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:18px;
+
+    margin-bottom:24px;
+}
+
+.sales-title h2{
+    font-size:30px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.sales-title p{
+    color:var(--text-muted);
+}
+
+.sales-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.sales-btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    font-weight:600;
+    transition:.25s ease;
+    text-decoration:none !important;
+}
+
+.sales-btn-primary{
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #4f46e5
+        );
+
+    color:#fff !important;
+}
+
+.sales-btn-light{
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    color:var(--text-main) !important;
+}
+
+/* KPI */
+.sales-kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+
+    margin-bottom:24px;
+}
+
+.sales-kpi{
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    border-radius:22px;
+
+    padding:24px;
+
+    position:relative;
+
+    overflow:hidden;
+}
+
+.sales-kpi h3{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.sales-kpi p{
+    color:var(--text-muted);
+    margin-top:8px;
+}
+
+.sales-kpi i{
+    position:absolute;
+    right:20px;
+    top:20px;
+
+    font-size:22px;
+
+    opacity:.12;
+}
+
+/* ==========================
+   CUSTOMER HEADER
+========================== */
+
+.customer-header-card{
+
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+
+    padding:18px 22px;
+
+    border-radius:22px;
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.04);
+
+}
+
+.customer-avatar{
+
+    width:70px;
+    height:70px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:28px;
+    font-weight:800;
+
+    color:#fff;
+
+    background:
+    linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+}
+
+.customer-info h2{
+
+    margin:0;
+
+    font-size:28px;
+    font-weight:800;
+
+    color:var(--text-main);
+
+}
+
+.customer-info p{
+
+    margin:4px 0 10px;
+
+    color:var(--text-muted);
+
+}
+
+.customer-meta{
+
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+
+}
+
+.customer-meta span{
+
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    font-size:13px;
+
+    color:var(--text-muted);
+
+    background:rgba(99,102,241,.08);
+
+    padding:8px 12px;
+
+    border-radius:999px;
+
+}
+
+.customer-meta i{
+
+    color:#6366f1;
+
+}
+
+/* TABLE */
+.sales-card{
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    overflow:hidden;
+}
+
+.sales-toolbar{
+    padding:20px;
+
+    border-bottom:1px solid var(--border);
+}
+
+.sales-search{
+    position:relative;
+    width:320px;
+}
+
+.sales-search i{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+}
+
+.sales-search input{
+    width:100%;
+    height:48px;
+
+    border-radius:14px;
+
+    border:1px solid var(--border);
+
+    background:var(--bg-main);
+
+    color:var(--text-main);
+
+    padding:0 16px 0 46px;
+}
+
+.sales-table-wrap{
+    overflow-x:auto;
+}
+
+.sales-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.sales-table th{
+    padding:18px;
+    background:rgba(99,102,241,0.05);
+
+    border-bottom:1px solid var(--border);
+
+    font-size:13px;
+    text-transform:uppercase;
+}
+
+.sales-table td{
+    padding:18px;
+    border-bottom:1px solid var(--border);
+}
+
+.sales-table tbody tr:hover{
+    background:rgba(99,102,241,0.03);
+}
+
+.badge-profit{
+    background:rgba(16,185,129,0.12);
+    color:#10b981;
+
+    padding:8px 12px;
+    border-radius:999px;
+
+    font-size:12px;
+    font-weight:700;
+}
+
+/* ACTIONS */
+.action-group{
+    display:flex;
+    gap:10px;
+}
+
+.action-btn{
+    width:40px;
+    height:40px;
+
+    border:none;
+
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    text-decoration:none !important;
+}
+
+.edit-btn{
+    background:rgba(59,130,246,0.12);
+    color:#3b82f6;
+}
+
+.delete-btn{
+    background:rgba(239,68,68,0.12);
+    color:#ef4444;
+}
+.sales-tabs{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:24px;
+}
+
+.sales-tab{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    padding:12px 18px;
+
+    border-radius:14px;
+
+    text-decoration:none !important;
+
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    color:var(--text-main);
+
+    font-weight:700;
+
+    transition:.25s ease;
+}
+
+.sales-tab span{
+    background:rgba(99,102,241,.12);
+    color:#6366f1;
+
+    padding:4px 10px;
+
+    border-radius:999px;
+
+    font-size:12px;
+}
+
+.active-tab{
+    background:linear-gradient(
+        135deg,
+        #6366f1,
+        #4f46e5
+    );
+
+    color:#fff !important;
+}
+
+.active-tab span{
+    background:rgba(255,255,255,.2);
+    color:#fff;
+}
+
+/* RESPONSIVE */
+@media(max-width:991px){
+
+    .sales-kpi-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+
+</style>
+
+<div class="content-wrapper">
+
+    <section class="content sales-wrapper">
+
+        <!-- TOP -->
+        <div class="sales-top">
+
+            <div class="sales-title">
+
+    <div class="customer-header-card">
+
+        <div class="customer-avatar">
+
+            {{ customer.full_name|slice:":1"|upper }}
+
+        </div>
+
+        <div class="customer-info">
+
+            <h2>
+
+                {{ customer.full_name }}
+
+            </h2>
+
+            <p>
+
+                Customer Purchase History
+
+            </p>
+
+            <div class="customer-meta">
+
+                {% if customer.phone %}
+                <span>
+                    <i class="fas fa-phone"></i>
+                    {{ customer.phone }}
+                </span>
+                {% endif %}
+
+                {% if customer.email %}
+                <span>
+                    <i class="fas fa-envelope"></i>
+                    {{ customer.email }}
+                </span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+            <div class="sales-actions">
+
+                <a href="{% url 'sales' %}"
+                   class="sales-btn sales-btn-primary">
+
+                    <i class="fas fa-plus me-2"></i>
+                    Add Sale
+
+                </a>
+
+                <button onclick="exportSalesCSV()"
+                        class="sales-btn sales-btn-light">
+
+                    <i class="fas fa-file-csv me-2"></i>
+                    CSV
+
+                </button>
+
+                <button onclick="exportSalesPDF()"
+                        class="sales-btn sales-btn-light">
+
+                    <i class="fas fa-file-pdf me-2"></i>
+                    PDF
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- KPI -->
+        <div class="sales-kpi-grid">
+
+            <div class="sales-kpi">
+
+                <i class="fas fa-wallet"></i>
+
+                <h3>
+                    Gh¢{{ total_revenue }}
+                </h3>
+
+                <p>
+                    Total Revenue
+                </p>
+
+            </div>
+
+            <div class="sales-kpi">
+
+                <i class="fas fa-chart-line"></i>
+
+                <h3>
+                    Gh¢{{ total_profit }}
+                </h3>
+
+                <p>
+                    Total Profit
+                </p>
+
+            </div>
+
+            <div class="sales-kpi">
+
+                <i class="fas fa-shopping-cart"></i>
+
+                <h3>
+                    {{ total_sales }}
+                </h3>
+
+                <p>
+                    Total Sales
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="sales-tabs">
+
+            <a href="?tab=all"
+               class="sales-tab {% if tab == 'all' %}active-tab{% endif %}">
+
+                All Sales
+
+                <span>{{ total_sales }}</span>
+
+            </a>
+
+            <a href="?tab=completed"
+               class="sales-tab {% if tab == 'completed' %}active-tab{% endif %}">
+
+                Completed
+
+                <span>{{ completed_sales_count }}</span>
+
+            </a>
+
+            <a href="?tab=refunded"
+               class="sales-tab {% if tab == 'refunded' %}active-tab{% endif %}">
+
+                Refunded
+
+                <span>{{ refunded_sales_count }}</span>
+
+            </a>
+
+        </div>
+
+        <!-- TABLE -->
+        <div class="sales-card">
+
+            <div class="sales-toolbar">
+
+                <div class="sales-search">
+
+                    <i class="fas fa-search"></i>
+
+                    <input
+                            type="text"
+                            id="salesSearch"
+                            placeholder="Search sales..."
+                    >
+
+                </div>
+
+            </div>
+
+            <div class="sales-table-wrap">
+
+                <table class="sales-table"
+                       id="salesTable">
+
+                    <thead>
+
+                    <tr>
+                        <th>Receipt No</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Profit</th>
+                        <th>Payment</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Refund Date</th>
+                        <th>Actions</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="salesTableBody">
+
+                    {% for sale in sales %}
+
+                    <tr>
+
+                        <!-- RECEIPT -->
+                        <td><strong>{{ sale.receipt_number }}</strong></td>
+                        <!-- CUSTOMER -->
+                        <td>{% if sale.customer %}
+                            {{ sale.customer.full_name }}
+                            {% else %}
+                            Walk-in Customer
+                            {% endif %}
+                        </td>
+                        <!-- ITEMS -->
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                {% for item in sale.items.all %}
+
+                                {% if item.quantity|add:"-"|add:item.refunded_quantity > 0 %}
+
+                                <small>
+                                    {{ item.product.product_name }}
+                                    ×
+                                    {{ item.quantity|add:"-"|add:item.refunded_quantity }}
+                                </small>
+
+                                {% endif %}
+
+                                {% endfor %}
+                            </div>
+
+                        </td>
+                        <!-- TOTAL -->
+                        <td><strong> Gh¢{{ sale.total|floatformat:2 }}</strong></td>
+                        <!-- PROFIT -->
+                        <td><span class="badge-profit"> Gh¢{{ sale.live_profit|floatformat:2 }}</span></td>
+
+                        <!-- PAYMENT -->
+                        <td>{{ sale.payment_method }}</td>
+                        <!-- DATE -->
+                        <td>{{ sale.created_at|date:"d M Y" }}</td>
+                        <!--                        Status-->
+                        <td>
+                            {% if sale.status == 'Completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger">Refunded</span>
+                            {% endif %}
+
+                        </td>
+                        <td>
+                            {% if sale.refund_date %}
+                            {{ sale.refund_date|date:"d M Y H:i" }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <!-- ACTIONS -->
+                        <td>
+
+                            <div class="action-group">
+
+                                <!-- RECEIPT -->
+                                <a href="{% url 'pos_receipt' sale.id %}"
+                                   class="action-btn edit-btn">
+
+                                    <i class="fas fa-receipt"></i>
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="9"
+                            class="text-center py-5">
+
+                            <div class="text-muted">
+
+                                <i class="fas fa-receipt fa-2x mb-3"></i>
+
+                                <p class="mb-0">
+                                    No sales found
+                                </p>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+
+/* SEARCH */
+
+const salesSearch =
+    document.getElementById('salesSearch');
+
+salesSearch.addEventListener('keyup', function(){
+
+    const value =
+        this.value.toLowerCase();
+
+    const rows =
+        document.querySelectorAll(
+            '#salesTableBody tr'
+        );
+
+    rows.forEach(row => {
+
+        const text =
+            row.innerText.toLowerCase();
+
+        row.style.display =
+            text.includes(value)
+            ? ''
+            : 'none';
+
+    });
+
+});
+
+/* CSV */
+
+function exportSalesCSV(){
+
+    let csv = [];
+
+    const rows =
+        document.querySelectorAll(
+            "table tr"
+        );
+
+    rows.forEach(row => {
+
+        let cols =
+            row.querySelectorAll(
+                "td, th"
+            );
+
+        let rowData = [];
+
+        cols.forEach(col => {
+
+            rowData.push(
+                '"' +
+                col.innerText.replace(/"/g, '""')
+                + '"'
+            );
+
+        });
+
+        csv.push(rowData.join(","));
+
+    });
+
+    const csvFile = new Blob(
+        [csv.join("\n")],
+        { type: "text/csv" }
+    );
+
+    const downloadLink =
+        document.createElement("a");
+
+    downloadLink.download = "sales.csv";
+
+    downloadLink.href =
+        window.URL.createObjectURL(csvFile);
+
+    downloadLink.click();
+
+}
+
+/* PDF */
+
+async function exportSalesPDF(){
+
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF();
+
+    doc.text(
+        "Sales Report",
+        14,
+        20
+    );
+
+    let rows = [];
+
+    document.querySelectorAll(
+        "#salesTable tbody tr"
+    ).forEach(row => {
+
+        let cols = row.querySelectorAll("td");
+
+        if(cols.length){
+
+            rows.push([
+                cols[0].innerText,
+                cols[1].innerText,
+                cols[2].innerText,
+                cols[3].innerText,
+                cols[4].innerText,
+            ]);
+
+        }
+
+    });
+
+    let y = 35;
+
+    rows.forEach(row => {
+
+        doc.text(
+            row.join(" | "),
+            14,
+            y
+        );
+
+        y += 10;
+
+    });
+
+    doc.save("sales.pdf");
+
+}
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+{% endblock %}

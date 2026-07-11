@@ -1,0 +1,592 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+:root{
+    --invoice-bg:var(--bg-card,#ffffff);
+    --invoice-text:var(--text-main,#1f2937);
+    --invoice-muted:var(--text-muted,#6b7280);
+    --invoice-border:var(--border,#e5e7eb);
+    --invoice-header:rgba(99,102,241,.08);
+    --invoice-table:rgba(99,102,241,.05);
+    --invoice-primary:#2563eb;
+    --invoice-shadow:0 12px 35px rgba(0,0,0,.08);
+    --invoice-watermark:rgba(0,0,0,.04);
+    --invoice-note:#fefce8;
+    --invoice-note-border:#f59e0b;
+}
+
+.dark-mode{
+
+    --invoice-bg:#1f2937;
+    --invoice-text:#f3f4f6;
+    --invoice-muted:#9ca3af;
+    --invoice-border:#374151;
+    --invoice-header:rgba(99,102,241,.15);
+    --invoice-table:rgba(255,255,255,.04);
+    --invoice-shadow:0 15px 45px rgba(0,0,0,.45);
+    --invoice-watermark:rgba(255,255,255,.035);
+    --invoice-note:#2f2610;
+    --invoice-note-border:#f59e0b;
+
+}
+
+.invoice-wrapper{
+
+    max-width:1100px;
+    margin:auto;
+    padding:30px;
+
+}
+
+.invoice-card{
+
+    background:var(--invoice-bg);
+    color:var(--invoice-text);
+    border:1px solid var(--invoice-border);
+    border-radius:22px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:var(--invoice-shadow);
+
+}
+
+.invoice-card::before{
+
+    content:"PRO-FORMA";
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) rotate(-30deg);
+
+    font-size:110px;
+    font-weight:900;
+    color:var(--invoice-watermark);
+
+    letter-spacing:8px;
+    pointer-events:none;
+    user-select:none;
+
+}
+
+.invoice-header{
+
+    padding:40px;
+    border-bottom:1px solid var(--invoice-border);
+    background:var(--invoice-header);
+
+}
+
+.header-top{
+
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:25px;
+
+}
+
+.business-name{
+
+    font-size:34px;
+    font-weight:900;
+    color:var(--invoice-text);
+
+}
+
+.document-title{
+
+    text-align:right;
+
+}
+
+.document-title h1{
+
+    margin:0;
+    color:var(--invoice-primary);
+    font-weight:900;
+
+}
+
+.document-title p{
+
+    margin-top:10px;
+    color:var(--invoice-muted);
+
+}
+
+.info-grid{
+
+    padding:30px 40px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+
+}
+
+.info-box{
+
+    background:var(--invoice-bg);
+    border:1px solid var(--invoice-border);
+    border-radius:14px;
+    padding:20px;
+
+}
+
+.info-label{
+
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--invoice-muted);
+
+}
+
+.info-value{
+
+    margin-top:8px;
+    font-size:17px;
+    font-weight:700;
+    color:var(--invoice-text);
+
+}
+
+.table-section{
+
+    padding:0 40px 30px;
+
+}
+
+.invoice-table{
+
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:14px;
+
+}
+
+.invoice-table thead{
+
+    background:var(--invoice-table);
+
+}
+
+.invoice-table th{
+
+    padding:15px;
+    color:var(--invoice-text);
+    border-bottom:1px solid var(--invoice-border);
+    font-weight:700;
+
+}
+
+.invoice-table td{
+
+    padding:15px;
+    border-bottom:1px solid var(--invoice-border);
+    color:var(--invoice-text);
+
+}
+
+.invoice-table tbody tr:hover{
+
+    background:rgba(99,102,241,.04);
+
+}
+
+.dark-mode .invoice-table tbody tr:hover{
+
+    background:rgba(255,255,255,.04);
+
+}
+
+.summary{
+
+    width:380px;
+    margin-left:auto;
+    margin-right:40px;
+    margin-bottom:40px;
+
+    background:var(--invoice-bg);
+    border:1px solid var(--invoice-border);
+    border-radius:14px;
+    padding:22px;
+
+}
+
+.summary-row{
+
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:15px;
+    color:var(--invoice-text);
+
+}
+
+.total-row{
+
+    margin-top:18px;
+    padding-top:18px;
+    border-top:2px solid var(--invoice-border);
+    font-size:24px;
+    font-weight:900;
+
+}
+
+.notes{
+
+    padding:0 40px 40px;
+
+}
+
+.note-box{
+
+    background:var(--invoice-note);
+    border-left:5px solid var(--invoice-note-border);
+    border-radius:12px;
+    padding:22px;
+    color:var(--invoice-text);
+
+}
+
+.note-box strong{
+
+    display:block;
+    margin-bottom:12px;
+
+}
+
+.signature{
+
+    padding:40px;
+    display:flex;
+    justify-content:space-between;
+    gap:40px;
+
+}
+
+.signature-box{
+
+    flex:1;
+
+}
+
+.signature-line{
+
+    margin-top:70px;
+    border-top:2px solid var(--invoice-border);
+    padding-top:10px;
+    color:var(--invoice-text);
+
+}
+
+.actions{
+
+    padding:0 40px 40px;
+
+}
+
+.btn-print{
+
+    background:#2563eb;
+    color:#fff;
+    border:none;
+    padding:12px 26px;
+    border-radius:12px;
+    font-weight:700;
+    transition:.25s;
+
+}
+
+.btn-print:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.btn-back{
+
+    display:inline-block;
+    margin-left:10px;
+    padding:12px 26px;
+    border-radius:12px;
+    border:1px solid var(--invoice-border);
+    color:var(--invoice-text);
+    text-decoration:none;
+    background:transparent;
+    transition:.25s;
+
+}
+
+.btn-back:hover{
+
+    background:rgba(99,102,241,.08);
+
+}
+
+@media(max-width:768px){
+
+    .summary{
+
+        width:100%;
+        margin:30px 20px;
+
+    }
+
+    .invoice-header,
+    .info-grid,
+    .table-section,
+    .notes,
+    .signature,
+    .actions{
+
+        padding-left:20px;
+        padding-right:20px;
+
+    }
+
+    .signature{
+
+        flex-direction:column;
+
+    }
+
+    .document-title{
+
+        text-align:left;
+
+    }
+
+}
+
+@media print{
+
+    .actions,
+    .main-header,
+    .main-sidebar,
+    .main-footer{
+
+        display:none !important;
+
+    }
+
+    .content-wrapper{
+
+        margin:0 !important;
+        padding:0 !important;
+
+    }
+
+    .invoice-card{
+
+        box-shadow:none;
+        border:none;
+
+    }
+
+    @page{
+
+        size:A4;
+        margin:10mm;
+
+    }
+
+}
+
+</style>
+
+<div class="content-wrapper">
+
+<section class="content invoice-wrapper">
+
+<div class="invoice-card">
+
+    <div class="invoice-header">
+
+        <div class="header-top">
+
+            <div>
+
+                <div class="business-name">
+                    {{ sale.business.name }}
+                </div>
+
+                {% if sale.business.address %}
+                    {{ sale.business.address }}<br>
+                {% endif %}
+
+                {% if sale.business.phone %}
+                    Tel: {{ sale.business.phone }}
+                {% endif %}
+
+            </div>
+
+            <div class="document-title">
+
+                <h1>PRO-FORMA INVOICE</h1>
+
+                <p>
+                    Invoice No:<br>
+                    <strong>{{ sale.invoice_number }}</strong>
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="info-grid">
+
+        <div class="info-box">
+
+            <div class="info-label">Customer</div>
+
+            <div class="info-value">
+                {{ sale.customer|default:"Walk-in Customer" }}
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <div class="info-label">Date</div>
+
+            <div class="info-value">
+                {{ sale.created_at|date:"d M Y h:i A" }}
+            </div>
+
+        </div>
+
+        <div class="info-box">
+
+            <div class="info-label">Prepared By</div>
+
+            <div class="info-value">
+                {{ sale.staff }}
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="table-section">
+
+        <table class="invoice-table">
+
+            <thead>
+
+            <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+
+            </thead>
+
+            <tbody>
+
+            {% for item in sale_items %}
+
+            <tr>
+
+                <td>{{ item.product.product_name }}</td>
+
+                <td>{{ item.quantity }}</td>
+
+                <td>GH¢{{ item.price }}</td>
+
+                <td>GH¢{{ item.total }}</td>
+
+            </tr>
+
+            {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <div class="summary">
+
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>GH¢{{ subtotal }}</strong>
+        </div>
+
+        <div class="summary-row">
+            <span>Tax</span>
+            <strong>GH¢{{ tax_amount }}</strong>
+        </div>
+
+        <div class="summary-row">
+            <span>Discount</span>
+            <strong>- GH¢{{ discount_amount }}</strong>
+        </div>
+
+        <div class="summary-row total-row">
+            <span>Total</span>
+            <span>GH¢{{ sale.total }}</span>
+        </div>
+
+    </div>
+
+    <div class="notes">
+
+        <div class="note-box">
+
+            <strong>Important Notice</strong>
+
+            This Pro-forma Invoice is issued for quotation purposes only.
+            No payment has been received, and stock has not been deducted or reserved.
+            Prices and availability are subject to change without notice.
+
+        </div>
+
+    </div>
+
+    <div class="signature">
+
+        <div class="signature-box">
+
+            <div class="signature-line">
+                Prepared By
+            </div>
+
+        </div>
+
+        <div class="signature-box">
+
+            <div class="signature-line">
+                Customer Acceptance
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="actions">
+
+        <button onclick="window.print()" class="btn-print">
+            Print Pro-forma
+        </button>
+
+        <a href="{% url 'sales' %}" class="btn-back">
+            Back to POS
+        </a>
+
+    </div>
+
+</div>
+
+</section>
+
+</div>
+
+{% endblock %}

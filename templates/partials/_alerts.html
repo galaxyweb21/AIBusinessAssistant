@@ -1,0 +1,114 @@
+<style>
+
+.alert {
+  position: relative;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent; }
+
+.alert-heading {
+  color: inherit; }
+
+.alert-link {
+  font-weight: 700; }
+
+.alert-dismissible .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.75rem 1.25rem;
+  color: inherit; }
+
+.alert-primary {
+  color: #115770;
+  background-color: #d2eef7;
+  border-color: #c1e7f4; }
+  .alert-primary hr {
+    border-top-color: #abdff0; }
+  .alert-primary .alert-link {
+    color: #0a3544; }
+
+.alert-secondary {
+  color: #555f64;
+  background-color: #edf1f3;
+  border-color: #e6ebee; }
+  .alert-secondary hr {
+    border-top-color: #d7dfe4; }
+  .alert-secondary .alert-link {
+    color: #3e4548; }
+
+.alert-success {
+  color: #28623c;
+  background-color: #dbf2e3;
+  border-color: #cdedd8; }
+  .alert-success hr {
+    border-top-color: #bae6c9; }
+  .alert-success .alert-link {
+    color: #193e26; }
+
+.alert-info {
+  color: #336573;
+  background-color: #e0f3f8;
+  border-color: #d3eef6; }
+  .alert-info hr {
+    border-top-color: #bee6f2; }
+  .alert-info .alert-link {
+    color: #234650; }
+
+.alert-warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba; }
+  .alert-warning hr {
+    border-top-color: #ffe8a1; }
+  .alert-warning .alert-link {
+    color: #533f03; }
+
+.alert-error {
+  color: #f8f8ff;
+  background-color: #ff6961;
+  border-color: #fdd6d6; }
+  .alert-danger hr {
+    border-top-color: #fcbebe; }
+  .alert-danger .alert-link {
+    color: #5d2929; }
+
+.alert-light {
+  color: #7d7e7f;
+  background-color: #fcfdfd;
+  border-color: #fbfcfc; }
+  .alert-light hr {
+    border-top-color: #ecf1f1; }
+  .alert-light .alert-link {
+    color: #646565; }
+
+.alert-dark {
+  color: #151c20;
+  background-color: #d4d7d8;
+  border-color: #c3c7c9; }
+  .alert-dark hr {
+    border-top-color: #b6babd; }
+  .alert-dark .alert-link {
+    color: #010101; }
+
+
+</style>
+
+{% if messages %}
+{% for message in messages%}
+<div id="message" class="container">
+    <div class="alert alert-{{ message.tags }} alert-dismissible text-center" role="alert">
+        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
+        <strong>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+            Error:
+            {% else %}
+            {{ message.tags | title }}
+            {% endif %}
+        </strong>
+        {{ message }}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+

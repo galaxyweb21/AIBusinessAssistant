@@ -1,0 +1,575 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+/* =========================================
+   DISCOUNT LIST (ENTERPRISE UI UNIFIED)
+========================================= */
+
+.discount-wrapper {
+    padding: 24px;
+}
+
+/* HEADER */
+.discount-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.discount-title h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.discount-title p {
+    color: var(--text-muted);
+}
+
+/* CARD */
+.discount-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+/* TOOLBAR */
+.discount-toolbar {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* SEARCH */
+.discount-search {
+    position: relative;
+    min-width: 260px;
+}
+
+.discount-search input {
+    width: 100%;
+    height: 46px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-main);
+    color: var(--text-main);
+    padding: 0 44px 0 16px;
+}
+
+.discount-search i {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+/* TABLE */
+.discount-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.discount-table th {
+    padding: 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border);
+}
+
+.discount-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.discount-table tbody tr:hover {
+    background: rgba(99, 102, 241, .04);
+}
+
+/* ACTION GROUP */
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.discount-action-btn {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: .25s ease;
+    text-decoration: none !important;
+}
+
+.discount-action-btn:hover {
+    transform: translateY(-2px);
+    background: rgba(99, 102, 241, .08);
+}
+
+/* EDIT (Yellow/Orange for modification accent) */
+.discount-action-edit {
+    background: rgba(245, 158, 11, .12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, .2);
+}
+
+/* DELETE (Red) */
+.discount-action-delete {
+    background: rgba(239, 68, 68, .12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, .2);
+}
+
+/* BADGES */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+.status-active {
+    background: rgba(16, 185, 129, .12);
+    color: #10b981;
+}
+.status-expired {
+    background: rgba(239, 68, 68, .12);
+    color: #ef4444;
+}
+
+/* BUTTONS */
+.discount-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-weight: 600;
+    transition: .25s ease;
+    cursor: pointer;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.discount-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff !important;
+}
+
+.discount-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, .25);
+}
+
+/* =========================================
+   DETAIL DRAWER SYSTEM
+========================================= */
+.discount-row {
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.drawer-overlay {
+    position: fixed;
+    top: 0; right: 0; left: 0; bottom: 0;
+    background: rgba(0, 0, 0, .45);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    visibility: hidden;
+    transition: .3s ease;
+    z-index: 1040;
+}
+
+.drawer-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.discount-drawer {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    width: 430px;
+    height: 100vh;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border);
+    z-index: 1050;
+    transition: .35s ease;
+    overflow-y: auto;
+    box-shadow: -10px 0 35px rgba(0, 0, 0, .15);
+}
+
+.discount-drawer.show {
+    right: 0;
+}
+
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px;
+    border-bottom: 1px solid var(--border);
+}
+
+.drawer-header h4 {
+    margin: 0;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.drawer-close {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, .12);
+    color: #ef4444;
+    transition: .25s;
+}
+
+.drawer-close:hover {
+    transform: rotate(90deg);
+}
+
+.drawer-body {
+    padding: 25px;
+}
+
+.discount-profile {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.discount-avatar {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    margin-bottom: 15px;
+}
+
+.discount-profile h5 {
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 4px 0;
+}
+
+.discount-profile p {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.drawer-box {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 15px;
+}
+
+.drawer-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.drawer-item:last-child {
+    border: none;
+}
+
+.drawer-item span {
+    color: var(--text-muted);
+}
+
+.drawer-item strong {
+    color: var(--text-main);
+}
+
+/* EMPTY STATE */
+.discount-empty-cell {
+    padding: 0 !important;
+    text-align: center;
+}
+
+.empty-state {
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 102, 241, .12), rgba(99, 102, 241, .05));
+    border: 1px solid rgba(99, 102, 241, .15);
+    margin-bottom: 10px;
+}
+
+.empty-icon i {
+    font-size: 38px;
+    color: #6366f1;
+}
+
+.empty-state h4 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.empty-state p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 15px;
+}
+
+.empty-state .discount-btn {
+    margin-top: 12px;
+}
+
+body.dark-mode .discount-action-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+@media(max-width:768px){
+    .discount-drawer {
+        width: 100%;
+        max-width: 100%;
+        right: -100%;
+    }
+    .discount-drawer.show {
+        right: 0;
+    }
+    .discount-btn {
+        width: 100%;
+    }
+}
+
+</style>
+
+<div class="content-wrapper">
+    <section class="content discount-wrapper">
+
+        <div class="discount-header">
+            <div class="discount-title">
+                <h2>Discounts</h2>
+                <p>{{ business.name }} • Discount Management</p>
+            </div>
+
+            <a href="{% url 'discount' %}" class="discount-btn discount-btn-primary">
+                <i class="fas fa-plus"></i> Add Discount
+            </a>
+        </div>
+
+        {% include 'partials/_alerts.html' %}
+
+        <div class="discount-card">
+
+            <div class="discount-toolbar">
+                <form method="get" style="width: 100%; display: flex;">
+                    <div class="discount-search">
+                        <input type="text" name="search" id="discountSearch" placeholder="Search discounts..." value="{{ search|default:'' }}">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </form>
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table class="discount-table">
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Name</th>
+                            <th>Percentage Rate</th>
+                            <th>Validity Period</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in discounts %}
+                        <tr class="discount-row"
+                            data-name="{{ item.name }}"
+                            data-rate="{{ item.percentage }}%"
+                            data-start="{% if item.start_date %}{{ item.start_date }}{% else %}Always{% endif %}"
+                            data-end="{% if item.end_date %}{{ item.end_date }}{% else %}Ongoing{% endif %}"
+                            data-status="{% if item.is_valid %}Active{% else %}Expired{% endif %}">
+
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td>{{ item.percentage }}%</td>
+                            <td>
+                                {% if item.start_date %}{{ item.start_date }}{% else %}Always{% endif %}
+                                -
+                                {% if item.end_date %}{{ item.end_date }}{% else %}Ongoing{% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_valid %}
+                                    <span class="status-badge status-active">Active</span>
+                                {% else %}
+                                    <span class="status-badge status-expired">Expired</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <a href="{% url 'update_discount' item.id %}" class="discount-action-btn discount-action-edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <button type="button" class="discount-action-btn discount-action-delete" data-toggle="modal" data-target="#deleteDiscount{{ item.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="deleteDiscount{{ item.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title text-danger">Delete Discount</h5>
+                                        <button type="button" class="close" data-dismiss="modal">
+                                            <span>&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>This action is <strong>permanent</strong>.</p>
+                                        <p>Are you sure you want to delete <strong>{{ item.name }}</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{% url 'delete_discount' item.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="discount-empty-cell">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-tags"></i>
+                                    </div>
+                                    <h4>No Discounts Found</h4>
+                                    <p>Add your first promotional discount to begin configuration</p>
+                                    <a href="{% url 'discount' %}" class="discount-btn discount-btn-primary">
+                                        <i class="fas fa-plus"></i> Add Discount
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="drawer-overlay"></div>
+        <div class="discount-drawer">
+            <div class="drawer-header">
+                <h4>Discount Insights</h4>
+                <button class="drawer-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <div class="discount-profile">
+                    <div class="discount-avatar">
+                        <i class="fas fa-percent"></i>
+                    </div>
+                    <h5 id="dName"></h5>
+                    <p id="dRate"></p>
+                </div>
+                <div class="drawer-box">
+                    <div class="drawer-item">
+                        <span>Start Date</span>
+                        <strong id="dStart"></strong>
+                    </div>
+                    <div class="drawer-item">
+                        <span>End Date</span>
+                        <strong id="dEnd"></strong>
+                    </div>
+                    <div class="drawer-item">
+                        <span>System Status</span>
+                        <strong id="dStatus"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rows = document.querySelectorAll('.discount-row');
+    const drawer = document.querySelector('.discount-drawer');
+    const overlay = document.querySelector('.drawer-overlay');
+    const closeBtn = document.querySelector('.drawer-close');
+
+    rows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('.action-group')) return;
+
+            document.getElementById('dName').innerText = this.dataset.name;
+            document.getElementById('dRate').innerText = "Deduction: " + this.dataset.rate;
+            document.getElementById('dStart').innerText = this.dataset.start;
+            document.getElementById('dEnd').innerText = this.dataset.end;
+            document.getElementById('dStatus').innerText = this.dataset.status;
+
+            drawer.classList.add('show');
+            overlay.classList.add('show');
+        });
+    });
+
+    [overlay, closeBtn].forEach(el => {
+        el.addEventListener('click', () => {
+            drawer.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+    });
+});
+</script>
+
+{% endblock %}
