@@ -1,12 +1,15 @@
 services:
   - type: web
     name: ai-business-assistant
+
     env: python
 
-    buildCommand: "./build.sh"
-
-    startCommand: "gunicorn AIBusinessAssistant.wsgi:application"
-
     plan: free
+
+    branch: main
+
+    buildCommand: ./build.sh
+
+    startCommand: gunicorn AIBusinessAssistant.wsgi:application
 
     autoDeploy: true
