@@ -5,7 +5,7 @@ whitenoise==6.4.0
 
 mysqlclient==2.2.4
 psycopg[binary]==3.2.13
-dj-database-url==3.0.1
+dj-database-url==2.2.0
 
 python-dotenv==1.0.1
 python-decouple==3.8

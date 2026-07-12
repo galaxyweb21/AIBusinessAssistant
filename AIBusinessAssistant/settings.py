@@ -15,6 +15,8 @@ Django settings for AIBusinessAssistant project.
 
 from pathlib import Path
 import os
+
+import dj_database_url
 from dotenv import load_dotenv
 
 # =========================
@@ -22,23 +24,41 @@ from dotenv import load_dotenv
 # =========================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-STATIC_DIR = os.path.join(BASE_DIR, 'static')
-
 load_dotenv(BASE_DIR / ".env")
+
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 # =========================
 # OPENAI CONFIG
 # =========================
 # OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # =========================
 # BASE SETTINGS
 # =========================
-SECRET_KEY = 'django-insecure-$0x^y^kzgb5gqfx=haa8_axpqol*63x3$q!9p2w-*l_(iyebk0'
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-local-development-key"
+)
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = [
+        "127.0.0.1",
+        "localhost",
+    ]
+else:
+    ALLOWED_HOSTS = os.getenv(
+        "ALLOWED_HOSTS",
+        ""
+    ).split(",")
+
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    ""
+).split(",") if os.getenv("CSRF_TRUSTED_ORIGINS") else []
 
 
 # Application definition
@@ -103,14 +123,27 @@ WSGI_APPLICATION = 'AIBusinessAssistant.wsgi.application'
 # }
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ai_business_assistant',
-        'USER': 'Raja',
-        'PASSWORD': '12345@dontmess',
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": os.getenv("DB_NAME"),
+            "USER": os.getenv("DB_USER"),
+            "PASSWORD": os.getenv("DB_PASSWORD"),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "3306"),
+        }
+    }
 
 
 # Password validation
@@ -147,13 +180,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    BASE_DIR / "static",
 ]
+
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -168,7 +205,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_ALLOW_ALL_ORIGINS = True
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 # STATIC_ROOT = BASE_DIR / 'media'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -179,6 +215,20 @@ LOGIN_REDIRECT_URL = 'index'
 CRONJOBS = [
     ('*/5 * * * *', 'event.cron.update_event_statuses'),
 ]
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
 
 # For  Forget password
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -206,3 +256,15 @@ CELERY_TIMEZONE = 'Africa/Accra'
 # PAYSTACK_CALLBACK_URL = "http://127.0.0.1:8000/billing/paystack/callback/"
 # **********************************************************************
 # For Deployment Ends
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )

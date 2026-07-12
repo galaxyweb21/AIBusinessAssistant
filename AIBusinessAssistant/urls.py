@@ -18,13 +18,11 @@ from django.contrib import admin
 from django.urls import path, reverse_lazy, include
 from django.conf import settings
 from django.conf.urls.static import static
-from accounts import views
-from business import views
-from inventory import views
-from sales import views
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 from accounts.forms import UserPasswordChangeForm
+
+from django.http import HttpResponse
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,7 +34,7 @@ urlpatterns = [
 
     path('', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='user-login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='accounts/logout.html'), name='user-logout'),
-path('change_password/', PasswordChangeView.as_view(template_name='accounts/change_password.html',
+    path('change_password/', PasswordChangeView.as_view(template_name='accounts/change_password.html',
                                                         success_url=reverse_lazy('password_change_done'),
                                                         form_class=UserPasswordChangeForm
                                                         ), name='change_password'),

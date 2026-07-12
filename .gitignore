@@ -1,15 +1,45 @@
-# Secrets
-.env
-backups/
-
-
+# -----------------------------
 # Python
+# -----------------------------
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment Variables
+.env
+.env.*
 
 # Django
 *.log
+db.sqlite3
+*.sqlite3
+media/
 staticfiles/
 
-# Database
-*.sqlite3
+# Backups
+backups/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
