@@ -10,106 +10,640 @@
 
     {% block custom_css %}{% endblock custom_css %}
 
-    <!-- THEME INIT -->
-    <script>
-    (function () {
-        const savedTheme = localStorage.getItem("theme") || "light";
-        if (savedTheme === "dark") {
-            document.documentElement.classList.add("dark-mode");
-        }
-    })();
-    </script>
+    <!-- ENTERPRISE THEME INITIALIZER -->
+<script>
+(function () {
+
+    const savedTheme =
+        localStorage.getItem("appTheme") || "light";
+
+
+    if(savedTheme === "dark"){
+
+        document.documentElement.classList.add(
+            "dark-mode"
+        );
+
+    }
+
+
+})();
+</script>
 
     <style>
-    body { overflow-x: hidden; }
+/* ==========================================================
+   AI BUSINESS ASSISTANT UI SYSTEM v2
+   ========================================================== */
 
-    .content-wrapper {
-        padding: 15px;
+:root{
+
+    /* Brand */
+
+    --primary:#4f46e5;
+    --primary-dark:#4338ca;
+    --primary-light:#eef2ff;
+
+    --success:#16a34a;
+    --warning:#f59e0b;
+    --danger:#dc2626;
+    --info:#0ea5e9;
+
+    /* Background */
+
+    --bg:#f8fafc;
+    --bg-card:#ffffff;
+    --bg-hover:#f1f5f9;
+
+    /* Text */
+
+    --text:#111827;
+    --text-light:#6b7280;
+
+    /* Border */
+
+    --border:#e5e7eb;
+
+    /* Radius */
+
+    --radius-sm:10px;
+    --radius:16px;
+    --radius-lg:22px;
+
+    /* Shadows */
+
+    --shadow-sm:0 2px 10px rgba(15,23,42,.04);
+
+    --shadow:
+        0 10px 30px rgba(15,23,42,.08);
+
+    --shadow-lg:
+        0 25px 60px rgba(15,23,42,.12);
+
+    --transition:.25s ease;
+}
+
+/* ==========================================================
+   DARK MODE
+   ========================================================== */
+
+.dark-mode{
+
+    --bg:#0f172a;
+
+    --bg-card:#172033;
+
+    --bg-hover:#243244;
+
+    --text:#f8fafc;
+
+    --text-light:#94a3b8;
+
+    --border:#273449;
+
+    color-scheme:dark;
+}
+
+
+/* ==========================================================
+   BODY
+   ========================================================== */
+
+html,
+body{
+
+    width:100%;
+
+    overflow-x:hidden;
+
+    color:var(--text);
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        sans-serif;
+
+    transition:
+        background .3s,
+        color .3s;
+}
+
+body{
+
+    min-height:100vh;
+}
+
+
+/* ==========================================================
+   WRAPPER
+   ========================================================== */
+
+.wrapper{
+
+    min-height:100vh;
+
+}
+
+
+/* ==========================================================
+   CONTENT
+   ========================================================== */
+
+.content-wrapper{
+
+    background:transparent;
+
+    padding:30px;
+
+    min-height:calc(100vh - 58px);
+
+    transition:all .3s;
+}
+
+
+/* ==========================================================
+   PREMIUM GLASS CARDS
+========================================================== */
+
+.card{
+
+    border:none;
+
+    border-radius:22px;
+
+    background:
+        rgba(255,255,255,.88);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    box-shadow:
+        0 20px 45px rgba(15,23,42,.08);
+
+    transition:.35s ease;
+
+    overflow:hidden;
+
+}
+
+.dark-mode .card{
+
+    background:
+        rgba(17,24,39,.92);
+
+}
+
+.card:hover{
+
+    box-shadow:
+        0 30px 60px rgba(99,102,241,.16);
+
+}
+
+.card-header{
+
+    background:transparent;
+
+    border-bottom:1px solid var(--border);
+
+    font-weight:700;
+
+    padding:18px 22px;
+}
+
+.card-body{
+
+    padding:24px;
+}
+
+
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+
+.btn{
+
+    border-radius:14px;
+
+    font-weight:600;
+
+    padding:.7rem 1.4rem;
+
+    transition:.3s;
+
+    border:none;
+
+}
+
+.btn-primary{
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #4f46e5
+        );
+
+    box-shadow:
+        0 12px 30px rgba(99,102,241,.25);
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 20px 40px rgba(99,102,241,.35);
+
+}
+
+.btn-success{
+
+    background:
+        linear-gradient(
+            135deg,
+            #22c55e,
+            #16a34a
+        );
+
+}
+
+.btn-danger{
+
+    background:
+        linear-gradient(
+            135deg,
+            #ef4444,
+            #dc2626
+        );
+
+}
+
+
+/* ==========================================================
+   TABLES
+   ========================================================== */
+
+.table{
+
+    border-collapse:separate;
+
+    border-spacing:0 10px;
+
+}
+
+.table thead th{
+
+    border:none;
+
+    background:#eef2ff;
+
+    color:#475569;
+
+    font-weight:700;
+
+}
+
+.dark-mode .table thead th{
+
+    background:#1e293b;
+
+    color:#cbd5e1;
+
+}
+
+.table tbody tr{
+
+    background:white;
+
+    transition:.25s;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.03);
+
+}
+
+.dark-mode .table tbody tr{
+
+    background:#111827;
+
+}
+
+.table tbody tr:hover{
+
+    box-shadow:
+        0 14px 35px rgba(99,102,241,.08);
+
+}
+
+.table-responsive{
+
+    border-radius:18px;
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   FORMS
+   ========================================================== */
+
+
+
+
+/* ==========================================================
+   DROPDOWNS
+   ========================================================== */
+
+.dropdown-menu{
+
+    border:none;
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow-lg);
+
+    background:var(--bg-card);
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   MODALS
+   ========================================================== */
+
+.modal-content{
+
+    border:none;
+
+    border-radius:22px;
+
+    overflow:hidden;
+
+    box-shadow:var(--shadow-lg);
+}
+
+.modal-header{
+
+    border-bottom:1px solid var(--border);
+}
+
+.modal-footer{
+
+    border-top:1px solid var(--border);
+}
+
+
+/* ==========================================================
+   SCROLLBAR
+   ========================================================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+    height:10px;
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#cbd5e1;
+
+    border-radius:20px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb{
+
+    background:#334155;
+}
+
+.badge{
+
+    padding:.55rem .9rem;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+
+}
+
+.badge-success{
+
+    background:#dcfce7;
+
+    color:#15803d;
+
+}
+
+.badge-danger{
+
+    background:#fee2e2;
+
+    color:#dc2626;
+
+}
+
+.badge-warning{
+
+    background:#fef3c7;
+
+    color:#d97706;
+
+}
+
+.skeleton{
+
+    position:relative;
+
+    overflow:hidden;
+
+    background:#e5e7eb;
+
+    border-radius:14px;
+
+}
+
+.skeleton::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.6),
+            transparent
+        );
+
+    animation:skeleton 1.3s infinite;
+
+}
+
+@keyframes skeleton{
+
+    from{
+
+        transform:translateX(-100%);
+
     }
 
-    /* Cards */
-    .card {
-        border-radius: 12px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    to{
+
+        transform:translateX(100%);
+
     }
 
-    /* Tables */
-    .table-responsive {
-        overflow-x: auto;
-    }
+}
 
-    /* Sidebar FIX */
-    @media (max-width: 768px) {
+.fab{
 
-        .main-sidebar {
-            position: fixed;
-            top: 0;
-            left: -260px;
-            width: 260px;
-            height: 100%;
-            z-index: 1055;
-            transition: 0.3s ease;
-        }
+    position:fixed;
 
-        body.sidebar-open .main-sidebar {
-            left: 0;
-        }
+    right:28px;
 
-        .content-wrapper {
-            margin-left: 0 !important;
-        }
+    bottom:28px;
 
-        /* Prevent overlay issues */
-        body.sidebar-open::after {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.4);
-            z-index: 1050;
-        }
+    width:64px;
 
-        /* GRID FIX (CRITICAL FIX) */
-        .row {
-            margin-left: 0;
-            margin-right: 0;
-        }
+    height:64px;
 
-        .col-lg-3,
-        .col-lg-4,
-        .col-lg-6,
-        .col-md-6,
-        .col-md-4 {
-            margin-bottom: 15px;
-        }
+    border-radius:50%;
 
-        /* Charts fix */
-        canvas {
-            max-width: 100% !important;
-            height: auto !important;
-        }
+    display:flex;
 
-        /* Buttons */
-        .btn {
-            width: auto;
-        }
-    }
-    </style>
+    align-items:center;
+
+    justify-content:center;
+
+    color:white;
+
+    text-decoration:none;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #4f46e5
+        );
+
+    box-shadow:
+        0 25px 45px rgba(99,102,241,.35);
+
+    transition:.3s;
+
+    z-index:1100;
+
+}
+
+.fab:hover{
+
+    transform:translateY(-5px) rotate(90deg);
+
+    color:white;
+
+}
+
+.fade-up{
+
+    opacity:0;
+
+    transform:translateY(20px);
+
+    transition:.6s;
+
+}
+
+.fade-up.show{
+
+    opacity:1;
+
+    transform:none;
+
+}
+
+/* ==========================================================
+   MOBILE
+   ========================================================== */
+
+@media(max-width:991px){
+
+.content-wrapper{
+
+    padding:18px;
+}
+
+.card-body{
+
+    padding:18px;
+}
+
+.card{
+
+    border-radius:18px;
+}
+
+.table-responsive{
+
+    border-radius:14px;
+}
+
+}
+
+.empty-state{
+
+    text-align:center;
+
+    padding:80px 20px;
+
+}
+
+.empty-state i{
+
+    font-size:70px;
+
+    color:#cbd5e1;
+
+    margin-bottom:20px;
+
+}
+
+.empty-state h4{
+
+    font-weight:700;
+
+}
+
+.empty-state p{
+
+    color:#94a3b8;
+
+}
+
+</style>
 
 </head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition">
 
 <div class="wrapper">
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     {% include 'base/navbar.html' %}
-    {% include 'base/sidebar.html' %}
+    {% include 'base/users_sidebar/admin_sidebar.html' %}
 
+<!--    <div class="content-wrapper">-->
     {% block main_content %}
     {% endblock %}
+
+<!--    </div>-->
 
     {% include 'base/footer.html' %}
 
@@ -121,39 +655,229 @@
 
 </div>
 
-<!-- Sidebar Toggle -->
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toggle = document.querySelector('[data-widget="pushmenu"]');
-
-    if (toggle) {
-        toggle.addEventListener("click", function () {
-            document.body.classList.toggle("sidebar-open");
-        });
-    }
-
-    // Close sidebar when clicking outside
-    document.addEventListener("click", function(e){
-        if (!e.target.closest('.main-sidebar') && !e.target.closest('[data-widget="pushmenu"]')) {
-            document.body.classList.remove("sidebar-open");
-        }
-    });
-});
-</script>
-
 <!-- Theme Toggle -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const toggle = document.getElementById("themeToggle");
 
-    if (!toggle) return;
+window.ThemeManager = {
 
-    toggle.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.toggle("dark-mode");
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-    });
+
+    init:function(){
+
+        const saved =
+            localStorage.getItem(
+                "appTheme"
+            ) || "light";
+
+
+        this.apply(saved);
+
+
+    },
+
+
+    apply:function(theme){
+
+
+        const html =
+            document.documentElement;
+
+
+        const icon =
+            document.getElementById(
+                "themeIcon"
+            );
+
+
+        if(theme==="dark"){
+
+
+            html.classList.add(
+                "dark-mode"
+            );
+
+
+            if(icon){
+
+                icon.classList.remove(
+                    "fa-moon"
+                );
+
+                icon.classList.add(
+                    "fa-sun"
+                );
+
+            }
+
+
+        }
+        else{
+
+
+            html.classList.remove(
+                "dark-mode"
+            );
+
+
+            if(icon){
+
+                icon.classList.remove(
+                    "fa-sun"
+                );
+
+                icon.classList.add(
+                    "fa-moon"
+                );
+
+            }
+
+
+        }
+
+
+    },
+
+
+    toggle:function(){
+
+
+        const isDark =
+            document.documentElement
+            .classList
+            .contains(
+                "dark-mode"
+            );
+
+
+        const theme =
+            isDark
+            ?
+            "light"
+            :
+            "dark";
+
+
+        localStorage.setItem(
+            "appTheme",
+            theme
+        );
+
+
+        this.apply(theme);
+
+
+    }
+
+
+};
+
+
+
+document.addEventListener(
+"DOMContentLoaded",
+function(){
+
+
+    ThemeManager.init();
+
+
+    const toggle =
+        document.getElementById(
+            "themeToggle"
+        );
+
+
+    if(toggle){
+
+
+        toggle.addEventListener(
+            "click",
+            function(){
+
+                ThemeManager.toggle();
+
+            }
+        );
+
+
+    }
+
+
+
+    const overlay =
+        document.getElementById(
+            "sidebarOverlay"
+        );
+
+
+    if(overlay){
+
+        overlay.addEventListener(
+            "click",
+            function(){
+
+                document.body.classList.remove(
+                    "sidebar-open"
+                );
+
+            }
+        );
+
+    }
+
+
+
 });
+
+
 </script>
 
+<script>
+
+document.addEventListener(
+"DOMContentLoaded",
+function(){
+
+
+const greeting =
+document.getElementById(
+"greetingText"
+);
+
+
+if(!greeting)
+return;
+
+
+
+const hour =
+new Date().getHours();
+
+
+let message =
+"Good evening";
+
+
+if(hour >=5 && hour <12){
+
+message="Good morning";
+
+}
+else if(hour >=12 && hour <17){
+
+message="Good afternoon";
+
+}
+
+
+
+greeting.textContent =
+message;
+
+
+
+});
+
+
+</script>
 </body>
 </html>

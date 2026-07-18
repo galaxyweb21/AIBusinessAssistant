@@ -31,9 +31,14 @@ from datetime import timedelta
 @login_required
 def index(request):
     user = request.user
+    staff = StaffProfile.objects.get(staff_id=user.id)
 
     today = timezone.now().date()
-    business = Business.objects.get(owner=request.user)
+
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
+    )
 
     context = {
         "today": today,
@@ -132,145 +137,18 @@ def register_business(request):
 
 @login_required
 @transaction.atomic
-def business_profile(request):
-
-    user = User.objects.get(id=request.user.id)
-    business = Business.objects.get(owner_id=request.user.id)
-    staff = StaffProfile.objects.get(staff_id=request.user.id)
-    total_staff = StaffProfile.objects.filter(business=business).count()
-
-    total_products = Inventory.objects.filter(business=business).count()
-
-    sales = Sale.objects.filter(business=business, status='Completed')
-
-    total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
-    #
-    # total_profit = SaleItem.objects.filter(sale__business=business, sale__status='Completed').aggregate(
-    #     total=Coalesce(Sum('profit'), Decimal('0.00')))['total']
-
-    if request.method == 'POST':
-
-        form = UpdateUserForm(
-            request.POST,
-            instance=user
-        )
-
-        pform = ProfileForm(
-            request.POST,
-            request.FILES,
-            instance=staff
-        )
-
-        businessform = BusinessForm(
-            request.POST,
-            request.FILES,
-            instance=business
-        )
-
-        if form.is_valid() and pform.is_valid() and businessform.is_valid():
-
-            # =========================
-            # USER
-            # =========================
-            user_instance = form.save(commit=False)
-            user_instance.save()
-
-            # =========================
-            # BUSINESS
-            # =========================
-            business_instance = businessform.save(commit=False)
-            business_instance.owner = user_instance
-            business_instance.save()
-
-            # =========================
-            # PROFILE
-            # =========================
-            profile_instance = pform.save(commit=False)
-            profile_instance.staff = user_instance
-            profile_instance.business_id = business_instance.id
-            profile_instance.save()
-
-            # =========================
-            # AUDIT LOG (PROFILE UPDATE)
-            # =========================
-
-            AuditLog.objects.create(
-
-                user=user_instance,
-
-                action="Business Profile Update",
-
-                description=(
-                    f"{user_instance.first_name or user_instance.username} "
-                    f"updated business profile for '{business_instance.name}'."
-                ),
-
-                content_type=ContentType.objects.get_for_model(Business),
-
-                object_id=business_instance.id,
-
-                ip_address=request.META.get("REMOTE_ADDR")
-            )
-
-            messages.success(
-                request,
-                'Business profile updated successfully.'
-            )
-
-            return redirect('business_profile')
-
-        else:
-
-            messages.error(
-                request,
-                'Please correct the errors below.'
-            )
-
-
-    else:
-
-        form = UpdateUserForm(instance=user)
-
-        pform = ProfileForm(instance=staff)
-
-        businessform = BusinessForm(instance=business)
-
-    context = {
-        "user": user,
-        "form": form,
-        "pform": pform,
-        "businessform": businessform,
-
-        "business": business,
-        "profile": staff,
-
-        # OPTIONAL STATS
-        "total_staff": total_staff,
-        "total_products": total_products,
-        "total_revenue": total_revenue,
-
-        "title": "Business Profile",
-    }
-
-    return render(
-        request,
-        'accounts/business_profile.html',
-        context
-    )
-
-
-@login_required
-@transaction.atomic
 def staff_profile(request):
 
-    user = User.objects.get(id=request.user.id)
-    business = Business.objects.get(owner_id=request.user.id)
-    staff = StaffProfile.objects.get(staff_id=request.user.id)
-    total_staff = StaffProfile.objects.filter(business=business).count()
+    user = request.user
 
-    total_products = Inventory.objects.filter(business=business).count()
+    staff = StaffProfile.objects.get(staff_id=user.id)
+    business = Business.objects.get(owner_id=staff.business_id)
 
-    sales = Sale.objects.filter(business=business, status='Completed')
+    total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
+
+    total_products = Inventory.objects.filter(business_id=staff.business_id).count()
+
+    sales = Sale.objects.filter(business_id=staff.business_id, status='Completed')
 
     total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
     #
@@ -353,7 +231,7 @@ def staff_profile(request):
         "pform": pform,
 
         "business": business,
-        "profile": staff,
+        "staff": staff,
 
         # OPTIONAL STATS
         "total_staff": total_staff,
@@ -372,12 +250,138 @@ def staff_profile(request):
 
 @login_required
 @transaction.atomic
-def register_staff(request):
+def business_profile(request):
 
     user = request.user
 
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = StaffProfile.objects.get(staff_id=user.id)
+    business = Business.objects.get(owner_id=staff.business_id)
+
+    total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
+
+    total_products = Inventory.objects.filter(business_id=staff.business_id).count()
+
+    sales = Sale.objects.filter(business_id=staff.business_id, status='Completed')
+
+    total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
+    #
+    # total_profit = SaleItem.objects.filter(sale__business=business, sale__status='Completed').aggregate(
+    #     total=Coalesce(Sum('profit'), Decimal('0.00')))['total']
+
+    if request.method == 'POST':
+
+        form = UpdateUserForm(
+            request.POST,
+            instance=user
+        )
+
+        pform = ProfileForm(
+            request.POST,
+            request.FILES,
+            instance=staff
+        )
+
+        bform = BusinessForm(request.POST, request.FILES, instance=business)
+
+        if form.is_valid() and pform.is_valid() and bform.is_valid():
+
+            # =========================
+            # USER
+            # =========================
+            user_instance = form.save(commit=False)
+            user_instance.save()
+
+            # =========================
+            # PROFILE
+            # =========================
+            profile_instance = pform.save(commit=False)
+            profile_instance.staff = user_instance
+            profile_instance.save()
+
+            # =========================
+            # BUSINESS
+            # =========================
+            # if staff.role_type == "Admin":
+            business_instance = bform.save(commit=False)
+            business_instance.save()
+
+            # =========================
+            # AUDIT LOG (PROFILE UPDATE)
+            # =========================
+
+            AuditLog.objects.create(
+
+                user=user_instance,
+
+                action="Staff Profile Update",
+
+                description=(
+                    f"{user_instance.first_name or user_instance.username} "
+                    f"updated profile for '{user_instance.first_name}'." f"{user_instance.last_name} "
+                ),
+
+                content_type=ContentType.objects.get_for_model(Business),
+
+                object_id=business.id,
+
+                ip_address=request.META.get("REMOTE_ADDR")
+            )
+
+            messages.success(
+                request,
+                'Profile updated successfully.'
+            )
+
+            return redirect('business_profile')
+
+        else:
+
+            messages.error(
+                request,
+                'Please correct the errors below.'
+            )
+
+    else:
+
+        form = UpdateUserForm(instance=user)
+
+        pform = ProfileForm(instance=staff)
+        bform = BusinessForm(instance=business)
+
+    context = {
+        "user": user,
+        "form": form,
+        "pform": pform,
+        "bform": bform,
+
+        "business": business,
+        "staff": staff,
+
+        # OPTIONAL STATS
+        "total_staff": total_staff,
+        "total_products": total_products,
+        "total_revenue": total_revenue,
+
+        "title": "Staff Profile",
+    }
+
+    return render(
+        request,
+        'accounts/business_profile.html',
+        context
+    )
+
+
+@login_required
+@transaction.atomic
+def register_staff(request):
+
+    user = User.objects.get(id=request.user.id)
+
+    staff = StaffProfile.objects.get(staff_id=user.id)
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
     )
 
     form = CreateUserForm()
@@ -501,18 +505,20 @@ def register_staff(request):
 @transaction.atomic
 def update_staff(request, staff_id):
 
-    business = Business.objects.get(owner=request.user)
+    user = request.user
 
-    staff_profile = get_object_or_404(
+    staff = get_object_or_404(
         StaffProfile,
-        id=staff_id,
-        business=business
+        id=staff_id
     )
 
-    user = staff_profile.staff
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
+    )
 
     form = UpdateUserForm(instance=user)
-    pform = StaffProfileForm(instance=staff_profile)
+    pform = StaffProfileForm(instance=staff)
 
     if request.method == "POST":
 
@@ -520,7 +526,7 @@ def update_staff(request, staff_id):
         pform = StaffProfileForm(
             request.POST,
             request.FILES,
-            instance=staff_profile
+            instance=staff
         )
 
         if form.is_valid() and pform.is_valid():
@@ -568,7 +574,7 @@ def update_staff(request, staff_id):
     # 🔥 ANALYTICS FIX HERE
     # =========================
 
-    staff_qs = StaffProfile.objects.filter(business=business)
+    staff_qs = StaffProfile.objects.filter(business_id=staff.business_id)
 
     total_staff = staff_qs.count()
 
@@ -583,7 +589,7 @@ def update_staff(request, staff_id):
     context = {
         "form": form,
         "pform": pform,
-        "staff": staff_profile,
+        "staff": staff,
         "user": user,
         "business": business,
 
@@ -602,14 +608,16 @@ def update_staff(request, staff_id):
 @transaction.atomic
 def deactivate_staff(request, staff_id):
 
-    business = Business.objects.get(
-        owner=request.user
-    )
+    user = User.objects.get(id=request.user.id)
 
     staff = get_object_or_404(
         StaffProfile,
-        id=staff_id,
-        business=business
+        id=staff_id
+    )
+
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
     )
 
     # Prevent repeated deactivation
@@ -671,14 +679,14 @@ def deactivate_staff(request, staff_id):
 @transaction.atomic
 def reactivate_staff(request, staff_id):
 
-    business = Business.objects.get(
-        owner=request.user
-    )
-
     staff = get_object_or_404(
         StaffProfile,
-        id=staff_id,
-        business=business
+        id=staff_id
+    )
+
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
     )
 
     staff.is_active = True
@@ -719,12 +727,14 @@ def reactivate_staff(request, staff_id):
 @transaction.atomic
 def delete_staff(request, staff_id):
 
-    business = Business.objects.get(owner=request.user)
-
-    staff_profile = get_object_or_404(
+    staff = get_object_or_404(
         StaffProfile,
-        id=staff_id,
-        business=business
+        id=staff_id
+    )
+
+    business = get_object_or_404(
+        Business,
+        owner_id=staff.business_id
     )
 
     user = staff_profile.staff
@@ -765,9 +775,12 @@ def delete_staff(request, staff_id):
 @login_required
 def staff_list_view(request):
 
-    user = request.user
-    business = Business.objects.get(owner=user)
+    user = User.objects.get(id=request.user.id)
 
+    staff = StaffProfile.objects.get(staff_id=user.id)
+    business = Business.objects.filter(
+        owner_id=staff.business_id
+    )
     search = request.GET.get("search", "").strip()
     role = request.GET.get("role", "").strip()
     tab = request.GET.get("tab", "active")
@@ -775,10 +788,8 @@ def staff_list_view(request):
     # =========================
     # BASE STAFF QUERY
     # =========================
-    staff_qs = StaffProfile.objects.select_related(
-        "staff"
-    ).filter(
-        business=business
+    staff_qs = StaffProfile.objects.filter(
+        business_id=staff.business_id
     )
 
     # =========================
@@ -920,7 +931,7 @@ def staff_list_view(request):
     # COUNTS
     # =========================
     base_qs = StaffProfile.objects.filter(
-        business=business
+        business_id=staff.business_id
     )
 
     context = {

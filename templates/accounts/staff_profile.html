@@ -438,8 +438,8 @@
 
                     <div class="business-logo">
 
-                        {% if profile.image %}
-                    <img src="{{ profile.image.url }}">
+                        {% if staff.image %}
+                    <img src="{{ staff.image.url }}">
                 {% else %}
                         <h1>{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</h1>
                 {% endif %}
@@ -506,7 +506,7 @@
                                 </div>
 
                                 <div class="info-item">
-                                    <div class="info-label">Owner</div>
+                                    <div class="info-label">Staff</div>
                                     <div class="info-value">
                                         {{ request.user.first_name }}
                                         {{ request.user.last_name }}
@@ -523,14 +523,14 @@
                                 <div class="info-item">
                                     <div class="info-label">Contact</div>
                                     <div class="info-value">
-                                        {{ profile.contact }}
+                                        {{ staff.contact }}
                                     </div>
                                 </div>
 
                                 <div class="info-item full-width">
                                     <div class="info-label">Address</div>
                                     <div class="info-value">
-                                        {{ profile.address }}
+                                        {{ staff.address }}
                                     </div>
                                 </div>
 
@@ -547,7 +547,7 @@
                                 {% csrf_token %}
 
                                 <div class="form-grid">
-{% if form.errors or pform.errors or businessform.errors %}
+{% if form.errors or pform.errors %}
 
 <div class="alert alert-danger mb-4">
 
@@ -586,6 +586,7 @@
                                         <label>Address</label>
                                         {{ pform.address }}
                                     </div>
+
 
                                 </div>
 
@@ -658,7 +659,7 @@
                                 </div>
 
                                 <div class="stat-value">
-                                    {{ profile.role_type }}
+                                    {{ staff.role_type }}
                                 </div>
 
                             </div>

@@ -438,11 +438,11 @@
 
                     <div class="business-logo">
 
-                        {% if business.logo %}
-                        <img src="{{ business.logo.url }}">
-                        {% else %}
-                        <i class="fas fa-building"></i>
-                        {% endif %}
+                        {% if staff.image %}
+                    <img src="{{ staff.image.url }}">
+                {% else %}
+                        <h1>{{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}</h1>
+                {% endif %}
 
                     </div>
 
@@ -523,14 +523,14 @@
                                 <div class="info-item">
                                     <div class="info-label">Contact</div>
                                     <div class="info-value">
-                                        {{ profile.contact }}
+                                        {{ staff.contact }}
                                     </div>
                                 </div>
 
                                 <div class="info-item full-width">
                                     <div class="info-label">Address</div>
                                     <div class="info-value">
-                                        {{ profile.address }}
+                                        {{ staff.address }}
                                     </div>
                                 </div>
 
@@ -547,13 +547,12 @@
                                 {% csrf_token %}
 
                                 <div class="form-grid">
-{% if form.errors or pform.errors or businessform.errors %}
+{% if form.errors or pform.errors or bform.errors %}
 
 <div class="alert alert-danger mb-4">
 
     {{ form.errors }}
     {{ pform.errors }}
-    {{ businessform.errors }}
 
 </div>
 
@@ -588,27 +587,36 @@
                                         {{ pform.address }}
                                     </div>
 
-                                    <div class="form-group">
-                                        <label>Business Name</label>
-                                        {{ businessform.name }}
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Business Type</label>
-                                        {{ businessform.business_type }}
-                                    </div>
-
-                                    <div class="form-group full-width">
-                                        <label>Description</label>
-                                        {{ businessform.description }}
-                                    </div>
-
-                                    <div class="form-group full-width">
-                                        <label>Business Logo</label>
-                                        {{ businessform.logo }}
-                                    </div>
 
                                 </div>
+
+<hr>
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label>Business Name</label>
+                            {{ bform.name }}
+                        </div>
+
+                        <div class="form-group">
+                            <label>Business Type</label>
+                            {{ bform.business_type }}
+                            {{ bform.business_type.errors }}
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Business Description</label>
+                            {{ bform.description }}
+                            {{ bform.description.errors }}
+                        </div>
+
+                        <div class="form-group">
+                            <label>Business Logo</label>
+                            {{ bform.logo }}
+                            {{ bform.logo.errors }}
+                        </div>
+
+                    </div>
 
                                 <button
                                         type="submit"
@@ -673,13 +681,13 @@
                                     </div>
 
                                     <div>
-                                        Revenue
+                                        Staff Role
                                     </div>
 
                                 </div>
 
                                 <div class="stat-value">
-                                    Gh¢{{ total_revenue }}
+                                    {{ staff.role_type }}
                                 </div>
 
                             </div>

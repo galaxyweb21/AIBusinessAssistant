@@ -1,366 +1,513 @@
 {% include 'base/announcement_style.html' %}
 {% load static %}
+
 <style>
-    /* =========================================
-   MODERN USER DROPDOWN
-========================================= */
-
-.user-dropdown-pro{
-    width: 320px;
-
-    padding: 0;
-
-    overflow: hidden;
-
-    border: none !important;
-    border-radius: 20px !important;
-
-    background: var(--bg-card) !important;
-
-    box-shadow:
-        0 20px 50px rgba(0,0,0,0.18),
-        0 0 0 1px var(--border);
-
-    animation: dropdownFade .25s ease;
-}
-
-/* DARK MODE */
-.dark-mode .user-dropdown-pro{
-    background: #111827 !important;
-
-    box-shadow:
-        0 25px 60px rgba(0,0,0,0.45),
-        0 0 0 1px rgba(255,255,255,0.06);
-}
-
-/* TOP SECTION */
-.dropdown-user-top{
-    position: relative;
-
-    padding: 24px;
-
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #6366f1,
-            #4f46e5
-        );
-
-    overflow: hidden;
-}
-
-.dropdown-user-top::before{
-    content: "";
-
-    position: absolute;
-
-    width: 180px;
-    height: 180px;
-
-    border-radius: 50%;
-
-    background: rgba(255,255,255,0.08);
-
-    top: -80px;
-    right: -60px;
-}
-
-/* AVATAR */
-.dropdown-avatar{
-    position: relative;
-    z-index: 2;
-
-    width: 62px;
-    height: 62px;
-
-    border-radius: 18px;
-
-    overflow: hidden;
-
-    background: rgba(255,255,255,0.15);
-
-    color: #fff;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 22px;
-    font-weight: 700;
-
-    border: 1px solid rgba(255,255,255,0.15);
-
-    backdrop-filter: blur(8px);
-}
-
-.dropdown-avatar img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* USER INFO */
-.dropdown-user-info{
-    position: relative;
-    z-index: 2;
-
-    display: flex;
-    flex-direction: column;
-}
-
-.dropdown-user-info strong{
-    color: #fff;
-
-    font-size: 17px;
-    font-weight: 700;
-
-    margin-bottom: 4px;
-}
-
-.dropdown-user-info small{
-    color: rgba(255,255,255,0.78);
-
-    font-size: 13px;
-
-    word-break: break-word;
-}
-
-/* DIVIDER */
-.user-dropdown-pro .dropdown-divider{
-    margin: 0;
-
-    border-top: 1px solid var(--border);
-}
-
-/* ===============================
-   USER AVATAR HOVER
-================================= */
-
-.user-avatar,
-.dropdown-avatar,
-.avatar-container {
-    cursor: pointer;
-    transition: all 0.25s ease;
-}
-
-/* HOVER EFFECT */
-.user-avatar:hover,
-.dropdown-avatar:hover,
-.avatar-container:hover {
-
-    transform: translateY(-2px) scale(1.04);
-
-    box-shadow:
-        0 10px 25px rgba(99,102,241,0.25);
-}
-
-/* IMAGE SMOOTH */
-.user-avatar img,
-.dropdown-avatar img,
-.avatar-container img {
-    transition: all 0.25s ease;
-}
-
-.user-avatar:hover img,
-.dropdown-avatar:hover img,
-.avatar-container:hover img {
-    transform: scale(1.06);
-}
-
-/* MENU ITEMS */
-.user-dropdown-pro .dropdown-item{
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    padding: 15px 22px;
-
-    color: var(--text-main) !important;
-
-    font-size: 14px;
-    font-weight: 500;
-
-    transition: all .25s ease;
-
-    border-radius: 0;
-}
-
-/* ICON */
-.user-dropdown-pro .dropdown-item i{
-    width: 38px;
-    height: 38px;
-
-    border-radius: 12px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background:
-        rgba(99,102,241,0.1);
-
-    color: #6366f1;
-
-    font-size: 14px;
-
-    transition: all .25s ease;
-}
-
-/* HOVER */
-.user-dropdown-pro .dropdown-item:hover{
-    background:
-        rgba(99,102,241,0.06);
-
-    color: #6366f1 !important;
-
-    padding-left: 28px;
-}
-
-.user-dropdown-pro .dropdown-item:hover i{
-    transform: scale(1.08);
-}
-
-/* LOGOUT */
-.user-dropdown-pro .dropdown-item.text-danger{
-    color: #ef4444 !important;
-}
-
-.user-dropdown-pro .dropdown-item.text-danger i{
-    background:
-        rgba(239,68,68,0.12);
-
-    color: #ef4444;
-}
-
-.user-dropdown-pro .dropdown-item.text-danger:hover{
-    background:
-        rgba(239,68,68,0.08);
-}
-
-/* ANIMATION */
-@keyframes dropdownFade{
-
-    from{
-        opacity: 0;
-        transform: translateY(10px) scale(.98);
+    /*==================================================
+    NAVBAR PRO & UTILITIES
+    ==================================================*/
+    .navbar-pro {
+        position: sticky;
+        top: 0;
+        z-index: 1030; /* Kept just below sidebar (1040) to prevent overlap */
+        height: 74px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 28px;
+        background: rgba(255, 255, 255, .75);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-bottom: 1px solid rgba(0, 0, 0, .06);
+        transition: margin-left .3s cubic-bezier(.4, 0, .2, 1);
     }
 
-    to{
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    /* DARK MODE OVERRIDES */
+    .dark-mode .navbar-pro {
+        background: rgba(15, 23, 42, .80);
+        border-color: rgba(255, 255, 255, .05);
     }
+
+    /* LEFT SECTION */
+    .navbar-left {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .navbar-title h5 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .dark-mode .navbar-title h5 {
+        color: #fff;
+    }
+
+    .navbar-title span {
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    /* TOGGLE BUTTON */
+    .menu-toggle {
+        width: 46px;
+        height: 46px;
+        border: none;
+        border-radius: 14px;
+        background: #eef2ff;
+        color: #4f46e5;
+        transition: .25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .menu-toggle:hover {
+        transform: translateY(-2px);
+        background: #4f46e5;
+        color: #fff;
+    }
+
+    .dark-mode .menu-toggle {
+        background: #1e1b4b;
+        color: #818cf8;
+    }
+
+    .dark-mode .menu-toggle:hover {
+        background: #4f46e5;
+        color: #fff;
+    }
+
+    /* CENTER SEARCH */
+    .navbar-search {
+        width: 430px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+        background: #f8fafc;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        transition: .25s ease;
+    }
+
+    .navbar-search:focus-within {
+        border-color: #4f46e5;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .dark-mode .navbar-search {
+        background: #0f172a;
+        border-color: #1e293b;
+    }
+
+    .dark-mode .navbar-search:focus-within {
+        background: #111827;
+        border-color: #4f46e5;
+    }
+
+    .navbar-search i {
+        color: #94a3b8;
+    }
+
+    .navbar-search input {
+        width: 100%;
+        border: none;
+        background: none;
+        outline: none;
+        font-size: 14px;
+        color: #1e293b;
+    }
+
+    .dark-mode .navbar-search input {
+        color: #cbd5e1;
+    }
+
+    /* RIGHT SECTION */
+    .navbar-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .nav-circle-btn {
+        width: 46px;
+        height: 46px;
+        border: none;
+        border-radius: 14px;
+        background: #f8fafc;
+        color: #475569;
+        transition: .25s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .dark-mode .nav-circle-btn {
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    .nav-circle-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+        background: #f1f5f9;
+    }
+
+    .dark-mode .nav-circle-btn:hover {
+        background: #334155;
+    }
+
+    /* NOTIFICATION BADGE */
+    .nav-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 10px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+    }
+
+    .dark-mode .nav-badge {
+        border-color: #1e293b;
+    }
+
+    /* USER PROFILE TRIGGER */
+    .profile-button {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        border-radius: 18px;
+        padding: 6px 12px;
+        transition: .25s ease;
+        cursor: pointer;
+    }
+
+    .profile-button:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    .dark-mode .profile-button {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .dark-mode .profile-button:hover {
+        background: #334155;
+    }
+
+    .profile-button img {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    /* AVATAR FALLBACKS */
+    .avatar-fallback {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #6366f1;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .profile-text {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+
+    .profile-text strong {
+        font-size: 13.5px;
+        color: #1e293b;
+        line-height: 1.2;
+    }
+
+    .dark-mode .profile-text strong {
+        color: #fff;
+    }
+
+    .profile-text small {
+        color: #64748b;
+        font-size: 11.5px;
+    }
+
+    .profile-button .fa-chevron-down {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    /* MODERN DROPDOWN MENU */
+    .user-dropdown-pro {
+        border: 1px solid rgba(0, 0, 0, .08);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
+        padding: 8px !important;
+        min-width: 240px;
+    }
+
+    .dark-mode .user-dropdown-pro {
+        background: #1e293b !important;
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .dropdown-user-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .dropdown-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #4f46e5;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 15px;
+        text-transform: uppercase;
+        overflow: hidden;
+    }
+
+    .dropdown-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .dropdown-user-info {
+        display: flex;
+        flex-direction: column;
+        max-width: 160px;
+    }
+
+    .dropdown-user-info strong {
+        font-size: 14px;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dark-mode .dropdown-user-info strong {
+        color: #fff;
+    }
+
+    .dropdown-user-info small {
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .user-dropdown-pro .dropdown-item {
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #475569 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: .15s ease;
+    }
+
+    .dark-mode .user-dropdown-pro .dropdown-item {
+        color: #cbd5e1 !important;
+    }
+
+    .user-dropdown-pro .dropdown-item:hover {
+        background: #f1f5f9;
+        color: #1e293b !important;
+    }
+
+    .dark-mode .user-dropdown-pro .dropdown-item:hover {
+        background: #334155;
+        color: #fff !important;
+    }
+
+    .user-dropdown-pro .dropdown-item i {
+        font-size: 14px;
+        color: #94a3b8;
+    }
+
+    /* RESPONSIVE BREAKPOINTS */
+    @media (max-width: 992px) {
+        .navbar-pro {
+            padding: 0 16px;
+        }
+
+        .navbar-search {
+            display: none !important;
+        }
+
+        .profile-text {
+            display: none;
+        }
+    }
+
+    .navbar-title h5{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+
+.navbar-title h5 span{
+    color:#64748b;
+    font-size:17px;
+    font-weight:600;
+}
+
+
+.dark-mode .navbar-title h5 span{
+    color:#cbd5e1;
 }
 </style>
 
-<nav class="main-header navbar navbar-expand">
+<nav class="main-header navbar navbar-expand navbar-pro">
 
-    <!-- LEFT -->
-    <ul class="navbar-nav align-items-center">
-        <li class="nav-item">
-            <a class="nav-link nav-icon-btn" data-widget="pushmenu" href="#">
-                <i class="fas fa-bars"></i>
-            </a>
-        </li>
+    <!-- LEFT SECTION -->
+    <div class="navbar-left">
+        <a href="#" class="nav-icon-btn menu-toggle" data-widget="pushmenu" role="button">
+    <i class="fas fa-bars"></i>
+</a>
 
-        <li class="nav-item d-none d-md-block">
-            <div class="announcement-bar-modern">
-                🚧 System in development — Welcome back {{ user.first_name }}
-            </div>
-        </li>
-    </ul>
+        <div class="navbar-title">
 
-    <!-- RIGHT -->
-    <ul class="navbar-nav ml-auto align-items-center">
-
-        <!-- USER DROPDOWN -->
-<li class="nav-item dropdown user-dropdown">
-    <a class="nav-link user-trigger modern-avatar" data-toggle="dropdown">
-
-        <div class="avatar-container">
-
-            {% if squeryset.image %}
-                <img src="{{ squeryset.image.url }}" class="avatar-img">
+    <h5>
+        <span id="greetingText">Good morning</span>,
+        <strong>
+            {% if user.first_name %}
+                {{ user.first_name }}
+            {% elif user.get_full_name %}
+                {{ user.get_full_name }}
             {% else %}
-                <div class="avatar-fallback">
-                    {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
-                </div>
+                {{ user.username }}
             {% endif %}
+        </strong>
+    </h5>
 
-            <span class="avatar-badge online"></span>
+    <span>
+        {{ business.name|default:"AI Business Assistant" }}
+    </span>
 
-        </div>
+</div>
+    </div>
 
-    </a>
+    <!-- RIGHT SECTION -->
+    <div class="navbar-right">
 
-    <!-- DROPDOWN -->
-    <div class="dropdown-menu dropdown-menu-right user-dropdown-pro">
+        <!-- Notifications -->
+        <button class="nav-circle-btn">
+            <i class="far fa-bell"></i>
+            <span class="nav-badge">3</span>
+        </button>
 
-        <div class="dropdown-user-top">
-            <div class="dropdown-avatar">
+        <!-- Theme Toggle -->
+        <button
+    id="themeToggle"
+    class="nav-circle-btn"
+    title="Toggle Theme">
+
+    <i id="themeIcon" class="fas fa-moon"></i>
+
+</button>
+
+        <!-- Fullscreen -->
+        <button class="nav-circle-btn" data-widget="fullscreen">
+            <i class="fas fa-expand"></i>
+        </button>
+
+        <!-- User Dropdown Menu -->
+        <div class="dropdown">
+            <button class="profile-button" data-toggle="dropdown">
                 {% if squeryset.image %}
-                    <img src="{{ squeryset.image.url }}">
+                    <img src="{{ squeryset.image.url }}" alt="User Avatar">
                 {% else %}
-                    {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                    <div class="avatar-fallback">
+                        {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                    </div>
                 {% endif %}
-            </div>
 
-            <div class="dropdown-user-info">
-                <strong>{{ user.get_full_name }}</strong>
-                <small>{{ user.email }}</small>
+                <div class="profile-text">
+                    <strong>{{ user.get_full_name }}</strong>
+                    <small>{{ squeryset.role_type }}</small>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <!-- DROPDOWN CONTAINER -->
+            <div class="dropdown-menu dropdown-menu-right user-dropdown-pro">
+                <div class="dropdown-user-top">
+                    <div class="dropdown-avatar">
+                        {% if squeryset.image %}
+                            <img src="{{ squeryset.image.url }}" alt="Avatar">
+                        {% else %}
+                            {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
+                        {% endif %}
+                    </div>
+                    <div class="dropdown-user-info">
+                        <strong>{{ user.get_full_name }}</strong>
+                        <small>{{ user.email }}</small>
+                    </div>
+                </div>
+
+                <div class="dropdown-divider"></div>
+
+                {% if squeryset.role_type == 'Admin' %}
+                    <a href="{% url 'business_profile' %}" class="dropdown-item">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                {% else %}
+                    <a href="{% url 'staff_profile' %}" class="dropdown-item">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'change_password' %}" class="dropdown-item">
+                    <i class="fas fa-lock"></i> Change Password
+                </a>
+
+                <div class="dropdown-divider"></div>
+
+                <a href="{% url 'user-logout' %}" class="dropdown-item text-danger">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </div>
-
-        <div class="dropdown-divider"></div>
-        {% if squeryset.role_type == 'Admin' %}
-        <a href="{% url 'business_profile' %}" class="dropdown-item">
-            <i class="fas fa-user"></i> Profile
-        </a>
-      {% else %}
-        <a href="{% url 'staff_profile' %}" class="dropdown-item">
-            <i class="fas fa-user"></i> Profile
-        </a>
-      {% endif %}
-        <a href="{% url 'change_password' %}" class="dropdown-item">
-            <i class="fas fa-lock"></i> Change Password
-        </a>
-
-        <div class="dropdown-divider"></div>
-
-        <a href="{% url 'user-logout' %}" class="dropdown-item text-danger">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
 
     </div>
-</li>
-
-
-        <!-- FULLSCREEN -->
-        <li class="nav-item">
-            <a class="nav-link nav-icon-btn" data-widget="fullscreen">
-                <i class="fas fa-expand"></i>
-            </a>
-        </li>
-
-        <!-- THEME SWITCH -->
-<li class="nav-item">
-    <button id="themeToggle" class="theme-toggle-btn">
-        <i id="themeIcon" class="fas fa-moon"></i>
-    </button>
-</li>
-
-    </ul>
 
 </nav>
-
-<!--Banner-->
-<!--   <div class="alert alert-warning alert-dismissible fade show text-center mb-0">-->
-<!--    <i class="fas fa-exclamation-triangle"></i>-->
-<!--    <strong>System Notice:</strong> This application is still under development. Some features may be unstable.-->
-
-<!--    <button type="button" class="close" data-dismiss="alert">&times;</button>-->
-<!--</div>-->
-
