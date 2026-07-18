@@ -164,9 +164,7 @@ def mark_ai_read(request, pk):
     )
 
     if not business:
-        return Response({
-            "error": "No business assigned"
-        }, status=404)
+        return redirect("dashboard")
 
     insight = get_object_or_404(
         AIRecommendation,
@@ -249,10 +247,9 @@ class AIInsightsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
-        business = Business.objects.filter(
-            owner=request.user
-        ).first()
+        business = get_user_business(
+            request.user
+        )
 
         if not business:
 
@@ -373,9 +370,9 @@ class AIChatHistoryAPIView(APIView):
 
     def get(self, request):
 
-        business = Business.objects.filter(
-            owner=request.user
-        ).first()
+        business = get_user_business(
+            request.user
+        )
 
         if not business:
 
@@ -414,9 +411,9 @@ class BusinessAlertsAPIView(APIView):
 
     def get(self, request):
 
-        business = Business.objects.filter(
-            owner=request.user
-        ).first()
+        business = get_user_business(
+            request.user
+        )
 
         if not business:
             return Response({"alerts": []})
@@ -494,10 +491,9 @@ class BusinessRiskAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
-        business = Business.objects.filter(
-            owner=request.user
-        ).first()
+        business = get_user_business(
+            request.user
+        )
 
         if not business:
             return Response([])

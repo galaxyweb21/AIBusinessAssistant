@@ -39,6 +39,22 @@
         margin-left .3s cubic-bezier(.4,0,.2,1);
 
 }
+@media(max-width:768px){
+
+    .navbar-pro{
+
+        height:70px;
+
+    }
+
+
+    .content-wrapper{
+
+        padding-top:90px !important;
+
+    }
+
+}
 
    body.sidebar-collapse .navbar-pro {
 
@@ -387,7 +403,9 @@
         color: #94a3b8;
     }
 
-    /* RESPONSIVE BREAKPOINTS */@media (max-width:992px){
+    /* RESPONSIVE BREAKPOINTS */
+
+@media (max-width:992px){
 
     .navbar-pro{
 
@@ -397,23 +415,26 @@
 
     }
 
-}
 
-        .navbar-search {
-            display: none !important;
-        }
+    .navbar-search{
 
-        .profile-text {
-            display: none;
-        }
+        display:none !important;
+
+    }
+
+
+    .profile-text{
+
+        display:none;
+
     }
 
     .navbar-title h5{
-    display:flex;
-    align-items:center;
-    gap:5px;
-}
 
+        font-size:14px;
+
+    }
+}
 
 .navbar-title h5 span{
     color:#64748b;
@@ -461,10 +482,10 @@
     <div class="navbar-right">
 
         <!-- Notifications -->
-        <button class="nav-circle-btn">
-            <i class="far fa-bell"></i>
-            <span class="nav-badge">3</span>
-        </button>
+<!--        <button class="nav-circle-btn">-->
+<!--            <i class="far fa-bell"></i>-->
+<!--            <span class="nav-badge">3</span>-->
+<!--        </button>-->
 
         <!-- Theme Toggle -->
         <button
