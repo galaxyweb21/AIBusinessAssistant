@@ -1,6 +1,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
-{% with role=request.user.staffprofile.role_type %}
+{% if request.user.is_authenticated %}
+{% with staff=request.user.staffprofile %}
 
 <style>
 :root {
@@ -27,18 +28,35 @@ body {
 }
 
 .main-sidebar {
+
     position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: var(--sidebar-width);
-    background: var(--sidebar-bg);
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--sidebar-border);
-    transition: width var(--speed), left var(--speed);
-    overflow: hidden;
-    z-index: 1055; /* Higher than sticky navbar (1030) */
+
+    top:0;
+    left:0;
+    bottom:0;
+
+    width:var(--sidebar-width);
+
+    background:var(--sidebar-bg);
+
+    display:flex;
+
+    flex-direction:column;
+
+    border-right:1px solid var(--sidebar-border);
+
+    transition:
+        width var(--speed),
+        left var(--speed);
+
+    /* Clips anything that visually pokes outside the sidebar's own box
+       (e.g. during the collapse/expand width transition). The actual
+       scrolling of menu content happens inside .sidebar below, via its
+       own independent overflow-y:auto. */
+    overflow:hidden;
+
+    z-index:1055;
+
 }
 
 body.sidebar-collapse .main-sidebar {
@@ -46,21 +64,64 @@ body.sidebar-collapse .main-sidebar {
 }
 
 .sidebar {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 16px 12px;
+
+    flex:1;
+
+    /* Without min-height:0, a flex child never shrinks below its content
+       size -- so overflow-y:auto below would never actually activate, the
+       box would just keep growing instead of scrolling. This is the actual
+       reason the sidebar wasn't scrolling on its own. */
+    min-height:0 !important;
+
+    height:auto !important;
+    max-height:none;
+
+    overflow-y:auto !important;
+
+    overflow-x:hidden !important;
+
+    /* Stops "scroll chaining": without this, once the sidebar's own
+       scroll reaches its top or bottom edge, the rest of the wheel/touch
+       movement gets handed off to the body, scrolling the page too. */
+    overscroll-behavior:contain;
+
+    padding:16px 12px;
+
+    scrollbar-width:thin;
+
+    scrollbar-color:
+        rgba(255,255,255,.18)
+        transparent;
+
 }
 
 .sidebar::-webkit-scrollbar {
-    width: 4px;
+
+    width:6px;
+
+}
+
+.sidebar::-webkit-scrollbar-track {
+
+    background:transparent;
+
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, .12);
-    border-radius: 50px;
+
+    background:
+        rgba(255,255,255,.18);
+
+    border-radius:50px;
+
 }
 
+.sidebar::-webkit-scrollbar-thumb:hover {
+
+    background:
+        rgba(255,255,255,.35);
+
+}
 /* =========================================
    BRAND LOGO & HEADER
    ========================================= */
@@ -73,6 +134,7 @@ body.sidebar-collapse .main-sidebar {
     color: #fff;
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, .06);
+    flex-shrink: 0;
 }
 
 .brand-logo {
@@ -480,9 +542,17 @@ body.sidebar-collapse .nav-treeview {
    FOOTER SECTION
    ========================================= */
 .sidebar-footer {
-    margin-top: auto;
-    padding: 14px;
-    border-top: 1px solid rgba(255, 255, 255, .06);
+
+    flex-shrink:0;
+
+    padding:14px;
+
+    border-top:
+        1px solid rgba(255,255,255,.06);
+
+    background:
+        var(--sidebar-bg);
+
 }
 
 .footer-version {
@@ -585,6 +655,7 @@ body.sidebar-collapse .nav-link:hover::after {
    RESPONSIVE LAYOUTS
    ========================================= */
 @media(max-width: 991px) {
+
     .main-sidebar {
         left: -280px; /* Hidden off-canvas by default */
     }
@@ -956,7 +1027,7 @@ body.sidebar-collapse .menu-badge {
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'sales' %}" class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}" data-title="Sales">
+                                <a href="{% url 'sales' %}" class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}" data-title="New Sale">
                                     <i class="far fa-circle nav-icon"></i> New Sale
                                 </a>
                             </li>
@@ -1090,5 +1161,45 @@ if(date){
         day:"numeric"
     });
 }
+
+/* =========================================
+   FORCE INDEPENDENT SIDEBAR SCROLL
+   =========================================
+   Belt-and-suspenders on top of the CSS above: sets the scrollable box's
+   height as an inline style, which beats any stylesheet rule that isn't
+   itself using !important (e.g. an AdminLTE bundle's own .sidebar rules).
+   This is what guarantees the sidebar scrolls on its own, independent of
+   the page's body scrollbar, on every page -- regardless of how much
+   other CSS is competing for control of this element. */
+(function () {
+
+    const outer = document.querySelector(".main-sidebar");
+    const brand = outer ? outer.querySelector(".brand-link") : null;
+    const inner = outer ? outer.querySelector(".sidebar") : null;
+
+    if (!outer || !inner) return;
+
+    function pinHeight() {
+        const brandHeight = brand ? brand.offsetHeight : 74;
+        const available = window.innerHeight - brandHeight;
+
+        inner.style.setProperty("height", available + "px", "important");
+        inner.style.setProperty("max-height", available + "px", "important");
+        inner.style.setProperty("min-height", "0", "important");
+        inner.style.setProperty("overflow-y", "auto", "important");
+        inner.style.setProperty("overflow-x", "hidden", "important");
+        inner.style.setProperty("overscroll-behavior", "contain", "important");
+    }
+
+    window.addEventListener("resize", pinHeight);
+    window.addEventListener("orientationchange", pinHeight);
+    document.addEventListener("DOMContentLoaded", pinHeight);
+    window.addEventListener("load", pinHeight);
+
+    pinHeight();
+
+})();
 </script>
+
 {% endwith %}
+{% endif %}
