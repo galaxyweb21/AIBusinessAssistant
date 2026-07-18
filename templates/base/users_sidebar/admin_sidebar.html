@@ -33,7 +33,6 @@ body {
 
     top:0;
     left:0;
-    bottom:0;
 
     width:var(--sidebar-width);
 
@@ -79,11 +78,6 @@ body.sidebar-collapse .main-sidebar {
     overflow-y:auto !important;
 
     overflow-x:hidden !important;
-
-    /* Stops "scroll chaining": without this, once the sidebar's own
-       scroll reaches its top or bottom edge, the rest of the wheel/touch
-       movement gets handed off to the body, scrolling the page too. */
-    overscroll-behavior:contain;
 
     padding:16px 12px;
 
@@ -177,16 +171,20 @@ body.sidebar-collapse .brand-info {
    LAYOUT ADAPTATIONS
    ========================================= */
 .content-wrapper,
-.main-header,
 .main-footer {
-    margin-left: var(--sidebar-width);
-    transition: margin-left var(--speed);
+
+    margin-left:var(--sidebar-width);
+
+    transition:
+    margin-left var(--speed);
+
 }
 
 body.sidebar-collapse .content-wrapper,
-body.sidebar-collapse .main-header,
 body.sidebar-collapse .main-footer {
-    margin-left: var(--sidebar-mini);
+
+    margin-left:var(--sidebar-mini);
+
 }
 
 /* =========================================
@@ -505,9 +503,15 @@ body.sidebar-collapse .nav-treeview {
 }
 
 .right {
-    margin-left: auto;
-    font-size: 11px;
-    transition: .25s ease;
+
+    margin-left:auto;
+
+    flex-shrink:0;
+
+    font-size:11px;
+
+    transition:.25s ease;
+
 }
 
 .menu-open > .nav-link > .right {
@@ -667,7 +671,10 @@ body.sidebar-collapse .nav-link:hover::after {
     .main-header,
     .content-wrapper,
     .main-footer {
-        margin-left: 0 !important;
+
+    margin-left:var(--sidebar-width);
+
+    transition:margin-left var(--speed);
     }
 
     /* Fixed backdrop blur alignment */
@@ -700,24 +707,45 @@ body.sidebar-open .sidebar-overlay{
 BADGES
 =========================================================*/
 .menu-text {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    flex:1;
+
+    min-width:0;
+
 }
 
 .menu-badge {
-    min-width: 24px;
-    height: 24px;
-    padding: 0 8px;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ef4444;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 700;
+
+    min-width:24px;
+
+    height:22px;
+
+    padding:0 7px;
+
+    border-radius:30px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#ef4444;
+
+    color:#fff;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    flex-shrink:0;
+
 }
 
 .menu-badge.success {
@@ -1188,7 +1216,6 @@ if(date){
         inner.style.setProperty("min-height", "0", "important");
         inner.style.setProperty("overflow-y", "auto", "important");
         inner.style.setProperty("overflow-x", "hidden", "important");
-        inner.style.setProperty("overscroll-behavior", "contain", "important");
     }
 
     window.addEventListener("resize", pinHeight);

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .utils import *
+from accounts.models import StaffProfile
 from dashboard.services.forecasting import *
 
 from sales.utils import update_business_metrics
@@ -19,6 +20,31 @@ from sales.utils import update_business_metrics
 from dashboard.models import BusinessAlert
 from dashboard.services.alerts import generate_business_alerts
 from dashboard.services.ai.ai import analyze_with_ai
+
+
+def get_user_business(user):
+
+    # OWNER ACCOUNT
+    business = Business.objects.filter(
+        owner=user
+    ).first()
+
+    if business:
+        return business
+
+
+    # STAFF ACCOUNT
+    staff = StaffProfile.objects.filter(
+        staff=user
+    ).select_related(
+        "business"
+    ).first()
+
+    if staff:
+        return staff.business
+
+
+    return None
 
 # =========================================
 # API DASHBOARD
@@ -28,8 +54,14 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        business = get_user_business(
+            request.user
+        )
 
-        business = get_object_or_404(Business, owner=request.user)
+        if not business:
+            return Response({
+                "error": "No business assigned"
+            }, status=404)
 
         # 🔥 FORCE UPDATE BEFORE READ (IMPORTANT)
         update_business_metrics(business)
@@ -44,7 +76,14 @@ class InventoryModalAPIView(APIView):
 
     def get(self, request):
 
-        business = get_object_or_404(Business, owner=request.user)
+        business = get_user_business(
+            request.user
+        )
+
+        if not business:
+            return Response({
+                "error": "No business assigned"
+            }, status=404)
 
         stock_type = request.GET.get("type")
 
@@ -80,11 +119,18 @@ class InventoryModalAPIView(APIView):
 
 @login_required
 def index(request):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    business = get_user_business(
+        request.user
     )
+
+    if not business:
+        return render(
+            request,
+            "dashboard/index.html",
+            {
+                "error": "No business assigned to your account."
+            }
+        )
 
     dashboard_data = get_dashboard_data(
         business
@@ -113,11 +159,14 @@ def index(request):
 
 @login_required
 def mark_ai_read(request, pk):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    business = get_user_business(
+        request.user
     )
+
+    if not business:
+        return Response({
+            "error": "No business assigned"
+        }, status=404)
 
     insight = get_object_or_404(
         AIRecommendation,
@@ -171,7 +220,7 @@ class SalesChartAPIView(APIView):
                 "labels": [],
                 "data": [],
                 "message": "No business found"
-            }, status=status.HTTP_200_OK)
+            })
 
         data = get_sales_chart_data(business, period)
         return Response(data)
@@ -255,10 +304,14 @@ class AIChatAPIView(APIView):
 
         user = request.user
 
-        business = get_object_or_404(
-            Business,
-            owner=user
+        business = get_user_business(
+            request.user
         )
+
+        if not business:
+            return Response({
+                "error": "No business assigned"
+            }, status=404)
 
         message = request.data.get(
             "message",

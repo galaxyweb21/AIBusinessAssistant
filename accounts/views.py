@@ -31,14 +31,14 @@ from datetime import timedelta
 @login_required
 def index(request):
     user = request.user
-    staff = StaffProfile.objects.get(staff_id=user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     today = timezone.now().date()
-
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
-    )
 
     context = {
         "today": today,
@@ -140,9 +140,12 @@ def register_business(request):
 def staff_profile(request):
 
     user = request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
 
-    staff = StaffProfile.objects.get(staff_id=user.id)
-    business = Business.objects.get(owner_id=staff.business_id)
+    business = staff.business
 
     total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
 
@@ -253,9 +256,12 @@ def staff_profile(request):
 def business_profile(request):
 
     user = request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
 
-    staff = StaffProfile.objects.get(staff_id=user.id)
-    business = Business.objects.get(owner_id=staff.business_id)
+    business = staff.business
 
     total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
 
@@ -378,11 +384,12 @@ def register_staff(request):
 
     user = User.objects.get(id=request.user.id)
 
-    staff = StaffProfile.objects.get(staff_id=user.id)
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     form = CreateUserForm()
     pform = StaffProfileForm()
@@ -508,14 +515,11 @@ def update_staff(request, staff_id):
     user = request.user
 
     staff = get_object_or_404(
-        StaffProfile,
-        id=staff_id
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
 
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
-    )
+    business = staff.business
 
     form = UpdateUserForm(instance=user)
     pform = StaffProfileForm(instance=staff)
@@ -611,14 +615,11 @@ def deactivate_staff(request, staff_id):
     user = User.objects.get(id=request.user.id)
 
     staff = get_object_or_404(
-        StaffProfile,
-        id=staff_id
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
 
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
-    )
+    business = staff.business
 
     # Prevent repeated deactivation
     if not staff.is_active:
@@ -678,16 +679,12 @@ def deactivate_staff(request, staff_id):
 @login_required
 @transaction.atomic
 def reactivate_staff(request, staff_id):
-
     staff = get_object_or_404(
-        StaffProfile,
-        id=staff_id
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
 
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
-    )
+    business = staff.business
 
     staff.is_active = True
     staff.save()
@@ -726,16 +723,12 @@ def reactivate_staff(request, staff_id):
 @login_required
 @transaction.atomic
 def delete_staff(request, staff_id):
-
     staff = get_object_or_404(
-        StaffProfile,
-        id=staff_id
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
 
-    business = get_object_or_404(
-        Business,
-        owner_id=staff.business_id
-    )
+    business = staff.business
 
     user = staff_profile.staff
 
@@ -777,10 +770,12 @@ def staff_list_view(request):
 
     user = User.objects.get(id=request.user.id)
 
-    staff = StaffProfile.objects.get(staff_id=user.id)
-    business = Business.objects.filter(
-        owner_id=staff.business_id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
     search = request.GET.get("search", "").strip()
     role = request.GET.get("role", "").strip()
     tab = request.GET.get("tab", "active")

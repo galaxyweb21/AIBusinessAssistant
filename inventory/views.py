@@ -12,7 +12,7 @@ from dashboard.services.alerts import generate_business_alerts
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.contrib.contenttypes.models import ContentType
-from accounts.models import AuditLog
+from accounts.models import *
 import json
 
 
@@ -21,9 +21,12 @@ import json
 def inventory(request):
     user = User.objects.get(id=request.user.id)
 
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     form = InventoryForm()
 
@@ -97,9 +100,12 @@ def inventory(request):
 def update_inventory(request, pk):
     user = User.objects.get(id=request.user.id)
 
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     queryset = get_object_or_404(
         Inventory,
@@ -182,9 +188,12 @@ def update_inventory(request, pk):
 @login_required
 @transaction.atomic
 def delete_inventory(request, pk):
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     queryset = get_object_or_404(
         Inventory,
@@ -229,9 +238,12 @@ def delete_inventory(request, pk):
 def view_inventory(request):
     user = User.objects.get(id=request.user.id)
 
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     search = request.GET.get(
         'search',
@@ -288,7 +300,12 @@ def view_inventory(request):
 
 @login_required
 def restock_inventory(request, pk):
-    business = get_object_or_404(Business, owner=request.user)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
     item = get_object_or_404(Inventory, pk=pk, business=business)
     item_history = item.history.all().order_by('-created_at')[:10]
 
@@ -357,7 +374,12 @@ def restock_inventory(request, pk):
 
 @login_required
 def damaged_inventory(request, pk):
-    business = get_object_or_404(Business, owner=request.user)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
     item = get_object_or_404(Inventory, pk=pk, business=business)
     item_history = item.history.all().order_by('-created_at')[:10]
 
@@ -429,9 +451,12 @@ def damaged_inventory(request, pk):
 
 @login_required
 def inventory_history(request):
-    business = Business.objects.get(
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     tab = request.GET.get(
         "tab",
@@ -503,10 +528,12 @@ def inventory_history(request):
 
 @login_required
 def supplier_list(request):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     search = request.GET.get("search", "").strip()
 
@@ -532,10 +559,12 @@ def supplier_list(request):
 def create_supplier(request):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     form = SupplierForm()
 
@@ -566,10 +595,12 @@ def create_supplier(request):
 def update_supplier(request, pk):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     supplier = get_object_or_404(
         Supplier,
@@ -603,10 +634,12 @@ def update_supplier(request, pk):
 @login_required
 @transaction.atomic
 def delete_supplier(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     supplier = get_object_or_404(
         Supplier,
@@ -625,11 +658,12 @@ def delete_supplier(request, pk):
 @login_required
 @transaction.atomic
 def create_purchase(request):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     suppliers = Supplier.objects.filter(
         business=business
@@ -751,7 +785,12 @@ def create_purchase(request):
 @login_required
 @transaction.atomic
 def post_purchase(request, pk):
-    business = get_object_or_404(Business, owner=request.user)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     purchase = get_object_or_404(
         Purchase,
@@ -771,7 +810,12 @@ def post_purchase(request, pk):
 
 @login_required
 def view_purchase(request, pk):
-    business = get_object_or_404(Business, owner=request.user)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     purchase = get_object_or_404(
         Purchase,
@@ -790,10 +834,12 @@ def view_purchase(request, pk):
 
 @login_required
 def supplier_detail(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     supplier = get_object_or_404(
         Supplier,
@@ -847,11 +893,12 @@ def supplier_detail(request, pk):
 @login_required
 @transaction.atomic
 def supplier_payment(request, purchase_id):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
     purchase = get_object_or_404(
         Purchase,
         id=purchase_id
@@ -952,11 +999,12 @@ def supplier_payment(request, purchase_id):
 
 @login_required
 def supplier_payment_history(request):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     # =========================
     # GET FILTER VALUES

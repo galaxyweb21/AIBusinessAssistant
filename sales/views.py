@@ -30,7 +30,12 @@ import json
 
 @login_required
 def barcode_lookup(request):
-    business = Business.objects.get(owner_id=request.user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     barcode = request.GET.get("barcode", "").strip()
 
@@ -63,10 +68,12 @@ def barcode_lookup(request):
 
 @login_required
 def tax_list(request):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     search = request.GET.get("search", "").strip()
 
@@ -92,7 +99,12 @@ def tax_list(request):
 def tax(request):
     user = request.user
 
-    business = get_object_or_404(Business, owner_id=user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
     form = TaxForm()
 
     if request.method == 'POST':
@@ -132,8 +144,12 @@ def tax(request):
 @transaction.atomic
 def update_tax(request, pk):
     user = request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
 
-    business = get_object_or_404(Business, owner_id=user.id)
+    business = staff.business
 
     queryset = get_object_or_404(
         Tax,
@@ -186,7 +202,12 @@ def update_tax(request, pk):
 def delete_tax(request, pk):
     user = request.user
 
-    business = get_object_or_404(Business, owner_id=user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     queryset = get_object_or_404(
         Tax,
@@ -224,11 +245,12 @@ def delete_tax(request, pk):
 
 @login_required
 def discount_list(request):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     search = request.GET.get("search", "").strip()
 
@@ -261,10 +283,12 @@ def discount(request):
 
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner=user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     form = DiscountForm()
 
@@ -320,11 +344,12 @@ def discount(request):
 @login_required
 @transaction.atomic
 def update_discount(request, pk):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     discount = get_object_or_404(
         Discount,
@@ -384,11 +409,12 @@ def update_discount(request, pk):
 @login_required
 @transaction.atomic
 def delete_discount(request, pk):
-
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     discount = get_object_or_404(
         Discount,
@@ -427,10 +453,12 @@ def delete_discount(request, pk):
 def sales(request):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner_id=user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     # =====================================
     # SEARCH
@@ -701,310 +729,17 @@ def sales(request):
     return render(request, 'sales/sales.html', context)
 
 
-# @login_required
-# @transaction.atomic
-# def sales(request):
-#     user = request.user
-#
-#     business = get_object_or_404(
-#         Business,
-#         owner_id=user.id
-#     )
-#
-#     # =====================================
-#     # SEARCH
-#     # =====================================
-#     search = request.GET.get('search', '').strip()
-#
-#     products_queryset = Inventory.objects.filter(
-#         business=business
-#     ).order_by('-id')
-#
-#     if search:
-#         products_queryset = products_queryset.filter(
-#             Q(product_name__icontains=search)
-#         )
-#
-#     # ALWAYS DISTINCT (prevents duplicates)
-#     products_queryset = products_queryset.distinct()
-#
-#     # =====================================
-#     # PAGINATION (ALWAYS RUNS)
-#     # =====================================
-#     paginator = Paginator(products_queryset, 12)
-#
-#     page_number = request.GET.get('page', 1)
-#
-#     products_page = paginator.get_page(page_number)
-#
-#     # =====================================
-#     # AJAX LOAD MORE SUPPORT
-#     # =====================================
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#         return JsonResponse({
-#             "html": render_to_string(
-#                 "sales/partials/product_grid.html",
-#                 {"products": products_page},
-#                 request=request
-#             ),
-#             "has_next": products_page.has_next(),
-#             "next_page": (
-#                 products_page.next_page_number()
-#                 if products_page.has_next()
-#                 else None
-#             )
-#         })
-#
-#     # =====================================
-#     # ACTIVE TAXES
-#     # =====================================
-#     taxes = Tax.objects.filter(business=business, active=True)
-#
-#     # =====================================
-#     # ACTIVE DISCOUNTS
-#     # =====================================
-#     discounts = []
-#
-#     for discount in Discount.objects.filter(business=business, active=True):
-#         if discount.is_valid():
-#             discounts.append(discount)
-#
-#     valid_discount_ids = [d.id for d in discounts]
-#
-#     # =====================================
-#     # FORM
-#     # =====================================
-#     form = SaleForm()
-#
-#     form.fields['customer'].queryset = Customer.objects.filter(
-#         business=business
-#     ).order_by('full_name')
-#
-#     form.fields['tax'].queryset = taxes
-#
-#     form.fields['discount'].queryset = Discount.objects.filter(
-#         id__in=valid_discount_ids
-#     )
-#
-#     # =====================================
-#     # CREATE SALE
-#     # =====================================
-#     if request.method == 'POST':
-#
-#         form = SaleForm(request.POST)
-#         sale_type = request.POST.get("sale_type", "Completed")
-#
-#         form.fields['customer'].queryset = Customer.objects.filter(
-#             business=business
-#         ).order_by('full_name')
-#
-#         form.fields['tax'].queryset = taxes
-#
-#         form.fields['discount'].queryset = Discount.objects.filter(
-#             id__in=valid_discount_ids
-#         )
-#
-#         if form.is_valid():
-#
-#             product_ids = request.POST.getlist('product_id')
-#             quantities = request.POST.getlist('quantity')
-#             amount_paid = request.POST.get('amount_paid', '0')
-#
-#             # EMPTY CART VALIDATION
-#             if not product_ids:
-#                 messages.error(request, 'Please select at least one product.')
-#                 return redirect('sales')
-#
-#             # CREATE SALE
-#             sale = form.save(commit=False)
-#             sale.business = business
-#
-#             sale.subtotal = Decimal('0.00')
-#             sale.tax_amount = Decimal('0.00')
-#             sale.discount_amount = Decimal('0.00')
-#             sale.total = Decimal('0.00')
-#             sale.amount_paid = Decimal('0.00')
-#             sale.change = Decimal('0.00')
-#             sale.staff = user
-#             sale.status = sale_type
-#             sale.save()
-#
-#             subtotal = Decimal('0.00')
-#             total_profit = Decimal('0.00')
-#             sale_items_created = 0
-#
-#             # PROCESS ITEMS
-#             for product_id, qty in zip(product_ids, quantities):
-#
-#                 try:
-#                     qty = int(qty)
-#
-#                     product = Inventory.objects.select_for_update().get(
-#                         id=product_id,
-#                         business=business
-#                     )
-#
-#                 except (Inventory.DoesNotExist, ValueError, TypeError):
-#                     continue
-#
-#                 if qty <= 0:
-#                     continue
-#
-#                 if qty > product.stock_quantity:
-#                     messages.error(
-#                         request,
-#                         f"{product.product_name} only has {product.stock_quantity} left in stock."
-#                     )
-#                     raise ValidationError("Insufficient stock.")
-#
-#                 item_price = Decimal(str(product.selling_price))
-#                 item_cost = Decimal(str(product.cost_price))
-#
-#                 item_total = item_price * qty
-#                 item_profit = (item_price - item_cost) * qty
-#
-#                 SaleItem.objects.create(
-#                     sale=sale,
-#                     product=product,
-#                     quantity=qty,
-#                     price=item_price,
-#                     cost_price=item_cost,
-#                     total=item_total,
-#                     profit=item_profit
-#                 )
-#
-#                 if sale.status == "Completed":
-#                     previous_stock = product.stock_quantity
-#                     product.stock_quantity -= qty
-#                     product.save()
-#
-#                     InventoryStockHistory.objects.create(
-#                         business=business,
-#                         inventory=product,
-#                         previous_stock=previous_stock,
-#                         quantity_changed=-qty,
-#                         new_stock=product.stock_quantity,
-#                         action_type='sale',
-#                         reference_number=f"SALE-{sale.receipt_number}",
-#                         performed_by=request.user,
-#                         note=f"Stock deducted from sale #{sale.receipt_number}"
-#                     )
-#
-#                 subtotal += item_total
-#                 total_profit += item_profit
-#                 sale_items_created += 1
-#
-#             if sale_items_created == 0:
-#                 sale.delete()
-#                 messages.error(request, 'No valid products selected.')
-#                 return redirect('sales')
-#
-#             # TAX
-#             tax_amount = Decimal('0.00')
-#
-#             if sale.tax and sale.tax.active:
-#                 tax_amount = (
-#                                      subtotal *
-#                                      Decimal(str(sale.tax.tax_percentage))
-#                              ) / Decimal('100')
-#
-#             # DISCOUNT
-#             discount_amount = Decimal('0.00')
-#
-#             if sale.discount and sale.discount.is_valid():
-#                 discount_amount = (
-#                                           subtotal * Decimal(str(sale.discount.percentage))
-#                                   ) / Decimal('100')
-#
-#             # TOTAL
-#             grand_total = subtotal + tax_amount - discount_amount
-#
-#             if grand_total < 0:
-#                 grand_total = Decimal('0.00')
-#
-#             # AMOUNT PAID
-#             try:
-#                 amount_paid = Decimal(str(amount_paid))
-#             except:
-#                 amount_paid = Decimal('0.00')
-#
-#             customer_change = Decimal('0.00')
-#
-#             if amount_paid > grand_total:
-#                 customer_change = amount_paid - grand_total
-#
-#             sale.subtotal = subtotal
-#             sale.tax_amount = tax_amount
-#             sale.discount_amount = discount_amount
-#             sale.total = grand_total
-#             sale.amount_paid = amount_paid
-#             sale.change = customer_change
-#             sale.save()
-#
-#             if sale.status == "Completed":
-#                 update_business_metrics(business, sale)
-#
-#             AuditLog.objects.create(
-#                 user=request.user,
-#                 action="Sale Completed" if sale.status == "Completed" else "Pro-forma Generated",
-#                 description=(
-#                     f"{request.user.username} completed sale "
-#                     f"#{sale.receipt_number} "
-#                     f"Total: {sale.total} "
-#                     f"Items: {sale_items_created}"
-#                 ),
-#                 content_type=ContentType.objects.get_for_model(Sale),
-#                 object_id=sale.id,
-#                 ip_address=request.META.get("REMOTE_ADDR")
-#             )
-#
-#             if sale.status == "Completed":
-#
-#                 messages.success(
-#                     request,
-#                     f"Sale completed successfully. Receipt No: {sale.receipt_number}"
-#                 )
-#
-#             else:
-#
-#                 messages.success(
-#                     request,
-#                     f"Pro-forma invoice generated. Invoice No: {sale.invoice_number}"
-#                 )
-#
-#             if sale.status == "Proforma":
-#                 return redirect('proforma_invoice', pk=sale.id)
-#
-#             return redirect('pos_receipt', pk=sale.id)
-#
-#         else:
-#             messages.error(request, 'Please correct the form errors.')
-#
-#     # =====================================
-#     # CONTEXT
-#     # =====================================
-#     context = {
-#         "form": form,
-#         "user": user,
-#         "business": business,
-#         "products": products_page,
-#         "search": search,
-#         "taxes": taxes,
-#         "discounts": discounts,
-#         "title": "Enterprise POS",
-#     }
-#
-#     return render(request, 'sales/sales.html', context)
-
-
 @login_required
 @transaction.atomic
 def update_sales(request, pk):
     user = User.objects.get(id=request.user.id)
 
-    business = Business.objects.get(
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     queryset = get_object_or_404(
         Sale,
@@ -1072,10 +807,12 @@ def update_sales(request, pk):
 @login_required
 @transaction.atomic
 def refund_sale(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     sale = get_object_or_404(
         Sale,
@@ -1256,7 +993,12 @@ def refund_sale(request, pk):
 @login_required
 def view_sales(request):
     user = request.user
-    business = get_object_or_404(Business, owner_id=user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     # =====================================
     # INITIALIZE VARIABLES (Prevents NameError)
@@ -1350,10 +1092,12 @@ def view_sales(request):
 def customers(request):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner_id=user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     # =====================================
     # BASE QUERY
@@ -1441,7 +1185,12 @@ def check_or_create_customer(request):
 
         })
 
-    business = Business.objects.get(owner=request.user)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     full_name = request.POST.get("name", "").strip()
     phone = request.POST.get("phone", "").strip()
@@ -1557,11 +1306,12 @@ def check_or_create_customer(request):
 @login_required
 @transaction.atomic
 def update_customer(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
 
+    business = staff.business
     customer = get_object_or_404(
         Customer,
         id=pk,
@@ -1679,10 +1429,12 @@ def update_customer(request, pk):
 @login_required
 @transaction.atomic
 def delete_customer(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     customer = get_object_or_404(
         Customer,
@@ -1738,10 +1490,12 @@ def delete_customer(request, pk):
 def customers_purchase(request, pk):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner_id=user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
     customer = get_object_or_404(
         Customer,
         id=pk,
@@ -1896,7 +1650,12 @@ def customers_purchase(request, pk):
 
 @login_required
 def pos_receipt(request, pk):
-    business = Business.objects.get(owner_id=request.user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
     sale = get_object_or_404(Sale, id=pk, business=business)
 
     sale_items = sale.items.all()
@@ -1984,10 +1743,12 @@ def pos_receipt(request, pk):
 
 @login_required
 def proforma_invoice(request, pk):
-    business = get_object_or_404(
-        Business,
-        owner_id=request.user.id
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     sale = get_object_or_404(
         Sale,
@@ -2033,7 +1794,12 @@ def proforma_invoice(request, pk):
 
 @login_required
 def sale_detail_api(request, pk):
-    business = get_object_or_404(Business, owner_id=request.user.id)
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
+    )
+
+    business = staff.business
 
     sale = get_object_or_404(
         Sale.objects.select_related('customer').prefetch_related('items__product'),
@@ -2091,10 +1857,12 @@ def sale_detail_api(request, pk):
 
 @login_required
 def sale_pdf_view(request, sale_id):
-    business = get_object_or_404(
-        Business,
-        owner=request.user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     sale = get_object_or_404(
         Sale.objects.select_related(
@@ -2142,10 +1910,12 @@ def sale_pdf_view(request, sale_id):
 def sales_report_pdf(request):
     user = request.user
 
-    business = get_object_or_404(
-        Business,
-        owner=user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related("business"),
+        staff=request.user
     )
+
+    business = staff.business
 
     tab = request.GET.get(
         'tab',

@@ -5,21 +5,46 @@
     /*==================================================
     NAVBAR PRO & UTILITIES
     ==================================================*/
-    .navbar-pro {
-        position: sticky;
-        top: 0;
-        z-index: 1030; /* Kept just below sidebar (1040) to prevent overlap */
-        height: 74px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 28px;
-        background: rgba(255, 255, 255, .75);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border-bottom: 1px solid rgba(0, 0, 0, .06);
-        transition: margin-left .3s cubic-bezier(.4, 0, .2, 1);
-    }
+   .navbar-pro {
+
+    position:fixed;
+
+    top:0;
+    left:0;
+    right:0;
+
+    height:74px;
+
+    z-index:1030;
+
+    display:flex;
+
+    margin-left:280px;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 28px;
+
+    background:rgba(255,255,255,.75);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    border-bottom:1px solid rgba(0,0,0,.06);
+
+    transition:
+        margin-left .3s cubic-bezier(.4,0,.2,1);
+
+}
+
+   body.sidebar-collapse .navbar-pro {
+
+    margin-left:70px;
+
+}
 
     /* DARK MODE OVERRIDES */
     .dark-mode .navbar-pro {
@@ -362,11 +387,17 @@
         color: #94a3b8;
     }
 
-    /* RESPONSIVE BREAKPOINTS */
-    @media (max-width: 992px) {
-        .navbar-pro {
-            padding: 0 16px;
-        }
+    /* RESPONSIVE BREAKPOINTS */@media (max-width:992px){
+
+    .navbar-pro{
+
+        margin-left:0 !important;
+
+        padding:0 16px;
+
+    }
+
+}
 
         .navbar-search {
             display: none !important;
