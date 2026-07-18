@@ -6,12 +6,92 @@
 {% block main_content %}
 <style>
     /* ================= PMS MODERN UI ================= */
-    .chart-container { height: 320px; position: relative; }
+    .chart-container{
+
+    position:relative;
+
+    width:100%;
+
+    height:360px;
+
+    min-height:360px;
+
+    overflow:hidden;
+
+}
+
+.chart-container canvas{
+
+display:block;
+
+}
+@media(max-width:768px){
+
+.chart-container{
+
+    height:260px;
+
+    min-height:260px;
+
+}
+
+}
     .section-space { margin-top: 25px; }
 
+.kpi-left{
+
+display:flex;
+
+align-items:center;
+
+gap:16px;
+
+}
+
+.kpi-icon{
+
+width:58px;
+
+height:58px;
+
+border-radius:16px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:rgba(255,255,255,.15);
+
+font-size:22px;
+
+color:#fff;
+
+flex-shrink:0;
+
+}
+
+.kpi-value{
+
+font-size:30px;
+
+font-weight:700;
+
+}
+
+.kpi-label{
+
+font-size:13px;
+
+opacity:.9;
+
+margin-bottom:6px;
+
+}
     .kpi-card {
         border-radius: 12px;
-        padding: 22px;
+        padding:20px;
         color: #fff;
         position: relative;
         overflow: hidden;
@@ -41,7 +121,7 @@
     .bg-soft-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 
     .card { border-radius: 12px; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    body.dark-mode .card { background: #1e293b; color: #f1f5f9; }
+    .dark-mode .card { background: #1e293b; color: #f1f5f9; }
 
     /* FIX: Quick Actions Background Color */
     .qa-item {
@@ -54,12 +134,12 @@
         background-color: rgba(0,0,0,0.05) !important;
         padding-left: 2rem !important;
     }
-    body.dark-mode .qa-item:hover {
+    .dark-mode .qa-item:hover {
         background-color: rgba(255,255,255,0.05) !important;
     }
 
     .table thead th { background: rgba(0,0,0,0.02); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    body.dark-mode .table thead th { background: rgba(255,255,255,0.05); }
+    .dark-mode .table thead th { background: rgba(255,255,255,0.05); }
 
     @media (max-width: 768px) {
 
@@ -148,9 +228,9 @@
 .ai-insight-card{
     display:flex;
     align-items:flex-start;
-    gap:16px;
+    gap:12px;
 
-    padding:18px;
+    padding:14px 16px;
     margin-bottom:14px;
 
     border-radius:18px;
@@ -184,9 +264,9 @@
 
 /* ICON */
 .ai-insight-icon{
-    width:50px;
-    height:50px;
-    min-width:50px;
+    width:42px;
+height:42px;
+min-width:42px;
 
     border-radius:14px;
 
@@ -196,7 +276,7 @@
 
     font-size:18px;
 
-    background:var(--bg-main);
+    background:var(--bg);
     border:1px solid var(--border);
 }
 
@@ -209,13 +289,13 @@
     font-size:15px;
     font-weight:700;
     margin-bottom:5px;
-    color:var(--text-main);
+    color:var(--text);
 }
 
 .ai-insight-message{
     font-size:13px;
     line-height:1.6;
-    color:var(--text-muted);
+    color:var(--text-light);
 }
 
 /* SUCCESS */
@@ -246,26 +326,334 @@
    DARK MODE FIX
 ========================= */
 
-body.dark-mode .ai-insight-card{
+.dark-mode .ai-insight-card{
     background:var(--bg-card);
     border:1px solid var(--border);
     box-shadow:0 6px 18px rgba(0,0,0,.35);
 }
 
-body.dark-mode .ai-insight-title{
-    color:var(--text-main);
+.dark-mode .ai-insight-title{
+    color:var(--text);
 }
 
-body.dark-mode .ai-insight-message{
-    color:var(--text-muted);
+.dark-mode .ai-insight-message{
+    color:var(--text-light);
 }
 
-body.dark-mode .ai-insight-icon{
-    background:var(--bg-main);
+.dark-mode .ai-insight-icon{
+    background:var(--bg);
     border:1px solid var(--border);
 }
 
+/* ===================================================
+   ENTERPRISE AI CHAT
+=================================================== */
 
+.chat-box{
+
+    height:430px;
+    overflow-y:auto;
+
+    padding:20px;
+
+    background:#f8fafc;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:14px;
+
+    scroll-behavior:smooth;
+}
+
+.dark-mode .chat-box{
+
+    background:#0f172a;
+
+}
+
+/* Chat bubbles */
+
+.chat-msg{
+
+    max-width:78%;
+
+    padding:14px 16px;
+
+    border-radius:18px;
+
+    line-height:1.6;
+
+    font-size:14px;
+
+    word-break:break-word;
+
+    animation:fadeIn .25s ease;
+}
+
+/* User */
+
+.chat-user{
+
+    align-self:flex-end;
+
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+
+    color:#fff;
+
+    border-bottom-right-radius:6px;
+}
+
+/* AI */
+
+.chat-ai{
+
+    align-self:flex-start;
+
+    background:#ffffff;
+
+    color:#334155;
+
+    border:1px solid rgba(0,0,0,.05);
+
+    border-bottom-left-radius:6px;
+}
+
+.dark-mode .chat-ai{
+
+    background:#1e293b;
+
+    color:#e2e8f0;
+
+    border-color:#334155;
+
+}
+
+/* Input area */
+
+.chat-input-wrapper{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:16px;
+
+    border-top:1px solid rgba(0,0,0,.08);
+
+    background:#fff;
+}
+
+.dark-mode .chat-input-wrapper{
+
+    background:#111827;
+
+    border-color:#334155;
+
+}
+
+.chat-input-field{
+
+    border-radius:30px;
+
+    height:48px;
+
+    padding-left:18px;
+
+    border:1px solid #d1d5db;
+}
+
+.chat-input-field:focus{
+
+    box-shadow:none;
+
+    border-color:#2563eb;
+}
+
+.chat-send-btn{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:50%;
+
+    padding:0;
+
+    flex-shrink:0;
+}
+
+.chat-clear-btn{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:50%;
+
+    padding:0;
+
+    flex-shrink:0;
+}
+
+/* Scrollbar */
+
+.chat-box::-webkit-scrollbar{
+
+    width:6px;
+}
+
+.chat-box::-webkit-scrollbar-thumb{
+
+    background:#94a3b8;
+
+    border-radius:10px;
+}
+
+@keyframes fadeIn{
+
+from{
+
+opacity:0;
+transform:translateY(8px);
+
+}
+
+to{
+
+opacity:1;
+transform:none;
+
+}
+
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width:768px){
+
+.chat-box{
+
+    height:340px;
+
+    padding:14px;
+
+}
+
+.chat-msg{
+
+    max-width:92%;
+
+    font-size:13px;
+
+    padding:12px 14px;
+}
+
+.chat-input-wrapper{
+
+    position:sticky;
+
+    bottom:0;
+
+    padding:12px;
+
+    gap:8px;
+}
+
+.chat-input-field{
+
+    height:44px;
+
+    font-size:14px;
+}
+
+.chat-send-btn,
+.chat-clear-btn{
+
+    width:42px;
+
+    height:42px;
+}
+
+}
+
+/* Small Phones */
+
+@media (max-width:480px){
+
+.chat-box{
+
+    height:300px;
+}
+
+.chat-msg{
+
+    max-width:96%;
+}
+
+.chat-input-wrapper{
+
+    padding:10px;
+}
+
+.chat-input-field{
+
+    font-size:13px;
+}
+
+}
+
+.dashboard-card{
+
+    border:none;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    height:100%;
+
+    box-shadow:0 10px 30px rgba(15,23,42,.08);
+
+}
+
+.dark-mode .dashboard-card{
+
+    background:#162032;
+
+}
+
+.dashboard-card-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:18px 22px;
+
+border-bottom:1px solid rgba(0,0,0,.06);
+
+}
+
+.dashboard-card-header h6{
+
+margin:0;
+
+font-weight:700;
+
+}
+
+.dashboard-card-header small{
+
+color:#94a3b8;
+
+}
 </style>
 
 <div class="content-wrapper dashboard-container">
@@ -291,7 +679,7 @@ body.dark-mode .ai-insight-icon{
     </section>
 
     <section class="content">
-        <div class="container-fluid">
+        <div class="container-fluid px-lg-4 px-3">
 
             <!-- =========================
                  KPI CARDS (ENTERPRISE PRO)
@@ -394,10 +782,21 @@ body.dark-mode .ai-insight-icon{
             <div class="row g-3 mb-3">
 
                 <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm border-0 chart-card h-100">
-                        <div class="card-header bg-transparent py-2">
-                            <h6 class="mb-0">Sales Trend</h6>
-                        </div>
+                    <div class="card dashboard-card chart-card">
+
+                            <div class="dashboard-card-header">
+
+    <div>
+
+        <h6>Sales Trend</h6>
+
+        <small>Last 7 days</small>
+
+    </div>
+
+</div>
+
+
                         <div class="card-body chart-container">
                             <canvas id="salesChart"></canvas>
                         </div>
@@ -405,8 +804,8 @@ body.dark-mode .ai-insight-icon{
                 </div>
 
                 <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm border-0 chart-card h-100">
-                        <div class="card-header bg-transparent py-2">
+                    <div class="card dashboard-card chart-card">
+                        <div class="dashboard-card-header">
                             <h6 class="mb-0">Top Products</h6>
                         </div>
                         <div class="card-body chart-container">
@@ -423,8 +822,8 @@ body.dark-mode .ai-insight-icon{
             <div class="row g-3 mb-3">
 
                 <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm border-0 chart-card h-100">
-                        <div class="card-header bg-transparent py-2">
+                    <div class="card dashboard-card chart-card">
+                        <div class="dashboard-card-header">
                             <h6 class="mb-0">AI Insights</h6>
                         </div>
                         <div class="card-body">
@@ -434,8 +833,8 @@ body.dark-mode .ai-insight-icon{
                 </div>
 
                 <div class="col-lg-6 col-12">
-                    <div class="card shadow-sm border-0 chart-card h-100">
-                        <div class="card-header bg-transparent py-2">
+                    <div class="card dashboard-card chart-card">
+                        <div class="dashboard-card-header">
                             <h6 class="mb-0">Profit Analytics</h6>
                         </div>
                         <div class="card-body chart-container">
@@ -467,7 +866,10 @@ body.dark-mode .ai-insight-icon{
 
                         <div class="card-body">
 
-                            <div id="alertsContainer"></div>
+                            <div
+id="alertsContainer"
+class="d-flex flex-column gap-3">
+</div>
 
                         </div>
 
@@ -489,7 +891,9 @@ body.dark-mode .ai-insight-icon{
 
                         <div class="card-body">
 
-                            <h3 id="forecastRevenue">0</h3>
+                            <h2
+id="forecastRevenue"
+class="fw-bold text-success">0</h2>
 
                             <p id="forecastText" class="text-muted mb-0">
                                 Loading forecast...
@@ -512,7 +916,10 @@ body.dark-mode .ai-insight-icon{
 
                         <div class="card-body">
 
-                            <ul id="riskList"></ul>
+                            <ul
+id="riskList"
+class="list-group list-group-flush">
+</ul>
 
                         </div>
 
@@ -640,32 +1047,41 @@ body.dark-mode .ai-insight-icon{
                             <span class="badge bg-success">Online</span>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body p-0">
 
-                            <div id="chatBox" class="chat-box"></div>
+    <div id="chatBox" class="chat-box"></div>
 
-                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="hidden"
+           name="csrfmiddlewaretoken"
+           value="{{ csrf_token }}">
 
-                            <!-- FIXED INPUT BAR (MODERN PROFESSIONAL) -->
-                            <div class="chat-input-wrapper mt-3 d-flex gap-2 align-items-center">
+    <div class="chat-input-wrapper">
 
-                                <input id="chatInput"
-                                       class="form-control chat-input-field"
-                                       placeholder="Ask your business AI..."
-                                       autocomplete="off">
+        <input
+            id="chatInput"
+            class="form-control chat-input-field"
+            placeholder="Ask AI anything about your business..."
+            autocomplete="off">
 
-                                <button onclick="sendMessage()"
-                                        class="btn btn-primary px-4 chat-send-btn">
-                                    Send
-                                </button>
+        <button
+            onclick="sendMessage()"
+            class="btn btn-primary chat-send-btn">
 
-                                <button onclick="clearChat()" class="btn btn-danger px-4 chat-clear-btn">
-                                    Clear
-                                </button>
+            <i class="fas fa-paper-plane"></i>
 
-                            </div>
+        </button>
 
-                        </div>
+        <button
+            onclick="clearChat()"
+            class="btn btn-outline-danger chat-clear-btn">
+
+            <i class="fas fa-trash"></i>
+
+        </button>
+
+    </div>
+
+</div>
 
                     </div>
 
@@ -801,7 +1217,11 @@ function renderChart(id,config){
         charts[id].destroy();
     }
 
-    charts[id]=new Chart(canvas,config);
+    requestAnimationFrame(()=>{
+
+charts[id]=new Chart(canvas,config);
+
+});
 
 }
 
@@ -1330,6 +1750,11 @@ chatBox.appendChild(
 userBubble
 );
 
+chatBox.scrollTo({
+top:chatBox.scrollHeight,
+behavior:"smooth"
+});
+
 saveToHistory(
 "user",
 message
@@ -1378,8 +1803,10 @@ saveToHistory(
 data.reply
 );
 
-chatBox.scrollTop=
-chatBox.scrollHeight;
+chatBox.scrollTo({
+    top: chatBox.scrollHeight,
+    behavior: "smooth"
+});
 
 });
 
@@ -1466,6 +1893,27 @@ loadChatHistory();
 
 }
 
+document.addEventListener("DOMContentLoaded",()=>{
+
+const input=document.getElementById("chatInput");
+
+if(input){
+
+input.addEventListener("keydown",function(e){
+
+if(e.key==="Enter"){
+
+e.preventDefault();
+
+sendMessage();
+
+}
+
+});
+
+}
+
+});
 </script>
 
 {% endblock %}
