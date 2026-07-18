@@ -784,7 +784,7 @@ def staff_list_view(request):
     # BASE STAFF QUERY
     # =========================
     staff_qs = StaffProfile.objects.filter(
-        business_id=staff.business_id
+        business=staff.business
     )
 
     # =========================
