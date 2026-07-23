@@ -9,36 +9,210 @@
     padding:24px;
 }
 
-.restock-grid{
-    display:grid;
-    grid-template-columns:1.1fr 1fr;
+.back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--text-muted);
+    text-decoration:none;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:16px;
+}
+
+.back-link:hover{
+    color:var(--text-main);
+}
+
+/* ============ PRODUCT HEADER ============ */
+
+.product-summary-card{
+    display:flex;
+    align-items:center;
     gap:24px;
-    align-items:start;
-    max-width:1100px;
-    margin:auto;
-}
-
-@media(max-width:900px){
-    .restock-grid{
-        grid-template-columns:1fr;
-    }
-}
-
-.restock-card{
+    padding:26px;
+    border-radius:22px;
     background:var(--bg-card);
     border:1px solid var(--border);
-    border-radius:24px;
-    overflow:hidden;
+    box-shadow:0 15px 35px rgba(0,0,0,.06);
+    margin-bottom:32px;
+    flex-wrap:wrap;
 }
+
+.product-image{
+    width:92px;
+    height:92px;
+    border-radius:18px;
+    overflow:hidden;
+    background:rgba(99,102,241,.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+.product-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.product-image i{
+    font-size:34px;
+    color:#6366f1;
+}
+
+.product-details{
+    flex:1;
+    min-width:200px;
+}
+
+.product-details h2{
+    font-size:26px;
+    font-weight:800;
+    margin-bottom:8px;
+    color:var(--text-main);
+}
+
+.product-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.product-meta span{
+    padding:7px 14px;
+    border-radius:30px;
+    background:rgba(99,102,241,.08);
+    color:var(--text-main);
+    font-size:13px;
+    font-weight:600;
+}
+
+.status-pill{
+    padding:10px 18px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    white-space:nowrap;
+}
+
+.status-healthy{ background:rgba(16,185,129,.15); color:#10b981; }
+.status-low{ background:rgba(245,158,11,.15); color:#f59e0b; }
+.status-critical{ background:rgba(239,68,68,.15); color:#ef4444; }
+.status-overstock{ background:rgba(99,102,241,.15); color:#6366f1; }
+
+/* ============ KPI ROW ============ */
+
+.kpi-section{
+    margin-bottom:40px;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:16px;
+}
+
+.kpi-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:18px;
+    border-radius:18px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    transition:.25s ease;
+}
+
+.kpi-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 14px 30px rgba(0,0,0,.06);
+}
+
+.kpi-icon{
+    width:46px;
+    height:46px;
+    border-radius:14px;
+    background:rgba(99,102,241,.1);
+    color:#6366f1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+}
+
+.kpi-card small{
+    color:var(--text-muted);
+    display:block;
+    font-size:12px;
+}
+
+.kpi-card h3{
+    font-size:19px;
+    font-weight:800;
+    margin:2px 0 0;
+    color:var(--text-main);
+}
+
+@media(max-width:1200px){
+    .kpi-grid{ grid-template-columns:repeat(3, 1fr); }
+}
+
+@media(max-width:600px){
+    .kpi-grid{ grid-template-columns:1fr 1fr; }
+    .kpi-section{ margin-bottom:32px; }
+}
+
+/* ============ MAIN LAYOUT ============ */
+
+.restock-layout{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:24px;
+    align-items:start;
+}
+
+@media(max-width:992px){
+    .restock-layout{ grid-template-columns:1fr; }
+}
+
+.erp-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,.05);
+    margin-bottom:22px;
+}
+
+.erp-card:last-child{
+    margin-bottom:0;
+}
+
+.erp-card h5{
+    font-weight:700;
+    color:var(--text-main);
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+/* FORM CARD HEADER */
 
 .restock-header{
     padding:28px;
+    margin:-24px -24px 22px;
     background:linear-gradient(135deg, #6366f1, #4f46e5);
     color:#fff;
+    border-radius:22px 22px 0 0;
 }
 
 .restock-header h2{
-    font-size:24px;
+    font-size:22px;
     font-weight:800;
     margin-bottom:4px;
 }
@@ -49,63 +223,33 @@
     font-size:14px;
 }
 
-.restock-body{
-    padding:28px;
-}
-
-.product-summary{
-    display:flex;
-    align-items:center;
+.form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
     gap:16px;
-    padding-bottom:22px;
-    margin-bottom:22px;
-    border-bottom:1px solid var(--border);
 }
 
-.product-summary .product-icon{
-    width:56px;
-    height:56px;
-    border-radius:16px;
-    background:rgba(99,102,241,0.1);
-    color:#6366f1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:22px;
-    flex-shrink:0;
-}
-
-.product-summary h4{
-    margin:0 0 4px;
-    font-weight:700;
-    color:var(--text-main);
-}
-
-.product-summary .stock-now{
-    font-size:13px;
-    color:var(--text-muted);
-}
-
-.product-summary .stock-now strong{
-    color:var(--text-main);
+@media(max-width:576px){
+    .form-row{ grid-template-columns:1fr; }
 }
 
 .form-group{
     display:flex;
     flex-direction:column;
-    margin-bottom:20px;
+    margin-bottom:18px;
 }
 
 .form-group label{
     margin-bottom:8px;
     font-weight:600;
     color:var(--text-main);
+    font-size:14px;
 }
 
 .form-group .form-control{
     width:100%;
-    padding:14px 16px;
-    border-radius:14px;
+    padding:13px 15px;
+    border-radius:13px;
     border:1px solid var(--border);
     background:var(--bg-main);
     color:var(--text-main);
@@ -124,6 +268,94 @@
     margin:6px 0 0;
     color:#dc2626;
     font-size:13px;
+    font-weight:600;
+}
+
+/* LIVE PREVIEW */
+
+.restock-preview{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:26px;
+    padding:22px;
+    margin:22px 0;
+    border-radius:18px;
+    background:rgba(99,102,241,.05);
+    border:1px solid rgba(99,102,241,.12);
+}
+
+.preview-item{
+    text-align:center;
+}
+
+.preview-item small{
+    color:var(--text-muted);
+}
+
+.preview-item h3{
+    font-size:30px;
+    font-weight:800;
+    margin-top:4px;
+    color:var(--text-main);
+}
+
+.preview-item.success h3{
+    color:#10b981;
+}
+
+.preview-arrow{
+    font-size:22px;
+    color:#6366f1;
+}
+
+.inventory-value-card{
+    padding:20px;
+    border-radius:16px;
+    background:linear-gradient(135deg, #4f46e5, #6366f1);
+    color:#fff;
+    margin-bottom:18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.inventory-value-card small{
+    opacity:.85;
+}
+
+.inventory-value-card h2{
+    font-size:28px;
+    font-weight:800;
+    margin:4px 0 0;
+}
+
+.recommendation-card{
+    padding:16px 18px;
+    border-radius:16px;
+    background:rgba(245,158,11,.1);
+    border-left:4px solid #f59e0b;
+    color:var(--text-main);
+    margin-bottom:20px;
+    font-size:14px;
+}
+
+.recommendation-card.status-good{
+    background:rgba(16,185,129,.1);
+    border-left-color:#10b981;
+}
+
+.recommendation-card.status-danger{
+    background:rgba(239,68,68,.1);
+    border-left-color:#ef4444;
+}
+
+.price-indicator{
+    font-size:13px;
+    font-weight:700;
+    margin-top:4px;
 }
 
 .restock-submit{
@@ -142,95 +374,210 @@
     transform:translateY(-2px);
 }
 
-.back-link{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    color:var(--text-muted);
-    text-decoration:none;
-    font-weight:600;
-    font-size:14px;
-    margin-bottom:16px;
-}
+/* ============ STOCK HEALTH METER ============ */
 
-.back-link:hover{
-    color:var(--text-main);
-}
-
-/* HISTORY */
-.history-card{
-    background:var(--bg-card);
+.stock-meter{
+    height:12px;
+    background:var(--bg-main);
     border:1px solid var(--border);
-    border-radius:24px;
+    border-radius:20px;
     overflow:hidden;
+    margin:16px 0 10px;
+    position:relative;
 }
 
-.history-header{
-    padding:22px 24px;
-    border-bottom:1px solid var(--border);
-    font-weight:700;
-    color:var(--text-main);
+.stock-fill{
+    height:100%;
+    background:linear-gradient(90deg, #10b981, #4f46e5);
+    transition:.4s ease;
 }
 
-.history-list{
-    max-height:520px;
-    overflow-y:auto;
-}
-
-.history-item{
+.stock-values{
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
-    padding:16px 24px;
-    border-bottom:1px solid var(--border);
-    gap:12px;
-}
-
-.history-item:last-child{
-    border-bottom:none;
-}
-
-.history-item .history-type{
     font-size:12px;
+    color:var(--text-muted);
+}
+
+.stock-values strong{
+    color:var(--text-main);
+}
+
+/* ============ SUPPLIER / PURCHASE ============ */
+
+.supplier-card{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.supplier-avatar{
+    width:50px;
+    height:50px;
+    border-radius:14px;
+    background:linear-gradient(135deg, #4f46e5, #6366f1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
     font-weight:700;
-    padding:5px 10px;
-    border-radius:999px;
-    text-transform:capitalize;
+    color:#fff;
     flex-shrink:0;
 }
 
-.history-type.restock{ background:rgba(16,185,129,0.12); color:#10b981; }
-.history-type.damaged{ background:rgba(239,68,68,0.12); color:#ef4444; }
-.history-type.adjustment{ background:rgba(245,158,11,0.12); color:#f59e0b; }
-.history-type.sale{ background:rgba(59,130,246,0.12); color:#3b82f6; }
-.history-type.returned{ background:rgba(139,92,246,0.12); color:#8b5cf6; }
-.history-type.transfer{ background:rgba(14,165,233,0.12); color:#0ea5e9; }
+.supplier-info strong{
+    display:block;
+    color:var(--text-main);
+}
 
-.history-detail{
+.supplier-info small{
+    color:var(--text-muted);
+}
+
+.purchase-summary{
+    display:grid;
+    gap:10px;
+    margin-top:14px;
+}
+
+.purchase-summary div{
+    padding:13px 15px;
+    border-radius:13px;
+    background:var(--bg-main);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:var(--text-muted);
+    font-size:13px;
+}
+
+.purchase-summary div strong{
+    color:var(--text-main);
+}
+
+.empty-note{
+    color:var(--text-muted);
+    font-size:13px;
+    text-align:center;
+    padding:14px 0;
+}
+
+.supplier-list{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+.supplier-list li{
+    padding:11px 0;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    gap:12px;
+    align-items:center;
+    color:var(--text-main);
+    font-size:14px;
+}
+
+.supplier-list li:last-child{
+    border-bottom:none;
+}
+
+.supplier-list li i{
+    color:#6366f1;
+}
+
+/* ============ ACTIVITY TIMELINE ============ */
+
+.timeline{
+    display:flex;
+    flex-direction:column;
+    max-height:420px;
+    overflow-y:auto;
+}
+
+.timeline-item{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    position:relative;
+    padding-bottom:20px;
+}
+
+.timeline-item:last-child{
+    padding-bottom:0;
+}
+
+.timeline-dot{
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    margin-top:5px;
+    flex-shrink:0;
+    position:relative;
+}
+
+.timeline-dot::after{
+    content:"";
+    position:absolute;
+    left:5px;
+    top:12px;
+    width:2px;
+    height:100%;
+    background:var(--border);
+}
+
+.timeline-item:last-child .timeline-dot::after{
+    display:none;
+}
+
+.timeline-dot.restock{ background:#10b981; }
+.timeline-dot.damaged{ background:#ef4444; }
+.timeline-dot.adjustment{ background:#f59e0b; }
+.timeline-dot.sale{ background:#3b82f6; }
+.timeline-dot.returned{ background:#8b5cf6; }
+.timeline-dot.transfer{ background:#0ea5e9; }
+
+.timeline-content{
     flex:1;
 }
 
-.history-detail .qty-change{
+.timeline-content .qty{
     font-weight:700;
     color:var(--text-main);
     font-size:14px;
 }
 
-.history-detail .meta{
+.timeline-content .type-tag{
+    font-size:11px;
+    font-weight:700;
+    text-transform:capitalize;
+    padding:3px 9px;
+    border-radius:999px;
+    margin-left:8px;
+}
+
+.type-tag.restock{ background:rgba(16,185,129,.12); color:#10b981; }
+.type-tag.damaged{ background:rgba(239,68,68,.12); color:#ef4444; }
+.type-tag.adjustment{ background:rgba(245,158,11,.12); color:#f59e0b; }
+.type-tag.sale{ background:rgba(59,130,246,.12); color:#3b82f6; }
+.type-tag.returned{ background:rgba(139,92,246,.12); color:#8b5cf6; }
+.type-tag.transfer{ background:rgba(14,165,233,.12); color:#0ea5e9; }
+
+.timeline-content .meta{
     font-size:12px;
     color:var(--text-muted);
-    margin-top:2px;
+    margin-top:3px;
 }
 
-.history-empty{
+.timeline-empty{
     text-align:center;
-    padding:50px 20px;
+    padding:40px 20px;
     color:var(--text-muted);
 }
 
-.history-empty i{
-    font-size:36px;
-    margin-bottom:12px;
+.timeline-empty i{
+    font-size:32px;
+    margin-bottom:10px;
     display:block;
 }
 
@@ -244,34 +591,109 @@
         Back to Inventory
     </a>
 
-    <div class="restock-grid">
+    {% include 'partials/_alerts.html' %}
 
-        <!-- RESTOCK FORM -->
-        <div class="restock-card">
+    <!-- PRODUCT HEADER -->
+    <div class="product-summary-card">
 
-            <div class="restock-header">
-                <h2>Restock Product</h2>
-                <p>Add received stock to this product.</p>
+        <div class="product-image">
+            {% if product.product_image %}
+                <img src="{{ product.product_image.url }}" alt="{{ product.product_name }}">
+            {% else %}
+                <i class="fas fa-box-open"></i>
+            {% endif %}
+        </div>
+
+        <div class="product-details">
+            <h2>{{ product.product_name }}</h2>
+            <div class="product-meta">
+                {% if product.category %}<span>{{ product.category }}</span>{% endif %}
+                {% if product.brand %}<span>{{ product.brand }}</span>{% endif %}
+                <span>{{ product.sku }}</span>
+            </div>
+        </div>
+
+        {% if stock_status == "Healthy" %}
+            <span class="status-pill status-healthy">Healthy</span>
+        {% elif stock_status == "Low" %}
+            <span class="status-pill status-low">Low Stock</span>
+        {% elif stock_status == "Critical" %}
+            <span class="status-pill status-critical">Critical</span>
+        {% else %}
+            <span class="status-pill status-overstock">Overstock</span>
+        {% endif %}
+
+    </div>
+
+    <!-- KPI ROW -->
+    <div class="kpi-section">
+        <div class="kpi-grid">
+
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-boxes"></i></div>
+                <div>
+                    <small>Current Stock</small>
+                    <h3>{{ current_stock }}</h3>
+                </div>
             </div>
 
-            <div class="restock-body">
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+                <div>
+                    <small>Reorder Level</small>
+                    <h3>{{ reorder_level }}</h3>
+                </div>
+            </div>
 
-                <div class="product-summary">
-                    <div class="product-icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div>
-                        <h4>{{ item.product_name }}</h4>
-                        <div class="stock-now">
-                            Current stock: <strong>{{ item.stock_quantity }}</strong>
-                            {% if item.is_low_stock %}
-                                &middot; <span style="color:#ef4444;font-weight:700;">Low Stock</span>
-                            {% endif %}
-                        </div>
-                    </div>
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-cart-plus"></i></div>
+                <div>
+                    <small>Suggested Restock</small>
+                    <h3>{{ suggested_quantity }}</h3>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+                <div>
+                    <small>Inventory Value</small>
+                    <h3>₵{{ inventory_value }}</h3>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-tags"></i></div>
+                <div>
+                    <small>Avg. Purchase Cost</small>
+                    <h3>₵{{ average_purchase_cost|floatformat:2 }}</h3>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-icon"><i class="fas fa-calendar-check"></i></div>
+                <div>
+                    <small>Restocked This Month</small>
+                    <h3>{{ monthly_restocked }}</h3>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN LAYOUT -->
+    <div class="restock-layout">
+
+        <!-- LEFT: RESTOCK FORM -->
+        <div class="restock-main">
+
+            <div class="erp-card" style="padding-top:0;">
+
+                <div class="restock-header">
+                    <h2>Restock Product</h2>
+                    <p>Add received stock to this product.</p>
                 </div>
 
-                <form method="POST" novalidate>
+                <form method="POST" id="restockForm" novalidate>
                     {% csrf_token %}
 
                     {% if form.non_field_errors %}
@@ -284,6 +706,51 @@
                         {{ form.quantity.errors }}
                     </div>
 
+                    <div class="restock-preview">
+                        <div class="preview-item">
+                            <small>Current Stock</small>
+                            <h3 id="currentStockDisplay">{{ current_stock }}</h3>
+                        </div>
+                        <div class="preview-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="preview-item success">
+                            <small>After Restock</small>
+                            <h3 id="newStockDisplay">{{ current_stock }}</h3>
+                        </div>
+                    </div>
+
+                    <div class="inventory-value-card">
+                        <div>
+                            <small>Inventory Value After Restock</small>
+                            <h2 id="inventoryValueDisplay">₵{{ inventory_value|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-card" id="recommendationCard">
+                        <span id="recommendationText">Enter a quantity to see stock impact.</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.supplier.id_for_label }}">{{ form.supplier.label }}</label>
+                            {{ form.supplier }}
+                            {{ form.supplier.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.invoice_number.id_for_label }}">{{ form.invoice_number.label }}</label>
+                            {{ form.invoice_number }}
+                            {{ form.invoice_number.errors }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.purchase_cost.id_for_label }}">{{ form.purchase_cost.label }}</label>
+                        {{ form.purchase_cost }}
+                        <div id="priceDifference" class="price-indicator"></div>
+                        {{ form.purchase_cost.errors }}
+                    </div>
+
                     <div class="form-group">
                         <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
                         {{ form.note }}
@@ -294,46 +761,94 @@
                         <i class="fas fa-plus-circle"></i>
                         Confirm Restock
                     </button>
+
                 </form>
 
             </div>
 
         </div>
 
-        <!-- RECENT HISTORY -->
-        <div class="history-card">
+        <!-- RIGHT: SIDEBAR -->
+        <div class="restock-sidebar">
 
-            <div class="history-header">
-                Recent Stock Activity
+            <div class="erp-card">
+                <h5><i class="fas fa-heartbeat"></i> Stock Health</h5>
+
+                <div class="stock-meter">
+                    <div class="stock-fill" style="width:{{ health_percent }}%;"></div>
+                </div>
+
+                <div class="stock-values">
+                    <span>0</span>
+                    <span>Reorder: <strong>{{ reorder_level }}</strong></span>
+                    <span>Max: <strong>{{ maximum_stock|default:"—" }}</strong></span>
+                </div>
             </div>
 
-            <div class="history-list">
+            <div class="erp-card">
+                <h5><i class="fas fa-receipt"></i> Previous Purchase</h5>
 
-                {% for record in item_history %}
-                    <div class="history-item">
-                        <span class="history-type {{ record.action_type }}">
-                            {{ record.get_action_type_display }}
-                        </span>
-                        <div class="history-detail">
-                            <div class="qty-change">
-                                {% if record.quantity_changed > 0 %}+{% endif %}{{ record.quantity_changed }}
-                                <span style="color:var(--text-muted); font-weight:500;">
-                                    ({{ record.previous_stock }} → {{ record.new_stock }})
-                                </span>
-                            </div>
-                            <div class="meta">
-                                {{ record.created_at|date:"d M Y, H:i" }}
-                                {% if record.performed_by %} &middot; {{ record.performed_by.username }}{% endif %}
+                {% if last_restock %}
+                    {% if last_restock.supplier %}
+                        <div class="supplier-card">
+                            <div class="supplier-avatar">{{ last_restock.supplier.name|slice:":1"|upper }}</div>
+                            <div class="supplier-info">
+                                <strong>{{ last_restock.supplier.name }}</strong>
+                                <small>{{ last_restock.supplier.phone|default:"No phone on file" }}</small>
                             </div>
                         </div>
-                    </div>
-                {% empty %}
-                    <div class="history-empty">
-                        <i class="fas fa-history"></i>
-                        No stock activity yet.
-                    </div>
-                {% endfor %}
+                    {% endif %}
 
+                    <div class="purchase-summary">
+                        <div>Last Quantity <strong>{{ last_restock.quantity }}</strong></div>
+                        <div>Last Unit Cost <strong>₵{{ last_restock.purchase_cost|floatformat:2 }}</strong></div>
+                        <div>Received <strong>{{ last_restock.created_at|date:"d M Y" }}</strong></div>
+                    </div>
+                {% else %}
+                    <div class="empty-note">No previous purchase recorded.</div>
+                {% endif %}
+            </div>
+
+            <div class="erp-card">
+                <h5><i class="fas fa-truck"></i> Recent Suppliers</h5>
+
+                <ul class="supplier-list">
+                    {% for supplier in recent_suppliers %}
+                        <li><i class="fas fa-truck"></i> {{ supplier }}</li>
+                    {% empty %}
+                        <li>No supplier history yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="erp-card">
+                <h5><i class="fas fa-stream"></i> Activity Timeline</h5>
+
+                <div class="timeline">
+                    {% for record in item_history %}
+                        <div class="timeline-item">
+                            <div class="timeline-dot {{ record.action_type }}"></div>
+                            <div class="timeline-content">
+                                <span class="qty">
+                                    {% if record.quantity > 0 %}+{% endif %}{{ record.quantity }} {{ product.unit }}
+                                </span>
+                                <span class="type-tag {{ record.action_type }}">
+                                    {{ record.get_action_type_display }}
+                                </span>
+                                <div class="meta">
+                                    {{ record.created_at|date:"d M Y, H:i" }}
+                                    {% if record.received_by %} &middot; {{ record.received_by.username }}{% endif %}
+                                    {% if record.note %} &middot; {{ record.note }}{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="timeline-empty">
+                            <i class="fas fa-history"></i>
+                            No stock activity yet.
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
 
         </div>
@@ -342,5 +857,84 @@
 
 </section>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const qtyInput = document.getElementById("{{ form.quantity.id_for_label }}");
+    const costInput = document.getElementById("{{ form.purchase_cost.id_for_label }}");
+
+    if (!qtyInput) return; // core control missing — nothing else on this page can safely run
+
+    const currentStock = {{ product.stock_quantity }};
+    const productCost = {{ product.cost_price }};
+    const minimumStock = {{ product.minimum_stock }};
+    const reorderLevel = {{ product.reorder_level }};
+    const maximumStock = {{ product.maximum_stock|default:0 }};
+
+    const newStockEl = document.getElementById("newStockDisplay");
+    const valueEl = document.getElementById("inventoryValueDisplay");
+    const recCard = document.getElementById("recommendationCard");
+    const recText = document.getElementById("recommendationText");
+    const priceDiffEl = document.getElementById("priceDifference");
+
+    function formatMoney(amount) {
+        return "₵" + amount.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
+
+    function updateAll() {
+        const qty = parseInt(qtyInput.value) || 0;
+        const projected = currentStock + qty;
+
+        if (newStockEl) newStockEl.textContent = projected;
+        if (valueEl) valueEl.textContent = formatMoney(projected * productCost);
+
+        if (recCard && recText) {
+            recCard.classList.remove("status-good", "status-danger");
+
+            if (qty <= 0) {
+                recText.textContent = "Enter a quantity to see stock impact.";
+            } else if (projected < minimumStock) {
+                recCard.classList.add("status-danger");
+                recText.innerHTML = "<strong>Critical:</strong> Stock will still be below minimum level.";
+            } else if (projected < reorderLevel) {
+                recText.innerHTML = "<strong>Low Stock:</strong> Consider increasing this purchase.";
+            } else if (maximumStock && projected > maximumStock) {
+                recCard.classList.add("status-danger");
+                recText.innerHTML = "<strong>Warning:</strong> This exceeds the maximum stock.";
+            } else {
+                recCard.classList.add("status-good");
+                recText.innerHTML = "<strong>Good:</strong> Inventory level looks healthy.";
+            }
+        }
+    }
+
+    qtyInput.addEventListener("input", updateAll);
+    updateAll();
+
+    if (costInput && priceDiffEl) {
+        costInput.addEventListener("input", function () {
+            const newCost = parseFloat(this.value) || 0;
+            if (newCost === 0) {
+                priceDiffEl.textContent = "";
+                return;
+            }
+            const diff = newCost - productCost;
+
+            if (diff > 0) {
+                priceDiffEl.innerHTML = `<span style="color:#ef4444;">▲ Cost increased by ₵${diff.toFixed(2)}</span>`;
+            } else if (diff < 0) {
+                priceDiffEl.innerHTML = `<span style="color:#10b981;">▼ Saving ₵${Math.abs(diff).toFixed(2)}</span>`;
+            } else {
+                priceDiffEl.textContent = "Same as current cost price.";
+            }
+        });
+    }
+
+});
+</script>
 
 {% endblock %}

@@ -153,8 +153,13 @@
     vertical-align:middle;
 }
 
-.supplier-table tbody tr:hover{
-    background:rgba(99,102,241,0.03);
+.supplier-row{
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.supplier-row:hover td{
+    background:rgba(99,102,241,0.05);
 }
 
 .supplier-info{
@@ -176,14 +181,9 @@
     flex-shrink:0;
 }
 
-.supplier-name-link{
+.supplier-name-text{
     color:var(--text-main);
     font-weight:700;
-    text-decoration:none;
-}
-
-.supplier-name-link:hover{
-    color:#6366f1;
 }
 
 .supplier-meta{
@@ -232,6 +232,11 @@
     justify-content:center;
     transition:.25s ease;
     text-decoration:none !important;
+}
+
+.history-btn{
+    background:rgba(14,165,233,0.12);
+    color:#0ea5e9;
 }
 
 .edit-btn{
@@ -313,6 +318,157 @@
     .supplier-header{ flex-direction:column; align-items:flex-start; }
 }
 
+/* =========================================
+   SUPPLIER DRAWER
+========================================= */
+
+.drawer-overlay{
+    position:fixed;
+    top:0; right:0; left:0; bottom:0;
+    background:rgba(0,0,0,.45);
+    opacity:0;
+    visibility:hidden;
+    transition:.3s ease;
+    z-index:1040;
+}
+
+.drawer-overlay.show{
+    opacity:1;
+    visibility:visible;
+}
+
+.supplier-drawer{
+    position:fixed;
+    top:0;
+    right:-450px;
+    width:430px;
+    max-width:100%;
+    height:100vh;
+    background:var(--bg-card);
+    border-left:1px solid var(--border);
+    z-index:1050;
+    transition:.35s ease;
+    overflow-y:auto;
+    box-shadow:-10px 0 35px rgba(0,0,0,.15);
+}
+
+.supplier-drawer.show{
+    right:0;
+}
+
+.drawer-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:25px;
+    border-bottom:1px solid var(--border);
+}
+
+.drawer-header h4{
+    margin:0;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.drawer-close{
+    width:38px;
+    height:38px;
+    border:none;
+    border-radius:10px;
+    background:rgba(239,68,68,.12);
+    color:#ef4444;
+    cursor:pointer;
+}
+
+.drawer-body{
+    padding:25px;
+}
+
+.drawer-profile{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.drawer-avatar{
+    width:85px;
+    height:85px;
+    border-radius:50%;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:30px;
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
+    color:white;
+    margin-bottom:15px;
+}
+
+.drawer-profile h5{
+    font-weight:800;
+    color:var(--text-main);
+    margin-bottom:4px;
+}
+
+.drawer-profile p{
+    color:var(--text-muted);
+    margin:0;
+}
+
+.drawer-box{
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:15px;
+}
+
+.drawer-item{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px dashed var(--border);
+}
+
+.drawer-item:last-child{
+    border:none;
+}
+
+.drawer-item span{
+    color:var(--text-muted);
+}
+
+.drawer-item strong{
+    color:var(--text-main);
+    text-align:right;
+}
+
+.drawer-item strong.over-limit{
+    color:#ef4444;
+}
+
+.drawer-notes{
+    font-size:13px;
+    color:var(--text-muted);
+    line-height:1.5;
+}
+
+.drawer-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:20px;
+}
+
+.drawer-actions .supplier-btn{
+    flex:1;
+    text-align:center;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+}
+
 </style>
 
 <div class="content-wrapper">
@@ -323,8 +479,6 @@
             <h2>Suppliers</h2>
             <p>Manage your supplier relationships and balances.</p>
         </div>
-
-            {% include 'partials/_alerts.html' %}
 
         <a href="{% url 'create_supplier' %}" class="supplier-btn supplier-btn-primary">
             <i class="fas fa-plus me-2"></i>
@@ -375,7 +529,22 @@
 
                 {% for supplier in suppliers %}
 
-                    <tr>
+                    <tr class="supplier-row"
+                        data-id="{{ supplier.id }}"
+                        data-name="{{ supplier.name }}"
+                        data-phone="{{ supplier.phone|default:'' }}"
+                        data-email="{{ supplier.email|default:'' }}"
+                        data-address="{{ supplier.address|default:'' }}"
+                        data-country="{{ supplier.country|default:'' }}"
+                        data-terms="{{ supplier.get_payment_terms_display }}"
+                        data-credit-limit="{{ supplier.credit_limit }}"
+                        data-balance="{{ supplier.balance_due }}"
+                        data-over-limit="{% if supplier.is_over_credit_limit %}1{% else %}0{% endif %}"
+                        data-last-supply="{{ supplier.last_supply_date|date:'d M Y'|default:'' }}"
+                        data-notes="{{ supplier.notes|default:'' }}"
+                        data-active="{% if supplier.is_active %}1{% else %}0{% endif %}"
+                        data-detail-url="{% url 'supplier_detail' supplier.id %}"
+                        data-edit-url="{% url 'update_supplier' supplier.id %}">
 
                         <td>
                             <div class="supplier-info">
@@ -383,12 +552,8 @@
                                     <i class="fas fa-truck"></i>
                                 </div>
                                 <div>
-                                    <a href="{% url 'supplier_detail' supplier.id %}" class="supplier-name-link">
-                                        {{ supplier.name }}
-                                    </a>
-                                    <div class="supplier-meta">
-                                        {{ supplier.get_payment_terms_display }}
-                                    </div>
+                                    <span class="supplier-name-text">{{ supplier.name }}</span>
+                                    <div class="supplier-meta">{{ supplier.get_payment_terms_display }}</div>
                                 </div>
                             </div>
                         </td>
@@ -430,16 +595,29 @@
 
                         <td>
                             <div class="action-group">
-                                <a href="{% url 'update_supplier' supplier.id %}" class="action-btn edit-btn" title="Edit">
+
+                                <a href="{% url 'supplier_detail' supplier.id %}"
+                                   class="action-btn history-btn"
+                                   title="View History"
+                                   onclick="event.stopPropagation();">
+                                    <i class="fas fa-history"></i>
+                                </a>
+
+                                <a href="{% url 'update_supplier' supplier.id %}"
+                                   class="action-btn edit-btn"
+                                   title="Edit"
+                                   onclick="event.stopPropagation();">
                                     <i class="fas fa-edit"></i>
                                 </a>
 
                                 <button type="button" class="action-btn delete-btn" title="Delete"
                                         data-toggle="modal" data-bs-toggle="modal"
                                         data-target="#deleteSupplierModal{{ supplier.id }}"
-                                        data-bs-target="#deleteSupplierModal{{ supplier.id }}">
+                                        data-bs-target="#deleteSupplierModal{{ supplier.id }}"
+                                        onclick="event.stopPropagation();">
                                     <i class="fas fa-trash"></i>
                                 </button>
+
                             </div>
                         </td>
 
@@ -524,5 +702,145 @@
 
 </section>
 </div>
+
+<!-- SUPPLIER DRAWER -->
+<div class="drawer-overlay" id="supplierDrawerOverlay"></div>
+
+<div class="supplier-drawer" id="supplierDrawer">
+
+    <div class="drawer-header">
+        <h4>Supplier Details</h4>
+        <button type="button" class="drawer-close" id="supplierDrawerClose">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="drawer-body">
+
+        <div class="drawer-profile">
+            <div class="drawer-avatar">
+                <i class="fas fa-truck"></i>
+            </div>
+            <h5 id="drawerName">—</h5>
+            <p id="drawerStatus">—</p>
+        </div>
+
+        <div class="drawer-box">
+            <div class="drawer-item">
+                <span>Phone</span>
+                <strong id="drawerPhone">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Email</span>
+                <strong id="drawerEmail">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Address</span>
+                <strong id="drawerAddress">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Country</span>
+                <strong id="drawerCountry">—</strong>
+            </div>
+        </div>
+
+        <div class="drawer-box">
+            <div class="drawer-item">
+                <span>Payment Terms</span>
+                <strong id="drawerTerms">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Credit Limit</span>
+                <strong id="drawerCreditLimit">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Balance Due</span>
+                <strong id="drawerBalance">—</strong>
+            </div>
+            <div class="drawer-item">
+                <span>Last Supply</span>
+                <strong id="drawerLastSupply">—</strong>
+            </div>
+        </div>
+
+        <div class="drawer-box" id="drawerNotesBox" style="display:none;">
+            <div class="activity-title" style="font-weight:700; margin-bottom:8px; color:var(--text-main);">Notes</div>
+            <div class="drawer-notes" id="drawerNotes"></div>
+        </div>
+
+        <div class="drawer-actions">
+            <a href="#" id="drawerEditLink" class="supplier-btn supplier-btn-light">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="#" id="drawerHistoryLink" class="supplier-btn supplier-btn-primary">
+                <i class="fas fa-history"></i> Full History
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const overlay = document.getElementById("supplierDrawerOverlay");
+    const drawer = document.getElementById("supplierDrawer");
+    const closeBtn = document.getElementById("supplierDrawerClose");
+
+    function openDrawer(row) {
+        const data = row.dataset;
+
+        document.getElementById("drawerName").textContent = data.name || "—";
+        document.getElementById("drawerStatus").textContent = data.active === "1" ? "Active Supplier" : "Inactive Supplier";
+        document.getElementById("drawerPhone").textContent = data.phone || "—";
+        document.getElementById("drawerEmail").textContent = data.email || "—";
+        document.getElementById("drawerAddress").textContent = data.address || "—";
+        document.getElementById("drawerCountry").textContent = data.country || "—";
+        document.getElementById("drawerTerms").textContent = data.terms || "—";
+        document.getElementById("drawerCreditLimit").textContent = "Gh¢" + (data.creditLimit || "0.00");
+
+        const balanceEl = document.getElementById("drawerBalance");
+        balanceEl.textContent = "Gh¢" + (data.balance || "0.00");
+        balanceEl.classList.toggle("over-limit", data.overLimit === "1");
+
+        document.getElementById("drawerLastSupply").textContent = data.lastSupply || "Never";
+
+        const notesBox = document.getElementById("drawerNotesBox");
+        const notesEl = document.getElementById("drawerNotes");
+        if (data.notes && data.notes.trim().length > 0) {
+            notesEl.textContent = data.notes;
+            notesBox.style.display = "block";
+        } else {
+            notesBox.style.display = "none";
+        }
+
+        document.getElementById("drawerEditLink").href = data.editUrl;
+        document.getElementById("drawerHistoryLink").href = data.detailUrl;
+
+        overlay.classList.add("show");
+        drawer.classList.add("show");
+    }
+
+    function closeDrawer() {
+        overlay.classList.remove("show");
+        drawer.classList.remove("show");
+    }
+
+    document.querySelectorAll(".supplier-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+            openDrawer(row);
+        });
+    });
+
+    closeBtn.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeDrawer();
+    });
+
+});
+</script>
 
 {% endblock %}

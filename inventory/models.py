@@ -12,17 +12,40 @@ from django.utils.text import slugify
 
 
 MOVEMENT_TYPES = (
-    ("OPENING", "Opening Stock"),
-    ("RESTOCK", "Restock"),
-    ("SALE", "Sale"),
-    ("DAMAGE", "Damage"),
-    ("ADJUSTMENT", "Adjustment"),
-    ("RETURN_IN", "Customer Return"),
-    ("RETURN_OUT", "Supplier Return"),
-    ("TRANSFER_IN", "Transfer In"),
-    ("TRANSFER_OUT", "Transfer Out"),
+
+    ("opening", "Opening Stock"),
+
+    ("purchase", "Purchase"),
+
+    ("sale", "Sale"),
+
+    ("return", "Sales Return"),
+
+    ("supplier_return", "Supplier Return"),
+
+    ("restock", "Restock"),
+
+    ("adjustment", "Stock Adjustment"),
+
+    ("damage", "Damaged"),
+
+    ("expired", "Expired"),
+
+    ("transfer_in", "Transfer In"),
+
+    ("transfer_out", "Transfer Out"),
+
+    ("production", "Production"),
+
 )
 
+DIRECTION = (
+
+    ("IN","Stock In"),
+
+    ("OUT","Stock Out"),
+
+)
 
 UNIT_CHOICES = (
     ("pcs", "Pieces"),
@@ -112,52 +135,6 @@ class Inventory(models.Model):
         return f"{self.product_name} ({self.sku})"
 
 
-class InventoryStockHistory(models.Model):
-
-    ACTION_CHOICES = [
-        ("restock", "Restock"),
-        ("sale", "Sale Deduction"),
-        ("adjustment", "Manual Adjustment"),
-        ('damaged', 'Damaged'),
-        ('returned', 'Returned'),
-        ('transfer', 'Transfer'),
-    ]
-
-    business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    inventory = models.ForeignKey(
-        Inventory,
-        on_delete=models.CASCADE,
-        related_name="history"
-    )
-
-    previous_stock = models.IntegerField()
-    quantity_changed = models.IntegerField()
-    new_stock = models.IntegerField()
-
-    action_type = models.CharField(
-        max_length=30,
-        choices=ACTION_CHOICES
-    )
-    reference_number = models.TextField(blank=True, null=True)
-
-    performed_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    note = models.TextField(blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.inventory.product_name} - {self.action_type}"
-
-
 class Supplier(models.Model):
 
     business = models.ForeignKey('business.Business', on_delete=models.CASCADE)
@@ -234,6 +211,119 @@ class Supplier(models.Model):
     @property
     def is_over_credit_limit(self):
         return self.balance_due > self.credit_limit
+
+
+class InventoryStockHistory(models.Model):
+
+    ACTION_CHOICES = [
+        ("restock", "Restock"),
+        ("sale", "Sale Deduction"),
+        ("adjustment", "Manual Adjustment"),
+        ('damaged', 'Damaged'),
+        ('returned', 'Returned'),
+        ('transfer', 'Transfer'),
+    ]
+
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
+    inventory = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name="history"
+    )
+
+    previous_stock = models.IntegerField()
+    quantity = models.IntegerField()
+    new_stock = models.IntegerField()
+
+    action_type = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES
+    )
+    reference_number = models.TextField(blank=True, null=True)
+
+    # =====================================================
+    # ENTERPRISE RECEIVING INFORMATION
+    # =====================================================
+
+    supplier = models.ForeignKey(
+        Supplier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restocks"
+    )
+
+    invoice_number = models.CharField(
+        max_length=80,
+        blank=True
+    )
+
+    purchase_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    warehouse = models.CharField(
+        max_length=120,
+        blank=True
+    )
+
+    reference = models.CharField(
+        max_length=120,
+        blank=True
+    )
+
+    received_date = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    received_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    remarks = models.TextField(
+        blank=True
+    )
+
+    note = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.inventory.product_name} - {self.action_type}"
+
+    @property
+    def total_cost(self):
+        return self.purchase_cost * self.quantity
+
+    @property
+    def supplier_name(self):
+        if self.supplier:
+            return self.supplier.name
+        return "-"
+
+    @property
+    def received_by_name(self):
+        if self.received_by:
+            return self.received_by.get_full_name() or self.received_by.username
+        return "-"
+
+    def __str__(self):
+        return (
+            f"{self.inventory.product_name} "
+            f"(+{self.quantity}) "
+            f"- {self.created_at:%d %b %Y}"
+        )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Inventory Restock"
+        verbose_name_plural = "Inventory Restocks"
 
 
 class Purchase(models.Model):

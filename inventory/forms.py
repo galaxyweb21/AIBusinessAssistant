@@ -233,6 +233,33 @@ class RestockForm(forms.Form):
             "autofocus": True,
         }),
     )
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.none(),
+        required=False,
+        label="Supplier (optional)",
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    invoice_number = forms.CharField(
+        required=False,
+        max_length=80,
+        label="Invoice / Reference No. (optional)",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "e.g. INV-2031",
+        }),
+    )
+    purchase_cost = forms.DecimalField(
+        required=False,
+        min_value=0,
+        max_digits=12,
+        decimal_places=2,
+        label="Unit Cost (optional)",
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "0.00",
+            "step": "0.01",
+        }),
+    )
     note = forms.CharField(
         required=False,
         label="Note (optional)",
@@ -242,6 +269,16 @@ class RestockForm(forms.Form):
             "placeholder": "e.g. Received from supplier delivery #4521",
         }),
     )
+
+    def __init__(self, *args, **kwargs):
+        business = kwargs.pop("business", None)
+        super().__init__(*args, **kwargs)
+        # Scope the supplier dropdown to this business only — without this,
+        # every business's suppliers would appear as options.
+        if business:
+            self.fields["supplier"].queryset = Supplier.objects.filter(
+                business=business, is_active=True
+            ).order_by("name")
 
 
 class DamageForm(forms.Form):

@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from dashboard.services.alerts import generate_business_alerts
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Avg
 from django.contrib.contenttypes.models import ContentType
 from accounts.models import *
 import json
@@ -329,23 +329,65 @@ def view_inventory(request):
 @transaction.atomic
 def restock_inventory(request, pk):
     business = get_business(request)
-    item = get_object_or_404(
+    product = get_object_or_404(
         Inventory.objects.select_related("category"),
         pk=pk,
         business=business,
     )
 
+    history = (
+        InventoryStockHistory.objects
+        .filter(inventory=product)
+        .select_related("supplier", "received_by")
+        .order_by("-created_at")
+    )
+
+    now = timezone.now()
+
+    monthly_restocked = (
+        history.filter(
+            action_type="restock",
+            created_at__month=now.month,
+            created_at__year=now.year,
+        ).aggregate(total=Sum("quantity"))["total"]
+        or 0
+    )
+
+    total_restocked = (
+        history.filter(action_type="restock")
+        .aggregate(total=Sum("quantity"))["total"]
+        or 0
+    )
+
+    recent_suppliers = list(
+        history.exclude(supplier=None)
+        .values_list("supplier__name", flat=True)
+        .distinct()[:5]
+    )
+
+    average_purchase_cost = (
+        history.filter(action_type="restock")
+        .exclude(purchase_cost=0)
+        .aggregate(avg=Avg("purchase_cost"))["avg"]
+        or product.cost_price
+    )
+
+    last_restock = history.filter(action_type="restock").first()
+
     if request.method == "POST":
-        form = RestockForm(request.POST)
+        form = RestockForm(request.POST, business=business)
 
         if form.is_valid():
             add_qty = form.cleaned_data["quantity"]
             note = form.cleaned_data["note"]
+            supplier = form.cleaned_data.get("supplier")
+            invoice_number = form.cleaned_data.get("invoice_number") or ""
+            purchase_cost = form.cleaned_data.get("purchase_cost") or product.cost_price
 
             # Lock the row for the duration of this transaction so two
             # concurrent restocks can't both read the same "before" stock
             # and silently overwrite each other.
-            locked_item = Inventory.objects.select_for_update().get(pk=item.pk)
+            locked_item = Inventory.objects.select_for_update().get(pk=product.pk)
 
             previous_stock = locked_item.stock_quantity
             new_stock = previous_stock + add_qty
@@ -374,10 +416,14 @@ def restock_inventory(request, pk):
                 business=business,
                 inventory=locked_item,
                 previous_stock=previous_stock,
-                quantity_changed=add_qty,
+                quantity=add_qty,
                 new_stock=new_stock,
                 action_type="restock",
-                performed_by=request.user,
+                received_by=request.user,
+                supplier=supplier,
+                invoice_number=invoice_number,
+                purchase_cost=purchase_cost,
+                received_date=timezone.now().date(),
                 note=note or f"Restocked {add_qty} units",
                 reference_number=reference_number,
             )
@@ -391,15 +437,53 @@ def restock_inventory(request, pk):
             )
             return redirect("view_inventory")
     else:
-        form = RestockForm()
+        form = RestockForm(business=business)
 
-    item_history = item.history.all()[:10]
+    current_stock = product.stock_quantity
+    minimum_stock = product.minimum_stock
+    maximum_stock = product.maximum_stock
+    reorder_level = product.reorder_level
+
+    inventory_value = Decimal(product.stock_quantity) * product.cost_price
+
+    if maximum_stock and maximum_stock > current_stock:
+        suggested_quantity = maximum_stock - current_stock
+    else:
+        suggested_quantity = product.reorder_quantity or 0
+
+    if current_stock <= minimum_stock:
+        stock_status = "Critical"
+    elif current_stock <= reorder_level:
+        stock_status = "Low"
+    elif maximum_stock and current_stock >= maximum_stock:
+        stock_status = "Overstock"
+    else:
+        stock_status = "Healthy"
+
+    # Health meter position (0-100), relative to the max-stock band.
+    if maximum_stock and maximum_stock > 0:
+        health_percent = max(0, min(100, round((current_stock / maximum_stock) * 100)))
+    else:
+        health_percent = 100 if current_stock > minimum_stock else 0
 
     context = {
-        "item": item,
-        "item_history": item_history,
         "form": form,
-        "title": f"Restock — {item.product_name}",
+        "product": product,
+        "item_history": history[:10],
+        "current_stock": current_stock,
+        "minimum_stock": minimum_stock,
+        "maximum_stock": maximum_stock,
+        "reorder_level": reorder_level,
+        "inventory_value": inventory_value,
+        "average_purchase_cost": average_purchase_cost,
+        "total_restocked": total_restocked,
+        "monthly_restocked": monthly_restocked,
+        "suggested_quantity": suggested_quantity,
+        "stock_status": stock_status,
+        "health_percent": health_percent,
+        "recent_suppliers": recent_suppliers,
+        "last_restock": last_restock,
+        "title": f"Restock — {product.product_name}",
     }
     return render(request, "inventory/restock_inventory.html", context)
 
