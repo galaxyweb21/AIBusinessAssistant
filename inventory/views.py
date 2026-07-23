@@ -1064,3 +1064,5 @@ def supplier_payment_history(request):
     }
 
     return render(request, "suppliers/supplier_payment_history.html", context)
+
+
