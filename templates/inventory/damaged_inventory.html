@@ -5,53 +5,95 @@
 
 <style>
 
-.inventory-wrapper{
+.restock-wrapper{
     padding:24px;
 }
 
-.inventory-card{
-    max-width:900px;
+.restock-grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr;
+    gap:24px;
+    align-items:start;
+    max-width:1100px;
     margin:auto;
+}
 
+@media(max-width:900px){
+    .restock-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+.restock-card{
     background:var(--bg-card);
     border:1px solid var(--border);
     border-radius:24px;
     overflow:hidden;
-
-    box-shadow:0 15px 40px rgba(0,0,0,0.08);
 }
 
-.inventory-header{
+.restock-header{
     padding:28px;
-
-    background:linear-gradient(135deg,#6366f1,#4f46e5);
-
+    background:linear-gradient(135deg, #f87171, #dc2626);
     color:#fff;
 }
 
-.inventory-header h2{
-    font-size:26px;
+.restock-header h2{
+    font-size:24px;
     font-weight:800;
+    margin-bottom:4px;
 }
 
-.inventory-body{
+.restock-header p{
+    opacity:.85;
+    margin:0;
+    font-size:14px;
+}
+
+.restock-body{
     padding:28px;
 }
 
-/* GRID */
-.form-grid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:20px;
+.product-summary{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding-bottom:22px;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--border);
+}
+
+.product-summary .product-icon{
+    width:56px;
+    height:56px;
+    border-radius:16px;
+    background:rgba(239,68,68,0.1);
+    color:#ef4444;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    flex-shrink:0;
+}
+
+.product-summary h4{
+    margin:0 0 4px;
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.product-summary .stock-now{
+    font-size:13px;
+    color:var(--text-muted);
+}
+
+.product-summary .stock-now strong{
+    color:var(--text-main);
 }
 
 .form-group{
     display:flex;
     flex-direction:column;
-}
-
-.full-width{
-    grid-column:span 2;
+    margin-bottom:20px;
 }
 
 .form-group label{
@@ -60,8 +102,7 @@
     color:var(--text-main);
 }
 
-/* INPUTS */
-.form-group input{
+.form-group .form-control{
     width:100%;
     padding:14px 16px;
     border-radius:14px;
@@ -71,172 +112,259 @@
     transition:.25s ease;
 }
 
-.form-group input:focus{
+.form-group .form-control:focus{
     outline:none;
-    border-color:#6366f1;
-    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+    border-color:#ef4444;
+    box-shadow:0 0 0 4px rgba(239,68,68,0.12);
 }
 
-/* STOCK BADGE */
-.stock-badge{
-    display:inline-block;
-    padding:8px 14px;
-    border-radius:20px;
-    font-weight:700;
-    background:#10b981;
-    color:#fff;
+.form-group .errorlist{
+    list-style:none;
+    padding:0;
+    margin:6px 0 0;
+    color:#dc2626;
+    font-size:13px;
+    font-weight:600;
 }
 
-/* BUTTON */
-.submit-btn{
+.restock-submit{
     width:100%;
-    margin-top:24px;
     border:none;
     padding:15px;
     border-radius:16px;
     font-weight:700;
     color:#fff;
-    background:linear-gradient(135deg,#6366f1,#4f46e5);
+    background:linear-gradient(135deg, #f87171, #dc2626);
     transition:.25s ease;
+    cursor:pointer;
 }
 
-.submit-btn:hover{
+.restock-submit:hover{
     transform:translateY(-2px);
 }
 
+.back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:var(--text-muted);
+    text-decoration:none;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:16px;
+}
+
+.back-link:hover{
+    color:var(--text-main);
+}
+
+.warning-note{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:14px 16px;
+    border-radius:14px;
+    background:rgba(245,158,11,0.1);
+    color:#b45309;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:20px;
+}
+
+.warning-note i{
+    margin-top:2px;
+    flex-shrink:0;
+}
+
 /* HISTORY */
-.history-box{
-    margin-top:28px;
-    border-top:1px solid var(--border);
-    padding-top:18px;
+.history-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+}
+
+.history-header{
+    padding:22px 24px;
+    border-bottom:1px solid var(--border);
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.history-list{
+    max-height:520px;
+    overflow-y:auto;
 }
 
 .history-item{
     display:flex;
     justify-content:space-between;
-    align-items:center;
-
-    padding:12px;
-    margin-bottom:10px;
-
-    border-radius:12px;
-    background:rgba(0,0,0,0.03);
+    align-items:flex-start;
+    padding:16px 24px;
+    border-bottom:1px solid var(--border);
+    gap:12px;
 }
 
-body.dark-mode .history-item{
-    background:rgba(255,255,255,0.05);
+.history-item:last-child{
+    border-bottom:none;
 }
 
-.history-left strong{
-    font-size:15px;
+.history-item .history-type{
+    font-size:12px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:999px;
+    text-transform:capitalize;
+    flex-shrink:0;
 }
 
-.history-left small{
+.history-type.restock{ background:rgba(16,185,129,0.12); color:#10b981; }
+.history-type.damaged{ background:rgba(239,68,68,0.12); color:#ef4444; }
+.history-type.adjustment{ background:rgba(245,158,11,0.12); color:#f59e0b; }
+.history-type.sale{ background:rgba(59,130,246,0.12); color:#3b82f6; }
+.history-type.returned{ background:rgba(139,92,246,0.12); color:#8b5cf6; }
+.history-type.transfer{ background:rgba(14,165,233,0.12); color:#0ea5e9; }
+
+.history-detail{
+    flex:1;
+}
+
+.history-detail .qty-change{
+    font-weight:700;
+    color:var(--text-main);
+    font-size:14px;
+}
+
+.history-detail .meta{
+    font-size:12px;
+    color:var(--text-muted);
+    margin-top:2px;
+}
+
+.history-empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--text-muted);
+}
+
+.history-empty i{
+    font-size:36px;
+    margin-bottom:12px;
     display:block;
-    opacity:0.7;
-}
-
-/* RESPONSIVE */
-@media(max-width:768px){
-    .form-grid{
-        grid-template-columns:1fr;
-    }
-
-    .full-width{
-        grid-column:span 1;
-    }
 }
 
 </style>
 
 <div class="content-wrapper">
+<section class="content restock-wrapper">
 
-<section class="content inventory-wrapper">
+    <a href="{% url 'view_inventory' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Inventory
+    </a>
 
-<div class="inventory-card">
+    <div class="restock-grid">
 
-    <!-- HEADER -->
-    <div class="inventory-header">
+        <!-- DAMAGE FORM -->
+        <div class="restock-card">
 
-        <h2>
-            Restock Inventory
-        </h2>
+            <div class="restock-header">
+                <h2>Mark Product Damaged</h2>
+                <p>Remove damaged units from available stock.</p>
+            </div>
 
-        <p class="mb-0">
-            {{ item.product_name }} • Current Stock:
-            <span class="stock-badge">
-                {{ item.stock_quantity }}
-            </span>
-        </p>
+            <div class="restock-body">
 
-    </div>
-
-    <!-- BODY -->
-    <div class="inventory-body">
-
-        <form method="POST">
-            {% csrf_token %}
-
-            <div class="form-grid">
-
-                <div class="form-group full-width">
-                    <label>Quantity Damaged</label>
-                    <input type="number"
-                           name="quantity"
-                           min="1"
-                           required>
+                <div class="product-summary">
+                    <div class="product-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h4>{{ item.product_name }}</h4>
+                        <div class="stock-now">
+                            Current stock: <strong>{{ item.stock_quantity }}</strong>
+                            {% if item.is_low_stock %}
+                                &middot; <span style="color:#ef4444;font-weight:700;">Low Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
+
+                <div class="warning-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>This action permanently deducts stock and cannot be undone. Use restock to reverse a mistake.</span>
+                </div>
+
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="{{ form.quantity.id_for_label }}">{{ form.quantity.label }}</label>
+                        {{ form.quantity }}
+                        {{ form.quantity.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+                        {{ form.note }}
+                        {{ form.note.errors }}
+                    </div>
+
+                    <button type="submit" class="restock-submit">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirm Damage
+                    </button>
+                </form>
 
             </div>
 
+        </div>
 
-    {% include 'partials/_alerts.html' %}
+        <!-- RECENT HISTORY -->
+        <div class="history-card">
 
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-boxes me-2"></i>
-                Remove Product
-            </button>
+            <div class="history-header">
+                Recent Stock Activity
+            </div>
 
-        </form>
+            <div class="history-list">
 
-        <!-- HISTORY -->
-        <div class="history-box">
-
-            <h5 class="mb-3">Stock Movement History</h5>
-
-            {% for h in item_history %}
-
-                <div class="history-item">
-
-                    <div class="history-left">
-                        <strong>+{{ h.quantity_changed }}</strong>
-                        <small>{{ h.action_type|title }} • {{ h.created_at|date:"M d, Y H:i" }}</small>
+                {% for record in item_history %}
+                    <div class="history-item">
+                        <span class="history-type {{ record.action_type }}">
+                            {{ record.get_action_type_display }}
+                        </span>
+                        <div class="history-detail">
+                            <div class="qty-change">
+                                {% if record.quantity_changed > 0 %}+{% endif %}{{ record.quantity_changed }}
+                                <span style="color:var(--text-muted); font-weight:500;">
+                                    ({{ record.previous_stock }} → {{ record.new_stock }})
+                                </span>
+                            </div>
+                            <div class="meta">
+                                {{ record.created_at|date:"d M Y, H:i" }}
+                                {% if record.performed_by %} &middot; {{ record.performed_by.username }}{% endif %}
+                            </div>
+                        </div>
                     </div>
-
-                    <div>
-                        <small class="text-muted">
-                            {{ h.previous_stock }} → {{ h.new_stock }}
-                        </small>
+                {% empty %}
+                    <div class="history-empty">
+                        <i class="fas fa-history"></i>
+                        No stock activity yet.
                     </div>
+                {% endfor %}
 
-                </div>
-
-            {% empty %}
-
-                <p class="text-muted">
-                    No stock movement history yet.
-                </p>
-
-            {% endfor %}
+            </div>
 
         </div>
 
     </div>
 
-</div>
-
 </section>
-
 </div>
 
 {% endblock %}

@@ -13,7 +13,6 @@ SUPPLIER PAYMENT ERP UI
 }
 
 .payment-card{
-
     background:var(--bg-card);
     border:1px solid var(--border);
     border-radius:20px;
@@ -22,10 +21,7 @@ SUPPLIER PAYMENT ERP UI
     animation:fadeIn .4s ease;
 }
 
-/* HEADER */
-
 .payment-header{
-
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -35,66 +31,38 @@ SUPPLIER PAYMENT ERP UI
 }
 
 .payment-title h3{
-
     margin:0;
     font-weight:700;
     color:var(--text-main);
 }
 
 .payment-title small{
-
     color:var(--text-muted);
 }
 
-
-/* SUMMARY CARDS */
-
 .summary-grid{
-
     display:grid;
-
-    grid-template-columns:
-    repeat(
-        auto-fit,
-        minmax(220px,1fr)
-    );
-
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
     gap:18px;
     margin-bottom:30px;
 }
 
 .summary-card{
-
     position:relative;
-
     padding:20px;
-
     border-radius:16px;
-
-    background:linear-gradient(
-        145deg,
-        var(--bg-card),
-        var(--bg-main)
-    );
-
+    background:linear-gradient(145deg, var(--bg-card), var(--bg-main));
     border:1px solid var(--border);
-
     overflow:hidden;
-
     transition:.3s;
 }
 
 .summary-card:hover{
-
     transform:translateY(-5px);
-
-    box-shadow:
-    0 10px 25px
-    rgba(0,0,0,.08);
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
 
 .summary-card i{
-
     position:absolute;
     right:15px;
     top:15px;
@@ -103,493 +71,243 @@ SUPPLIER PAYMENT ERP UI
 }
 
 .summary-card small{
-
     color:var(--text-muted);
 }
 
 .summary-card h4{
-
     margin-top:10px;
     font-weight:700;
     color:var(--text-main);
 }
 
-.blue{
-border-left:4px solid #3b82f6;
-}
-
-.green{
-border-left:4px solid #10b981;
-}
-
-.orange{
-border-left:4px solid #f59e0b;
-}
-
-.purple{
-border-left:4px solid #8b5cf6;
-}
-
-
-/* FORM */
+.blue{ border-left:4px solid #3b82f6; }
+.green{ border-left:4px solid #10b981; }
+.orange{ border-left:4px solid #f59e0b; }
+.purple{ border-left:4px solid #8b5cf6; }
 
 .form-card{
-
     border:1px solid var(--border);
-
     border-radius:18px;
-
     padding:25px;
-
-    background:
-    linear-gradient(
-        145deg,
-        var(--bg-card),
-        var(--bg-main)
-    );
+    background:linear-gradient(145deg, var(--bg-card), var(--bg-main));
 }
 
 .form-group{
-
     margin-bottom:18px;
 }
 
 .form-label{
-
     margin-bottom:8px;
     display:block;
-
     color:var(--text-main);
-
     font-weight:600;
 }
 
 .form-control{
-
     width:100%;
-
     padding:14px;
-
     border-radius:12px;
-
     border:1px solid var(--border);
-
     background:var(--bg-card);
-
     color:var(--text-main);
-
     transition:.3s;
 }
 
 .form-control:focus{
-
     outline:none;
-
     border-color:var(--primary);
-
-    box-shadow:
-    0 0 0 4px
-    rgba(99,102,241,.12);
+    box-shadow:0 0 0 4px rgba(99,102,241,.12);
 }
 
-
-/* BUTTONS */
+.field-error{
+    list-style:none;
+    padding:0;
+    margin:6px 0 0;
+    color:#dc2626;
+    font-size:13px;
+    font-weight:600;
+}
 
 .action-buttons{
-
     margin-top:30px;
-
     display:flex;
-
     justify-content:flex-end;
-
     gap:12px;
-
     flex-wrap:wrap;
 }
 
 .btn-modern{
-
     border:none;
-
     padding:12px 20px;
-
     border-radius:12px;
-
     font-weight:600;
-
     text-decoration:none;
-
     transition:.3s;
 }
 
 .btn-modern:hover{
-
     transform:translateY(-2px);
 }
 
 .btn-primary-modern{
-
-    background:
-    linear-gradient(
-        135deg,
-        var(--primary),
-        var(--primary-dark)
-    );
-
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
     color:white;
 }
 
 .btn-secondary-modern{
-
-    background:
-    rgba(16,185,129,.12);
-
+    background:rgba(16,185,129,.12);
     color:#10b981;
 }
 
 .btn-secondary-modern:hover{
-
     background:#10b981;
     color:white;
 }
 
-
-/* MOBILE */
-
 @media(max-width:768px){
-
-.payment-card{
-padding:18px;
-}
-
-.action-buttons{
-justify-content:center;
-}
-
+    .payment-card{ padding:18px; }
+    .action-buttons{ justify-content:center; }
 }
 
 </style>
 
-
 <div class="content-wrapper">
-
 <div class="payment-wrapper">
-
 <div class="payment-card">
 
 {% include 'partials/_alerts.html' %}
 
-<!-- HEADER -->
-
 <div class="payment-header">
-
-<div class="payment-title">
-
-<h3>
-
-<i class="fas fa-money-check-alt"></i>
-
-Supplier Payment
-
-</h3>
-
-<small>
-
-Record supplier payment
-
-</small>
-
+    <div class="payment-title">
+        <h3><i class="fas fa-money-check-alt"></i> Supplier Payment</h3>
+        <small>Record supplier payment</small>
+    </div>
 </div>
-
-</div>
-
-
-<!-- SUMMARY -->
 
 <div class="summary-grid">
 
-<div class="summary-card blue">
+    <div class="summary-card blue">
+        <i class="fas fa-truck"></i>
+        <small>Supplier</small>
+        <h4>{{ purchase.supplier.name }}</h4>
+    </div>
 
-<i class="fas fa-truck"></i>
+    <div class="summary-card green">
+        <i class="fas fa-file-invoice"></i>
+        <small>Purchase Ref</small>
+        <h4>{{ purchase.reference_number }}</h4>
+    </div>
 
-<small>Supplier</small>
+    <div class="summary-card orange">
+        <i class="fas fa-wallet"></i>
+        <small>Total Purchase</small>
+        <h4>GHS {{ purchase.total_cost }}</h4>
+    </div>
 
-<h4>
-
-{{ purchase.supplier.name }}
-
-</h4>
-
-</div>
-
-
-<div class="summary-card green">
-
-<i class="fas fa-file-invoice"></i>
-
-<small>Purchase Ref</small>
-
-<h4>
-
-{{ purchase.reference_number }}
-
-</h4>
+    <div class="summary-card purple">
+        <i class="fas fa-clock"></i>
+        <small>Balance Due</small>
+        <h4>GHS {{ purchase.balance }}</h4>
+    </div>
 
 </div>
-
-
-<div class="summary-card orange">
-
-<i class="fas fa-wallet"></i>
-
-<small>Total Purchase</small>
-
-<h4>
-
-GHS {{ purchase.total_cost }}
-
-</h4>
-
-</div>
-
-
-<div class="summary-card purple">
-
-<i class="fas fa-clock"></i>
-
-<small>Balance Due</small>
-
-<h4>
-
-GHS {{ purchase.balance }}
-
-</h4>
-
-</div>
-
-</div>
-
-
-<!-- FORM -->
 
 <div class="form-card">
 
-<form method="POST">
+    <form method="POST" novalidate>
+        {% csrf_token %}
 
-{% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
 
-<div class="row">
+        <div class="row">
 
-<div class="col-md-6">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.amount_paid.id_for_label }}">
+                        {{ form.amount_paid.label }}
+                    </label>
+                    {{ form.amount_paid }}
+                    {{ form.amount_paid.errors }}
+                </div>
+            </div>
 
-<div class="form-group">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.payment_method.id_for_label }}">
+                        {{ form.payment_method.label }}
+                    </label>
+                    {{ form.payment_method }}
+                    {{ form.payment_method.errors }}
+                </div>
+            </div>
 
-<label class="form-label">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.external_reference.id_for_label }}">
+                        {{ form.external_reference.label }}
+                    </label>
+                    {{ form.external_reference }}
+                    {{ form.external_reference.errors }}
+                </div>
+            </div>
 
-Amount Paid
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="form-label">Remaining Balance After Payment</label>
+                    <input type="text" id="remainingBalance" class="form-control" readonly>
+                </div>
+            </div>
 
-</label>
+            <div class="col-12">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.note.id_for_label }}">
+                        {{ form.note.label }}
+                    </label>
+                    {{ form.note }}
+                    {{ form.note.errors }}
+                </div>
+            </div>
 
-<input
-type="number"
-step="0.01"
-name="amount_paid"
-class="form-control"
-value="{{ purchase.balance }}"
-max="{{ purchase.balance }}"
-required>
+        </div>
 
-</div>
+        <div class="action-buttons">
+            <a href="{% url 'view_purchase' purchase.id %}" class="btn-modern btn-secondary-modern">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
 
-</div>
+            <button type="submit" class="btn-modern btn-primary-modern">
+                <i class="fas fa-save"></i> Save Payment
+            </button>
+        </div>
 
-
-<div class="col-md-6">
-
-<div class="form-group">
-
-<label class="form-label">
-
-Payment Method
-
-</label>
-
-<select
-name="payment_method"
-class="form-control"
-required>
-
-<option value="cash">
-
-Cash
-
-</option>
-
-<option value="bank">
-
-Bank Transfer
-
-</option>
-
-<option value="mobile_money">
-
-Mobile Money
-
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-
-<div class="col-md-6">
-
-<div class="form-group">
-
-<label class="form-label">
-
-Reference No.
-
-</label>
-
-<input
-type="text"
-name="external_reference"
-class="form-control"
-placeholder="Optional Bank / MoMo transaction ID">
+    </form>
 
 </div>
 
 </div>
-
-
-<div class="col-md-6">
-
-<div class="form-group">
-
-<label class="form-label">
-
-Remaining Balance After Payment
-
-</label>
-
-<input
-type="text"
-id="remainingBalance"
-class="form-control"
-readonly>
-
 </div>
-
 </div>
-
-
-<div class="col-12">
-
-<div class="form-group">
-
-<label class="form-label">
-
-Notes
-
-</label>
-
-<textarea
-name="note"
-rows="4"
-class="form-control"
-placeholder="Optional notes..."></textarea>
-
-</div>
-
-</div>
-
-</div>
-
-
-<div class="action-buttons">
-
-<a href="{% url 'view_purchase' purchase.id %}"
-class="btn-modern btn-secondary-modern">
-
-<i class="fas fa-arrow-left"></i>
-
-Back
-
-</a>
-
-<button
-type="submit"
-class="btn-modern btn-primary-modern">
-
-<i class="fas fa-save"></i>
-
-Save Payment
-
-</button>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const amountInput = document.getElementById("{{ form.amount_paid.id_for_label }}");
+    const balance = parseFloat("{{ purchase.balance|default:'0' }}") || 0;
+    const remaining = document.getElementById("remainingBalance");
 
-const amountInput =
-document.querySelector(
-'[name="amount_paid"]'
-);
+    if (!amountInput || !remaining) return;
 
-const balance =
-parseFloat(
-"{{ purchase.balance }}"
-);
+    function calculateBalance() {
+        let amount = parseFloat(amountInput.value) || 0;
+        let result = balance - amount;
+        if (result < 0) result = 0;
+        remaining.value = "GHS " + result.toFixed(2);
+    }
 
-const remaining =
-document.getElementById(
-"remainingBalance"
-);
-
-function calculateBalance(){
-
-let amount =
-parseFloat(
-amountInput.value
-) || 0;
-
-let result =
-balance - amount;
-
-if(result < 0){
-
-result=0;
-
-}
-
-remaining.value =
-"GHS " +
-result.toFixed(2);
-
-}
-
-amountInput.addEventListener(
-'input',
-calculateBalance
-);
-
-calculateBalance();
-
+    amountInput.addEventListener("input", calculateBalance);
+    calculateBalance();
+});
 </script>
 
 {% endblock %}

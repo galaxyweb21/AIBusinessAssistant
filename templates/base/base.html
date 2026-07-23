@@ -646,6 +646,68 @@ body{
 
 }
 
+#erpToast{
+
+position:fixed;
+
+top:20px;
+
+right:20px;
+
+z-index:99999;
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+.erp-toast{
+
+padding:14px 18px;
+
+border-radius:14px;
+
+background:#10b981;
+
+color:#fff;
+
+font-weight:600;
+
+box-shadow:0 15px 40px rgba(0,0,0,.15);
+
+animation:slideToast .35s;
+
+}
+
+.erp-toast.danger{
+
+background:#dc2626;
+
+}
+
+@keyframes slideToast{
+
+from{
+
+opacity:0;
+
+transform:translateX(40px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:none;
+
+}
+
+}
+
 </style>
 
 </head>
@@ -673,6 +735,9 @@ body{
     {% endblock %}
 
 </div>
+
+<div id="erpToast"></div>
+
 
 <!-- Theme Toggle -->
 <script>
@@ -896,7 +961,40 @@ message;
 
 });
 
+function showToast(message,type="success"){
+
+    const holder=document.getElementById("erpToast");
+
+    if(!holder) return;
+
+    const toast=document.createElement("div");
+
+    toast.className="erp-toast";
+
+    if(type==="danger"){
+
+        toast.classList.add("danger");
+
+    }
+
+    toast.innerHTML=message;
+
+    holder.appendChild(toast);
+
+    setTimeout(()=>{
+
+        toast.style.opacity=0;
+
+        toast.style.transform="translateX(40px)";
+
+        setTimeout(()=>toast.remove(),300);
+
+    },2500);
+
+}
 
 </script>
+
+
 </body>
 </html>

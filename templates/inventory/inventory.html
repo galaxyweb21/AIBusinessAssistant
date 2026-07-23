@@ -5,46 +5,27 @@
 
 <style>
 
-.inventory-wrapper{
-    padding:24px;
-}
+.inventory-wrapper{ padding:24px; }
 
 .inventory-card{
     max-width:900px;
     margin:auto;
-
     background:var(--bg-card);
-
     border:1px solid var(--border);
-
     border-radius:24px;
-
     overflow:hidden;
-
     box-shadow:0 15px 40px rgba(0,0,0,0.08);
 }
 
 .inventory-header{
     padding:28px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #6366f1,
-            #4f46e5
-        );
-
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
     color:#fff;
 }
 
-.inventory-header h2{
-    font-size:28px;
-    font-weight:800;
-}
+.inventory-header h2{ font-size:28px; font-weight:800; }
 
-.inventory-body{
-    padding:28px;
-}
+.inventory-body{ padding:28px; }
 
 .form-grid{
     display:grid;
@@ -52,14 +33,9 @@
     gap:20px;
 }
 
-.form-group{
-    display:flex;
-    flex-direction:column;
-}
+.form-group{ display:flex; flex-direction:column; }
 
-.full-width{
-    grid-column:span 2;
-}
+.full-width{ grid-column:span 2; }
 
 .form-group label{
     margin-bottom:8px;
@@ -67,142 +43,1020 @@
     color:var(--text-main);
 }
 
-.form-group input{
+.form-group .required::after{
+    content:" *";
+    color:#dc2626;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea{
     width:100%;
-
     padding:14px 16px;
-
     border-radius:14px;
-
     border:1px solid var(--border);
-
     background:var(--bg-main);
-
     color:var(--text-main);
-
     transition:.25s ease;
 }
 
-.form-group input:focus{
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus{
     outline:none;
-
     border-color:#6366f1;
-
-    box-shadow:
-        0 0 0 4px rgba(99,102,241,0.12);
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
 }
+
+.form-group input.is-invalid,
+.form-group select.is-invalid,
+.form-group textarea.is-invalid{
+    border-color:#dc2626;
+    box-shadow:0 0 0 4px rgba(220,38,38,0.10);
+}
+
+.form-group .errorlist{
+    list-style:none;
+    padding:0;
+    margin:6px 0 0;
+    color:#dc2626;
+    font-size:13px;
+}
+
+.option-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+}
+
+.option-row label{ font-weight:600; color:var(--text-main); }
 
 .submit-btn{
     width:100%;
-
     margin-top:24px;
-
     border:none;
-
     padding:15px;
-
     border-radius:16px;
-
     font-weight:700;
-
     color:#fff;
-
-    background:
-        linear-gradient(
-            135deg,
-            #6366f1,
-            #4f46e5
-        );
-
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
     transition:.25s ease;
 }
 
-.submit-btn:hover{
+.submit-btn:hover{ transform:translateY(-2px); }
+.submit-btn:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+/* ==========================================
+   PRODUCT WIZARD
+==========================================*/
+
+.wizard-wrapper{ max-width:1100px; margin:auto; }
+
+.wizard-steps{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+    position:relative;
+}
+
+.wizard-step{ flex:1; text-align:center; position:relative; z-index:2; }
+
+.step-circle{
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#e5e7eb;
+    color:#64748b;
+    font-weight:700;
+    transition:.35s;
+}
+
+.wizard-step span{ display:block; margin-top:8px; font-size:13px; font-weight:600; }
+
+.wizard-step.active .step-circle{
+    background:var(--primary);
+    color:#fff;
+    transform:scale(1.08);
+}
+
+.wizard-step.completed .step-circle{ background:#10b981; color:#fff; }
+
+.wizard-bar{
+    position:absolute;
+    left:0; right:0; top:23px;
+    height:4px;
+    background:#e5e7eb;
+    border-radius:20px;
+    z-index:1;
+}
+
+.wizard-fill{
+    width:0%;
+    height:100%;
+    background:linear-gradient(90deg,#6366f1,#4f46e5);
+    border-radius:20px;
+    transition:.35s;
+}
+
+.wizard-page{ display:none; animation:fadeSlide .35s; }
+.wizard-page.active{ display:block; }
+
+@keyframes fadeSlide{
+    from{ opacity:0; transform:translateX(30px); }
+    to{ opacity:1; transform:none; }
+}
+
+.wizard-footer{ display:flex; justify-content:space-between; margin-top:35px; }
+
+.upload-zone{
+    border:2px dashed rgba(99,102,241,.35);
+    border-radius:18px;
+    padding:40px;
+    text-align:center;
+    cursor:pointer;
+    background:var(--card-bg,#fff);
+    transition:.25s;
+}
+
+.upload-zone.dragover{
+    border-color:var(--primary);
+    background:rgba(99,102,241,.06);
+}
+
+.upload-zone:hover{
+    border-color:var(--primary);
+    transform:translateY(-2px);
+    box-shadow:0 12px 30px rgba(99,102,241,.12);
+}
+
+.upload-zone input[type=file]{ margin-top:20px; }
+
+/*=====================================
+PRODUCT IDENTITY
+=====================================*/
+
+.identity-card{
+    margin-bottom:30px;
+    padding:24px;
+    border-radius:20px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+}
+
+.identity-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.identity-header h5{
+    margin:0;
+    font-size:18px;
+    font-weight:700;
+}
+
+.identity-header small{
+    color:var(--text-muted);
+}
+
+.identity-grid{
+    display:grid;
+    gap:18px;
+}
+
+.identity-row label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.identity-control{
+    display:flex;
+    gap:10px;
+}
+
+.identity-control input{
+    flex:1;
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    font-weight:600;
+    letter-spacing:1px;
+    transition:.25s ease;
+}
+
+.identity-control input:focus{
+    outline:none;
+    border-color:#6366f1;
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+}
+
+.identity-control button{
+    width:46px;
+    height:46px;
+    border-radius:12px;
+    transition:.25s;
+    flex-shrink:0;
+}
+
+.identity-control button:hover{
     transform:translateY(-2px);
 }
 
+/*=========================================
+LIVE PRODUCT PREVIEW
+=========================================*/
+
+.product-preview-card{
+    margin:30px 0;
+    padding:24px;
+    border-radius:22px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    transition:.35s;
+}
+
+.preview-image{
+    width:140px;
+    height:140px;
+    border-radius:18px;
+    overflow:hidden;
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    margin-bottom:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.preview-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.product-preview-card h3{
+    font-size:22px;
+    font-weight:700;
+    margin-bottom:6px;
+}
+
+.product-preview-card p{
+    color:var(--text-muted);
+    margin-bottom:20px;
+}
+
+.preview-stats{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+}
+
+.preview-stats div{
+    padding:16px;
+    border-radius:14px;
+    background:var(--bg-main);
+}
+
+.preview-stats small{
+    display:block;
+    color:var(--text-muted);
+    margin-bottom:6px;
+}
+
+.preview-stats strong{
+    font-size:15px;
+}
+
+/*=========================================
+PRODUCT COMPLETION
+=========================================*/
+
+.completion-card{
+    margin:0 0 30px;
+    padding:24px;
+    border-radius:22px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+}
+
+.completion-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+}
+
+.completion-header h5{
+    margin:0;
+    font-size:16px;
+    font-weight:700;
+}
+
+.completion-percent{
+    font-weight:800;
+    font-size:18px;
+    color:#6366f1;
+}
+
+.completion-bar{
+    width:100%;
+    height:10px;
+    border-radius:20px;
+    background:#e5e7eb;
+    overflow:hidden;
+    margin-bottom:18px;
+}
+
+.completion-fill{
+    height:100%;
+    width:0%;
+    border-radius:20px;
+    background:linear-gradient(90deg,#6366f1,#4f46e5);
+    transition:width .35s ease;
+}
+
+.completion-fill.complete{
+    background:linear-gradient(90deg,#10b981,#059669);
+}
+
+.completion-checklist{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px 16px;
+}
+
+.completion-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+    color:var(--text-muted);
+}
+
+.completion-item.done{ color:#10b981; }
+.completion-item.missing{ color:#dc2626; }
+
+.completion-item i{ font-size:13px; width:14px; }
+
 @media(max-width:768px){
+    .completion-checklist{ grid-template-columns:1fr; }
+}
 
-    .form-grid{
-        grid-template-columns:1fr;
-    }
-
-    .full-width{
-        grid-column:span 1;
-    }
+@media(max-width:768px){
+    .form-grid{ grid-template-columns:1fr; }
+    .full-width{ grid-column:span 1; }
 }
 
 </style>
 
 <div class="content-wrapper">
-
 <section class="content inventory-wrapper">
-
 <div class="inventory-card">
 
     <div class="inventory-header">
-
         <h2>
-            {% if queryset %}
+            {% if form.instance.pk %}
                 Update Inventory
             {% else %}
                 Add Inventory
             {% endif %}
         </h2>
-
     </div>
 
     <div class="inventory-body">
 
-        <form method="POST" enctype="multipart/form-data">
+        <div class="wizard-steps" role="list">
+            <div class="wizard-step active" role="listitem" aria-current="step">
+                <div class="step-circle">1</div>
+                <span>General</span>
+            </div>
+            <div class="wizard-step" role="listitem">
+                <div class="step-circle">2</div>
+                <span>Pricing</span>
+            </div>
+            <div class="wizard-step" role="listitem">
+                <div class="step-circle">3</div>
+                <span>Inventory</span>
+            </div>
+            <div class="wizard-step" role="listitem">
+                <div class="step-circle">4</div>
+                <span>Images</span>
+            </div>
+            <div class="wizard-step" role="listitem">
+                <div class="step-circle">5</div>
+                <span>Review</span>
+            </div>
+        </div>
 
+        <form id="productWizardForm" method="POST" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
-            <div class="form-grid">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
 
-                <div class="form-group">
-                    <label>Product Name</label>
-                    {{ form.product_name }}
+            <div class="wizard-wrapper">
+
+                <div class="wizard-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="wizardProgress">
+                    <div class="wizard-bar">
+                        <div class="wizard-fill" id="wizardFill"></div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Stock Quantity</label>
-                    {{ form.stock_quantity }}
+                <div class="completion-card">
+    <div class="completion-header">
+        <h5>Product Completion</h5>
+        <span class="completion-percent" id="completionPercent">0%</span>
+    </div>
+    <div class="completion-bar">
+        <div class="completion-fill" id="completionFill"></div>
+    </div>
+    <div class="completion-checklist" id="completionChecklist"></div>
+</div>
+
+                <div class="wizard-page active">
+                    <h4>General Information</h4>
+
+                    <!-- ===========================================
+                    PRODUCT IDENTITY
+                    ===========================================-->
+                    <div class="identity-card">
+
+                        <div class="identity-header">
+                            <div>
+                                <h5>
+                                    <i class="fas fa-fingerprint"></i>
+                                    Product Identity
+                                </h5>
+                                <small>
+                                    Every product receives a unique identity.
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="identity-grid">
+
+                            <!-- SKU -->
+                            <div class="identity-row">
+                                <label for="{{ form.sku.id_for_label }}">SKU</label>
+                                <div class="identity-control">
+                                    {{ form.sku }}
+                                    <button type="button" class="btn btn-light identity-generate" data-type="sku" aria-label="Generate new SKU">
+                                        <i class="fas fa-sync"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-light identity-copy" data-target="id_sku" aria-label="Copy SKU">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- BARCODE -->
+                            <div class="identity-row">
+                                <label for="{{ form.barcode.id_for_label }}">Barcode</label>
+                                <div class="identity-control">
+                                    {{ form.barcode }}
+                                    <button type="button" class="btn btn-light identity-generate" data-type="barcode" aria-label="Generate new barcode">
+                                        <i class="fas fa-barcode"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-light identity-copy" data-target="id_barcode" aria-label="Copy barcode">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- QR -->
+                            <div class="identity-row">
+                                <label for="{{ form.qr_code.id_for_label }}">QR Code</label>
+                                <div class="identity-control">
+                                    {{ form.qr_code }}
+                                    <button type="button" class="btn btn-light identity-generate" data-type="qr" aria-label="Generate new QR code">
+                                        <i class="fas fa-qrcode"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-light identity-copy" data-target="id_qr_code" aria-label="Copy QR code">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- LIVE PREVIEW -->
+                    <div class="product-preview-card">
+                        <div class="preview-image">
+                            <img
+                                id="livePreviewImage"
+                                src="{% if form.instance.product_image %}{{ form.instance.product_image.url }}{% else %}{% static 'img/product-placeholder.png' %}{% endif %}"
+                                alt="Live product preview">
+                        </div>
+
+                        <h3 id="previewName">Product Name</h3>
+                        <p id="previewCategory">No Category</p>
+
+                        <div class="preview-stats">
+                            <div>
+                                <small>SKU</small>
+                                <strong id="previewSKU"></strong>
+                            </div>
+                            <div>
+                                <small>Barcode</small>
+                                <strong id="previewBarcode"></strong>
+                            </div>
+                            <div>
+                                <small>Brand</small>
+                                <strong id="previewBrand"></strong>
+                            </div>
+                            <div>
+                                <small>Status</small>
+                                <strong id="previewStatus"></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="required" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                            {{ form.category }}
+                            {{ form.category.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="{{ form.product_name.id_for_label }}">{{ form.product_name.label }}</label>
+                            {{ form.product_name }}
+                            {{ form.product_name.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.brand.id_for_label }}">{{ form.brand.label }}</label>
+                            {{ form.brand }}
+                            {{ form.brand.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.unit.id_for_label }}">{{ form.unit.label }}</label>
+                            {{ form.unit }}
+                            {{ form.unit.errors }}
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {{ form.description.errors }}
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Cost Price</label>
-                    {{ form.cost_price }}
+                <div class="wizard-page">
+                    <h4>Pricing</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="required" for="{{ form.cost_price.id_for_label }}">{{ form.cost_price.label }}</label>
+                            {{ form.cost_price }}
+                            {{ form.cost_price.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label class="required" for="{{ form.selling_price.id_for_label }}">{{ form.selling_price.label }}</label>
+                            {{ form.selling_price }}
+                            {{ form.selling_price.errors }}
+                        </div>
+                    </div>
+
+                    <div class="profit-card">
+                        <h3 id="profitAmount" aria-live="polite">₵0.00</h3>
+                        <p>Estimated Profit</p>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Selling Price</label>
-                    {{ form.selling_price }}
+                <div class="wizard-page">
+                    <h4>Inventory</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="{{ form.stock_quantity.id_for_label }}">{{ form.stock_quantity.label }}</label>
+                            {{ form.stock_quantity }}
+                            {{ form.stock_quantity.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.minimum_stock.id_for_label }}">{{ form.minimum_stock.label }}</label>
+                            {{ form.minimum_stock }}
+                            {{ form.minimum_stock.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.maximum_stock.id_for_label }}">{{ form.maximum_stock.label }}</label>
+                            {{ form.maximum_stock }}
+                            {{ form.maximum_stock.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.reorder_level.id_for_label }}">{{ form.reorder_level.label }}</label>
+                            {{ form.reorder_level }}
+                            {{ form.reorder_level.errors }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.reorder_quantity.id_for_label }}">{{ form.reorder_quantity.label }}</label>
+                            {{ form.reorder_quantity }}
+                            {{ form.reorder_quantity.errors }}
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Product Image</label>
-                    {{ form.image }}
+                <div class="wizard-page">
+                    <h4>Product Images</h4>
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h5>Drop image here</h5>
+                        <p>or click to browse</p>
+                        <img id="previewImage" class="img-fluid rounded mb-3"
+                             src="{% if form.instance.product_image %}{{ form.instance.product_image.url }}{% endif %}"
+                             style="{% if form.instance.product_image %}display:block;{% else %}display:none;{% endif %}max-height:240px;"
+                             alt="Product preview">
+                        {{ form.product_image }}
+                        {{ form.product_image.errors }}
+                    </div>
+                </div>
+
+                <div class="wizard-page">
+                    <h4>Review Product</h4>
+
+                    <div class="option-row">
+                        {{ form.featured }}
+                        <label for="{{ form.featured.id_for_label }}">{{ form.featured.label }}</label>
+                    </div>
+                    <div class="option-row">
+                        {{ form.track_stock }}
+                        <label for="{{ form.track_stock.id_for_label }}">{{ form.track_stock.label }}</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                        {{ form.status }}
+                        {{ form.status.errors }}
+                    </div>
+
+                    <div id="reviewContent"></div>
                 </div>
 
             </div>
 
-            <button type="submit" class="submit-btn">
 
-                <i class="fas fa-save me-2"></i>
 
-                Save Inventory
-
-            </button>
+            <div class="wizard-footer">
+                <button type="button" class="btn btn-light" id="prevStep">Previous</button>
+                <button type="button" class="btn btn-primary submit-btn" id="nextStep" style="width:auto;margin-top:0;">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
 
         </form>
 
     </div>
 
 </div>
-
 </section>
-
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.getElementById("productWizardForm");
+    const pages = [...document.querySelectorAll(".wizard-page")];
+    const steps = [...document.querySelectorAll(".wizard-step")];
+    const fill = document.getElementById("wizardFill");
+    const progress = document.getElementById("wizardProgress");
+    const next = document.getElementById("nextStep");
+    const prev = document.getElementById("prevStep");
+
+    let current = 0;
+    let submitting = false;
+
+    function updateWizard() {
+        pages.forEach((p, i) => p.classList.toggle("active", i === current));
+
+        steps.forEach((s, i) => {
+            s.classList.remove("active", "completed");
+            s.removeAttribute("aria-current");
+            if (i < current) {
+                s.classList.add("completed");
+            } else if (i === current) {
+                s.classList.add("active");
+                s.setAttribute("aria-current", "step");
+            }
+        });
+
+        const pct = pages.length > 1 ? (current / (pages.length - 1)) * 100 : 100;
+        fill.style.width = pct + "%";
+        progress.setAttribute("aria-valuenow", Math.round(pct));
+
+        prev.style.display = current === 0 ? "none" : "inline-block";
+        next.innerHTML = current === pages.length - 1
+            ? '<i class="fas fa-save"></i> Save Product'
+            : 'Next <i class="fas fa-arrow-right"></i>';
+    }
+
+    function validateStep() {
+        let valid = true;
+        pages[current]
+            .querySelectorAll("input[required], select[required], textarea[required]")
+            .forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add("is-invalid");
+                    valid = false;
+                } else {
+                    field.classList.remove("is-invalid");
+                }
+            });
+        return valid;
+    }
+
+    // Prevent Enter key from submitting the form early on non-final steps
+    form.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && current !== pages.length - 1) {
+            e.preventDefault();
+        }
+    });
+
+    prev.addEventListener("click", function () {
+        if (current > 0) {
+            current--;
+            updateWizard();
+        }
+    });
+
+    next.addEventListener("click", function () {
+        if (current === pages.length - 1) {
+            if (submitting) return;
+            submitting = true;
+            next.disabled = true;
+            next.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            if (typeof form.requestSubmit === "function") {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+            return;
+        }
+
+        if (!validateStep()) return;
+
+        current++;
+        updateWizard();
+        generateReview();
+    });
+
+    // ---- Profit calculator ----
+    const cost = document.getElementById("id_cost_price");
+    const sell = document.getElementById("id_selling_price");
+    const profit = document.getElementById("profitAmount");
+
+    function calculateProfit() {
+        if (!cost || !sell || !profit) return;
+        const c = parseFloat(cost.value) || 0;
+        const s = parseFloat(sell.value) || 0;
+        profit.textContent = "₵" + (s - c).toFixed(2);
+    }
+
+    // ---- Image preview + drag & drop ----
+    const img = document.getElementById("id_product_image");
+    const preview = document.getElementById("previewImage");
+    const zone = document.getElementById("uploadZone");
+    let previewUrl = null;
+    let hasProductImage = {% if form.instance.product_image %}true{% else %}false{% endif %};
+
+    function handleFile(file) {
+        if (!file || !preview) return;
+        if (!file.type.startsWith("image/")) return;
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file);
+        preview.src = previewUrl;
+        preview.style.display = "block";
+
+        const live = document.getElementById("livePreviewImage");
+        if (live) live.src = previewUrl;
+
+        hasProductImage = true;
+        updateCompletion();
+    }
+
+    if (img) {
+        img.addEventListener("change", function () {
+            handleFile(this.files && this.files[0]);
+        });
+    }
+
+    if (zone && img) {
+        ["dragover", "dragenter"].forEach(evt =>
+            zone.addEventListener(evt, function (e) {
+                e.preventDefault();
+                zone.classList.add("dragover");
+            })
+        );
+        ["dragleave", "dragend"].forEach(evt =>
+            zone.addEventListener(evt, function () {
+                zone.classList.remove("dragover");
+            })
+        );
+        zone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            zone.classList.remove("dragover");
+            const file = e.dataTransfer.files && e.dataTransfer.files[0];
+            if (file) {
+                img.files = e.dataTransfer.files;
+                handleFile(file);
+            }
+        });
+    }
+
+    // ---- Review summary ----
+    function fieldValue(id) {
+        const el = document.getElementById(id);
+        if (!el) return "";
+        if (el.tagName === "SELECT") {
+            return el.selectedOptions[0] ? el.selectedOptions[0].text : "";
+        }
+        return el.value;
+    }
+
+    function generateReview() {
+        const reviewEl = document.getElementById("reviewContent");
+        if (!reviewEl) return;
+        reviewEl.innerHTML = `
+            <table class="table">
+                <tr><th>Category</th><td>${fieldValue("id_category")}</td></tr>
+                <tr><th>Name</th><td>${fieldValue("id_product_name")}</td></tr>
+                <tr><th>Brand</th><td>${fieldValue("id_brand")}</td></tr>
+                <tr><th>Cost</th><td>${fieldValue("id_cost_price")}</td></tr>
+                <tr><th>Selling</th><td>${fieldValue("id_selling_price")}</td></tr>
+                <tr><th>Stock</th><td>${fieldValue("id_stock_quantity")}</td></tr>
+            </table>
+        `;
+    }
+
+    // ---- Identity generation (SKU / Barcode / QR) ----
+    const identityEndpoints = {
+        sku: "{% url 'generate_sku' %}",
+        barcode: "{% url 'generate_barcode' %}",
+        qr: "{% url 'generate_qr' %}"
+    };
+
+    const identityInputMap = {
+        sku: "id_sku",
+        barcode: "id_barcode",
+        qr: "id_qr_code"
+    };
+
+    const identityIconMap = {
+        sku: '<i class="fas fa-sync"></i>',
+        barcode: '<i class="fas fa-barcode"></i>',
+        qr: '<i class="fas fa-qrcode"></i>'
+    };
+
+    document.querySelectorAll(".identity-generate").forEach(button => {
+        button.addEventListener("click", async function () {
+            const type = this.dataset.type;
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch(identityEndpoints[type]);
+                if (!response.ok) throw new Error("Request failed");
+                const data = await response.json();
+                const input = document.getElementById(identityInputMap[type]);
+                if (input) {
+                    input.value = data.value;
+                    refreshPreview();
+                }
+                showToast(type.toUpperCase() + " generated");
+            } catch (e) {
+                showToast("Generation failed", "danger");
+            } finally {
+                this.disabled = false;
+                this.innerHTML = identityIconMap[type];
+            }
+        });
+    });
+
+    document.querySelectorAll(".identity-copy").forEach(button => {
+        button.addEventListener("click", async function () {
+            const target = document.getElementById(this.dataset.target);
+            if (!target || !target.value) {
+                showToast("Nothing to copy", "danger");
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(target.value);
+                showToast("Copied");
+            } catch (e) {
+                showToast("Copy failed", "danger");
+            }
+        });
+    });
+
+    // ---- Live preview card ----
+    const productFields = {
+        name: document.getElementById("id_product_name"),
+        brand: document.getElementById("id_brand"),
+        category: document.getElementById("id_category"),
+        status: document.getElementById("id_status"),
+        sku: document.getElementById("id_sku"),
+        barcode: document.getElementById("id_barcode"),
+    };
+
+    function refreshPreview() {
+        const nameEl = document.getElementById("previewName");
+        const brandEl = document.getElementById("previewBrand");
+        const skuEl = document.getElementById("previewSKU");
+        const barcodeEl = document.getElementById("previewBarcode");
+        const categoryEl = document.getElementById("previewCategory");
+        const statusEl = document.getElementById("previewStatus");
+
+        if (nameEl) nameEl.textContent = (productFields.name && productFields.name.value) || "Unnamed Product";
+        if (brandEl) brandEl.textContent = (productFields.brand && productFields.brand.value) || "--";
+        if (skuEl) skuEl.textContent = (productFields.sku && productFields.sku.value) || "--";
+        if (barcodeEl) barcodeEl.textContent = (productFields.barcode && productFields.barcode.value) || "--";
+
+        if (categoryEl && productFields.category) {
+            const cat = productFields.category.options[productFields.category.selectedIndex];
+            categoryEl.textContent = cat ? cat.text : "No Category";
+        }
+
+        if (statusEl && productFields.status) {
+            const status = productFields.status.options[productFields.status.selectedIndex];
+            statusEl.textContent = status ? status.text : "--";
+        }
+    }
+
+    // ---- Product completion score ----
+    const completionFields = [
+        { label: "Category",      check: () => !!(productFields.category && productFields.category.value) },
+        { label: "Name",          check: () => !!(productFields.name && productFields.name.value.trim()) },
+        { label: "Price",         check: () => !!(cost && sell && parseFloat(cost.value) > 0 && parseFloat(sell.value) > 0) },
+        { label: "Stock",         check: () => { const el = document.getElementById("id_stock_quantity"); return !!(el && el.value.trim() !== ""); } },
+        { label: "Image",         check: () => hasProductImage },
+        { label: "Brand",         check: () => !!(productFields.brand && productFields.brand.value.trim()) },
+        { label: "Description",   check: () => { const el = document.getElementById("id_description"); return !!(el && el.value.trim()); } },
+        { label: "Reorder Level", check: () => { const el = document.getElementById("id_reorder_level"); return !!(el && parseFloat(el.value) > 0); } },
+    ];
+
+    function updateCompletion() {
+        const fillEl = document.getElementById("completionFill");
+        const percentEl = document.getElementById("completionPercent");
+        const listEl = document.getElementById("completionChecklist");
+        if (!fillEl || !percentEl || !listEl) return;
+
+        let done = 0;
+        let html = "";
+
+        completionFields.forEach(f => {
+            const ok = !!f.check();
+            if (ok) done++;
+            html += `<span class="completion-item ${ok ? "done" : "missing"}">
+                <i class="fas ${ok ? "fa-check-circle" : "fa-times-circle"}"></i> ${f.label}
+            </span>`;
+        });
+
+        const pct = Math.round((done / completionFields.length) * 100);
+        fillEl.style.width = pct + "%";
+        fillEl.classList.toggle("complete", pct === 100);
+        percentEl.textContent = pct + "%";
+        listEl.innerHTML = html;
+    }
+
+    // ---- Wire up shared listeners ----
+    if (cost) cost.addEventListener("input", () => { calculateProfit(); updateCompletion(); });
+    if (sell) sell.addEventListener("input", () => { calculateProfit(); updateCompletion(); });
+
+    [
+        document.getElementById("id_stock_quantity"),
+        document.getElementById("id_description"),
+        document.getElementById("id_reorder_level")
+    ].forEach(f => {
+        if (!f) return;
+        f.addEventListener("input", updateCompletion);
+        f.addEventListener("change", updateCompletion);
+    });
+
+    Object.values(productFields).forEach(field => {
+        if (!field) return;
+        field.addEventListener("input", () => { refreshPreview(); updateCompletion(); });
+        field.addEventListener("change", () => { refreshPreview(); updateCompletion(); });
+    });
+
+    // ---- Initial render ----
+    updateWizard();
+    calculateProfit();
+    refreshPreview();
+    updateCompletion();
+});
+</script>
 
 {% endblock %}

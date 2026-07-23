@@ -1,0 +1,48 @@
+{% extends 'base/base.html' %}
+
+{% block content %}
+
+<div class="container py-5">
+
+    <div class="card border-danger">
+
+        <div class="card-body text-center">
+
+            <h3>
+
+                Delete "{{ category.name }}"?
+
+            </h3>
+
+            <p>
+
+                This action cannot be undone.
+
+            </p>
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <button class="btn btn-danger">
+
+                    Delete Category
+
+                </button>
+
+                <a href="{% url 'category_list' %}"
+                   class="btn btn-secondary">
+
+                    Cancel
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

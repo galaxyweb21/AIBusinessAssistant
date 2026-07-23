@@ -5,160 +5,187 @@
 
 <style>
 
-/* =========================================
-   ERP INVENTORY HISTORY
-========================================= */
-
 .history-wrapper{
     padding:24px;
 }
 
-.history-card{
+.history-page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:18px;
+    margin-bottom:24px;
+}
 
+.history-page-header h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+    margin-bottom:6px;
+}
+
+.history-page-header p{
+    color:var(--text-muted);
+    margin:0;
+}
+
+.history-page-card{
     background:var(--bg-card);
-
     border:1px solid var(--border);
-
     border-radius:24px;
-
     overflow:hidden;
 }
 
-.history-header{
-
-    padding:24px;
-
-    border-bottom:1px solid var(--border);
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    flex-wrap:wrap;
-
-    gap:15px;
-}
-
-.history-title h2{
-
-    font-size:28px;
-
-    font-weight:800;
-
-    margin-bottom:5px;
-}
-
-.history-title p{
-    color:var(--text-muted);
-}
-
 /* TABS */
-
 .history-tabs{
-
     display:flex;
-
-    gap:10px;
-
+    gap:6px;
+    padding:18px 22px 0;
     flex-wrap:wrap;
-
-    padding:20px 24px;
-
     border-bottom:1px solid var(--border);
 }
 
-.tab-btn{
-
-    padding:10px 18px;
-
-    border-radius:999px;
-
+.history-tab{
+    padding:10px 16px;
+    border-radius:12px 12px 0 0;
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-muted);
     text-decoration:none !important;
+    border:1px solid transparent;
+    border-bottom:none;
+    transition:.2s ease;
+}
 
-    border:1px solid var(--border);
-
+.history-tab:hover{
     color:var(--text-main);
-
-    transition:.25s ease;
+    background:rgba(99,102,241,.05);
 }
 
-.tab-btn:hover{
-    background:rgba(99,102,241,0.08);
+.history-tab.active{
+    color:#6366f1;
+    background:var(--bg-card);
+    border-color:var(--border);
+    position:relative;
+    top:1px;
 }
 
-.tab-active{
-
-    background:linear-gradient(
-        135deg,
-        #6366f1,
-        #4f46e5
-    );
-
-    color:#fff !important;
-
-    border:none;
+/* TOOLBAR */
+.history-toolbar{
+    padding:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:15px;
+    border-bottom:1px solid var(--border);
 }
 
-/* SEARCH */
+.history-toolbar form{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    flex:1;
+}
 
 .history-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    height:48px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    transition:.25s ease;
+    flex:1;
+    min-width:280px;
+    max-width:100%;
+}
 
-    padding:20px 24px;
+.history-search:focus-within{
+    border-color:#6366f1;
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+}
 
-    border-bottom:1px solid var(--border);
+.history-search i{
+    color:var(--text-muted);
+    font-size:15px;
+    flex-shrink:0;
+    pointer-events:none;
 }
 
 .history-search input{
-
+    flex:1;
     width:100%;
-
-    height:50px;
-
-    border-radius:14px;
-
-    border:1px solid var(--border);
-
-    background:var(--bg-main);
-
+    height:100%;
+    border:none;
+    outline:none;
+    background:transparent;
     color:var(--text-main);
+    padding:0;
+}
 
-    padding:0 18px;
+.history-btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    font-weight:600;
+    transition:.25s ease;
+    cursor:pointer;
+    text-decoration:none !important;
+}
+
+.history-btn-primary{
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
+    color:#fff !important;
+}
+
+.history-btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 30px rgba(99,102,241,0.25);
+}
+
+.history-btn-light{
+    background:var(--bg-card);
+    color:var(--text-main) !important;
+    border:1px solid var(--border);
+}
+
+.history-btn-light:hover{
+    background:var(--hover-bg);
 }
 
 /* TABLE */
-
 .history-table-wrap{
     overflow-x:auto;
 }
 
 .history-table{
-
     width:100%;
-
     border-collapse:collapse;
 }
 
-.history-table th{
-
-    padding:18px;
-
+.history-table thead{
     background:rgba(99,102,241,0.05);
+}
 
+.history-table th{
+    padding:16px 20px;
+    color:var(--text-main);
+    font-size:13px;
+    font-weight:700;
     text-transform:uppercase;
-
-    font-size:12px;
-
     border-bottom:1px solid var(--border);
+    text-align:left;
 }
 
 .history-table td{
-
-    padding:18px;
-
+    padding:16px 20px;
     border-bottom:1px solid var(--border);
-
+    color:var(--text-main);
     vertical-align:middle;
 }
 
@@ -166,426 +193,300 @@
     background:rgba(99,102,241,0.03);
 }
 
-/* BADGES */
-
-.type-badge{
-
-    padding:8px 14px;
-
+.action-badge{
+    padding:6px 12px;
     border-radius:999px;
-
     font-size:12px;
+    font-weight:700;
+    text-transform:capitalize;
+    display:inline-block;
+}
 
+.action-badge.restock{ background:rgba(16,185,129,0.12); color:#10b981; }
+.action-badge.damaged{ background:rgba(239,68,68,0.12); color:#ef4444; }
+.action-badge.adjustment{ background:rgba(245,158,11,0.12); color:#f59e0b; }
+.action-badge.sale{ background:rgba(59,130,246,0.12); color:#3b82f6; }
+.action-badge.returned{ background:rgba(139,92,246,0.12); color:#8b5cf6; }
+.action-badge.transfer{ background:rgba(14,165,233,0.12); color:#0ea5e9; }
+
+.qty-change{
     font-weight:700;
 }
 
-.type-restock{
-    background:rgba(16,185,129,0.12);
-    color:#10b981;
+.qty-change.positive{ color:#10b981; }
+.qty-change.negative{ color:#ef4444; }
+
+.stock-path{
+    font-size:12px;
+    color:var(--text-muted);
 }
 
-.type-sale{
-    background:rgba(59,130,246,0.18);
-    color:#2563eb;
+.product-link{
+    color:var(--text-main);
+    font-weight:600;
+    text-decoration:none;
 }
 
-.type-adjustment{
-    background:rgba(245,158,11,0.12);
-    color:#f59e0b;
+.product-link:hover{
+    color:#6366f1;
 }
 
-.type-damaged{
-    background:rgba(239,68,68,0.12);
-    color:#ef4444;
-}
-
-.type-returned{
-    background:rgba(14,165,233,0.12);
-    color:#0ea5e9;
-}
-
-.type-transfer{
-    background:rgba(139,92,246,0.12);
-    color:#8b5cf6;
-}
-
-.stock-flow{
-
-    font-weight:700;
+.ref-code{
+    font-family:monospace;
+    font-size:12px;
+    color:var(--text-muted);
 }
 
 /* EMPTY */
-
 .empty-state{
-
-    text-align:center;
-
     padding:70px 20px;
+    text-align:center;
 }
 
 .empty-state i{
-
-    font-size:55px;
-
-    margin-bottom:18px;
-
+    font-size:60px;
+    margin-bottom:20px;
     color:var(--text-muted);
 }
-/* ==========================
-   PAGINATION
-========================== */
 
-.inventory-pagination{
+.empty-state h4{
+    color:var(--text-main);
+    font-weight:700;
+}
 
+.empty-state p{
+    color:var(--text-muted);
+}
+
+/* PAGINATION */
+.history-pagination{
     display:flex;
     justify-content:center;
     align-items:center;
     gap:10px;
-
     padding:24px;
-
     border-top:1px solid var(--border);
-
 }
 
 .page-btn{
-
     min-width:42px;
     height:42px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     border-radius:12px;
-
     text-decoration:none !important;
-
     border:1px solid var(--border);
-
     background:var(--bg-card);
-
     color:var(--text-main);
-
     font-weight:700;
-
     transition:.25s ease;
-
 }
 
 .page-btn:hover{
-
     transform:translateY(-2px);
-
     background:rgba(99,102,241,.08);
-
 }
 
 .active-page{
-
-    background:linear-gradient(
-        135deg,
-        #6366f1,
-        #4f46e5
-    );
-
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
     color:#fff;
-
     border:none;
-
 }
+
+@media(max-width:768px){
+    .history-wrapper{ padding:14px; }
+    .history-toolbar{ flex-direction:column; align-items:stretch; }
+    .history-toolbar form{ width:100%; }
+    .history-search{ width:100%; min-width:100%; }
+    .history-page-header{ flex-direction:column; align-items:flex-start; }
+}
+
 </style>
 
 <div class="content-wrapper">
-
 <section class="content history-wrapper">
 
-<div class="history-card">
+    <div class="history-page-header">
+        <div>
+            <h2>Inventory History</h2>
+            <p>Full audit trail of every stock movement.</p>
+        </div>
 
-    <!-- HEADER -->
+        <a href="{% url 'view_inventory' %}" class="history-btn history-btn-light">
+            <i class="fas fa-arrow-left me-2"></i>
+            Back to Inventory
+        </a>
+    </div>
 
-    <div class="history-header">
+    <div class="history-page-card">
 
-        <div class="history-title">
+        <!-- TABS -->
+        <div class="history-tabs">
+            {% for tab_key, tab_label in tabs %}
+                <a href="?tab={{ tab_key }}{% if search %}&search={{ search|urlencode }}{% endif %}"
+                   class="history-tab {% if tab == tab_key %}active{% endif %}">
+                    {{ tab_label }}
+                </a>
+            {% endfor %}
+        </div>
 
-            <h2>
-                Inventory Stock Ledger
-            </h2>
+        <!-- TOOLBAR -->
+        <div class="history-toolbar">
 
-            <p>
-                Complete inventory movement history and audit trail
-            </p>
+            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="hidden" name="tab" value="{{ tab }}">
+
+                <div class="history-search">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search by product, reference, or user...">
+                </div>
+
+                <button type="submit" class="history-btn history-btn-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Search
+                </button>
+
+                {% if search %}
+                    <a href="?tab={{ tab }}" class="history-btn history-btn-light">
+                        <i class="fas fa-times me-2"></i>
+                        Clear
+                    </a>
+                {% endif %}
+            </form>
+
+        </div>
+
+        <!-- TABLE -->
+        <div class="history-table-wrap">
+
+            <table class="history-table">
+
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Action</th>
+                        <th>Change</th>
+                        <th>Reference</th>
+                        <th>Performed By</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for record in queryset %}
+
+                    <tr>
+
+                        <td>
+                            {% if record.inventory %}
+                                <a href="{% url 'update_inventory' record.inventory.id %}" class="product-link">
+                                    {{ record.inventory.product_name }}
+                                </a>
+                            {% else %}
+                                <span style="color:var(--text-muted);">Deleted product</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="action-badge {{ record.action_type }}">
+                                {{ record.get_action_type_display }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="qty-change {% if record.quantity_changed > 0 %}positive{% else %}negative{% endif %}">
+                                {% if record.quantity_changed > 0 %}+{% endif %}{{ record.quantity_changed }}
+                            </div>
+                            <div class="stock-path">
+                                {{ record.previous_stock }} → {{ record.new_stock }}
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="ref-code">{{ record.reference_number|default:"—" }}</span>
+                        </td>
+
+                        <td>
+                            {% if record.performed_by %}
+                                {{ record.performed_by.username }}
+                            {% else %}
+                                <span style="color:var(--text-muted);">System</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {{ record.created_at|date:"d M Y, H:i" }}
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <h4>No Activity Found</h4>
+                                <p>
+                                    {% if search or tab != "all" %}
+                                        Try adjusting your search or filter.
+                                    {% else %}
+                                        Stock movements will appear here as they happen.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% if queryset.has_other_pages %}
+
+            <div class="history-pagination">
+
+                {% if queryset.has_previous %}
+                    <a href="?page={{ queryset.previous_page_number }}&tab={{ tab }}&search={{ search|urlencode }}"
+                       class="page-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for num in queryset.paginator.page_range %}
+                    {% if queryset.number == num %}
+                        <span class="page-btn active-page">{{ num }}</span>
+                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+                        <a href="?page={{ num }}&tab={{ tab }}&search={{ search|urlencode }}" class="page-btn">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if queryset.has_next %}
+                    <a href="?page={{ queryset.next_page_number }}&tab={{ tab }}&search={{ search|urlencode }}"
+                       class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+
+            </div>
+
+            {% endif %}
 
         </div>
 
     </div>
 
-    <!-- TABS -->
-
-    <div class="history-tabs">
-
-        <a href="?tab=all"
-           class="tab-btn {% if tab == 'all' %}tab-active{% endif %}">
-            All
-        </a>
-
-        <a href="?tab=restock"
-           class="tab-btn {% if tab == 'restock' %}tab-active{% endif %}">
-            Restock
-        </a>
-
-        <a href="?tab=sale"
-           class="tab-btn {% if tab == 'sale' %}tab-active{% endif %}">
-            Sales
-        </a>
-
-        <a href="?tab=adjustment"
-           class="tab-btn {% if tab == 'adjustment' %}tab-active{% endif %}">
-            Adjustments
-        </a>
-
-        <a href="?tab=damaged"
-           class="tab-btn {% if tab == 'damaged' %}tab-active{% endif %}">
-            Damaged
-        </a>
-
-        <a href="?tab=returned"
-           class="tab-btn {% if tab == 'returned' %}tab-active{% endif %}">
-            Returned
-        </a>
-
-        <a href="?tab=transfer"
-           class="tab-btn {% if tab == 'transfer' %}tab-active{% endif %}">
-            Transfers
-        </a>
-
-    </div>
-
-    <!-- SEARCH -->
-
-<div class="history-search">
-
-    <form method="GET"
-          style="display:flex;gap:10px;align-items:center;">
-
-        <!-- keep active tab -->
-        <input
-            type="hidden"
-            name="tab"
-            value="{{ tab }}"
-        >
-
-        <input
-            type="text"
-            name="search"
-            placeholder="Search product, reference, user..."
-            value="{{ search }}"
-            style="flex:1;"
-        >
-
-        <button
-            type="submit"
-            class="page-btn"
-            style="min-width:120px;">
-
-            <i class="fas fa-search"></i>
-            Search
-
-        </button>
-
-        {% if search %}
-
-        <a href="?tab={{ tab }}"
-           class="page-btn"
-           style="min-width:90px;">
-
-            Clear
-
-        </a>
-
-        {% endif %}
-
-    </form>
-
-</div>
-
-    <!-- TABLE -->
-
-    <div class="history-table-wrap">
-
-        <table class="history-table">
-
-            <thead>
-
-                <tr>
-
-                    <th>Product</th>
-
-                    <th>Action</th>
-
-                    <th>Movement</th>
-
-                    <th>Reference</th>
-
-                    <th>User</th>
-
-                    <th>Date</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-            {% for item in inventory_items %}
-
-                <tr>
-
-                    <td>
-                        <strong>
-                            {{ item.inventory.product_name }}
-                        </strong>
-                    </td>
-
-                    <td>
-
-                        <span class="type-badge type-{{ item.action_type }}">
-
-                            {{ item.get_action_type_display }}
-
-                        </span>
-
-                    </td>
-
-                    <td class="stock-flow">
-
-                        {{ item.previous_stock }}
-
-                        →
-
-                        {{ item.new_stock }}
-
-                        (
-
-                        {% if item.quantity_changed > 0 %}+{% endif %}
-                        {{ item.quantity_changed }}
-
-                        )
-
-                    </td>
-
-                    <td>
-
-                        {{ item.reference_number|default:"-" }}
-
-                    </td>
-
-                    <td>
-
-                        {% if item.performed_by %}
-                            {{ item.performed_by.username }}
-                        {% else %}
-                            System
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-
-                        {{ item.created_at|date:"d M Y H:i" }}
-
-                    </td>
-
-                </tr>
-
-            {% empty %}
-
-                <tr>
-
-                    <td colspan="6">
-
-                        <div class="empty-state">
-
-                            <i class="fas fa-history"></i>
-
-                            <h4>
-                                No History Found
-                            </h4>
-
-                            <p>
-                                No inventory movement records available.
-                            </p>
-
-                        </div>
-
-                    </td>
-
-                </tr>
-
-            {% endfor %}
-
-            </tbody>
-
-        </table>
-{% if inventory_items.has_other_pages %}
-
-<div class="inventory-pagination">
-
-    {% if inventory_items.has_previous %}
-
-    <a href="?page={{ inventory_items.previous_page_number }}&tab={{ tab }}&search={{ search }}"
-       class="page-btn">
-
-        <i class="fas fa-chevron-left"></i>
-
-    </a>
-
-    {% endif %}
-
-
-    {% for num in inventory_items.paginator.page_range %}
-
-        {% if inventory_items.number == num %}
-
-            <span class="page-btn active-page">
-                {{ num }}
-            </span>
-
-        {% elif num > inventory_items.number|add:'-3' and num < inventory_items.number|add:'3' %}
-
-            <a href="?page={{ num }}&tab={{ tab }}&search={{ search }}"
-               class="page-btn">
-
-                {{ num }}
-
-            </a>
-
-        {% endif %}
-
-    {% endfor %}
-
-
-    {% if inventory_items.has_next %}
-
-    <a href="?page={{ inventory_items.next_page_number }}&tab={{ tab }}&search={{ search }}"
-       class="page-btn">
-
-        <i class="fas fa-chevron-right"></i>
-
-    </a>
-
-    {% endif %}
-
-</div>
-
-{% endif %}
-
-    </div>
-
-</div>
-
 </section>
-
 </div>
 
 {% endblock %}

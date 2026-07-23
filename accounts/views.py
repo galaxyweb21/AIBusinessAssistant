@@ -25,18 +25,14 @@ from django.contrib.contenttypes.models import ContentType
 from .utils import get_client_ip
 
 from datetime import timedelta
+from .get_business import get_business
 # Create your views here.
 
 
 @login_required
 def index(request):
     user = request.user
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     today = timezone.now().date()
 
@@ -140,18 +136,14 @@ def register_business(request):
 def staff_profile(request):
 
     user = request.user
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
+    staff = StaffProfile.objects.get(staff_id=user.id)
+    business = get_business(request)
 
-    business = staff.business
+    total_staff = StaffProfile.objects.filter(business=get_business(request)).count()
 
-    total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
+    total_products = Inventory.objects.filter(business=get_business(request)).count()
 
-    total_products = Inventory.objects.filter(business_id=staff.business_id).count()
-
-    sales = Sale.objects.filter(business_id=staff.business_id, status='Completed')
+    sales = Sale.objects.filter(business=get_business(request), status='Completed')
 
     total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
     #
@@ -256,18 +248,13 @@ def staff_profile(request):
 def business_profile(request):
 
     user = request.user
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
+    business = get_business(request)
 
-    business = staff.business
+    total_staff = StaffProfile.objects.filter( business = get_business(request)).count()
 
-    total_staff = StaffProfile.objects.filter(business_id=staff.business_id).count()
+    total_products = Inventory.objects.filter( business = get_business(request)).count()
 
-    total_products = Inventory.objects.filter(business_id=staff.business_id).count()
-
-    sales = Sale.objects.filter(business_id=staff.business_id, status='Completed')
+    sales = Sale.objects.filter( business = get_business(request), status='Completed')
 
     total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
     #
@@ -384,12 +371,7 @@ def register_staff(request):
 
     user = User.objects.get(id=request.user.id)
 
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     form = CreateUserForm()
     pform = StaffProfileForm()
@@ -514,12 +496,7 @@ def update_staff(request, staff_id):
 
     user = request.user
 
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     form = UpdateUserForm(instance=user)
     pform = StaffProfileForm(instance=staff)
@@ -578,7 +555,7 @@ def update_staff(request, staff_id):
     # 🔥 ANALYTICS FIX HERE
     # =========================
 
-    staff_qs = StaffProfile.objects.filter(business_id=staff.business_id)
+    staff_qs = StaffProfile.objects.filter(business = get_business(request))
 
     total_staff = staff_qs.count()
 
@@ -614,12 +591,7 @@ def deactivate_staff(request, staff_id):
 
     user = User.objects.get(id=request.user.id)
 
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     # Prevent repeated deactivation
     if not staff.is_active:
@@ -679,12 +651,7 @@ def deactivate_staff(request, staff_id):
 @login_required
 @transaction.atomic
 def reactivate_staff(request, staff_id):
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     staff.is_active = True
     staff.save()
@@ -723,12 +690,7 @@ def reactivate_staff(request, staff_id):
 @login_required
 @transaction.atomic
 def delete_staff(request, staff_id):
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     user = staff_profile.staff
 
@@ -770,12 +732,8 @@ def staff_list_view(request):
 
     user = User.objects.get(id=request.user.id)
 
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
+    business = get_business(request)
 
-    business = staff.business
     search = request.GET.get("search", "").strip()
     role = request.GET.get("role", "").strip()
     tab = request.GET.get("tab", "active")
@@ -784,7 +742,11 @@ def staff_list_view(request):
     # BASE STAFF QUERY
     # =========================
     staff_qs = StaffProfile.objects.filter(
-        business=staff.business
+        business=get_business(request)
+    )
+
+    base_qs = StaffProfile.objects.filter(
+        business=get_business(request)
     )
 
     # =========================
@@ -921,13 +883,6 @@ def staff_list_view(request):
             })
 
         staff.recent_logs = recent_logs
-
-    # =========================
-    # COUNTS
-    # =========================
-    base_qs = StaffProfile.objects.filter(
-        business_id=staff.business_id
-    )
 
     context = {
         "staff_list": staff_list,

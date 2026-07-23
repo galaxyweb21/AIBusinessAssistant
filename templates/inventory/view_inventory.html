@@ -20,7 +20,6 @@
     align-items:center;
     flex-wrap:wrap;
     gap:18px;
-
     margin-bottom:24px;
 }
 
@@ -54,11 +53,7 @@
 }
 
 .inventory-btn-primary{
-    background:linear-gradient(
-        135deg,
-        #6366f1,
-        #4f46e5
-    );
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
     color:#fff !important;
 }
 
@@ -89,7 +84,6 @@
 .inventory-toolbar{
     padding:22px;
     border-bottom:1px solid var(--border);
-
     display:flex;
     justify-content:space-between;
     align-items:center;
@@ -97,40 +91,81 @@
     gap:15px;
 }
 
-/* SEARCH */
+.inventory-toolbar form{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    flex:1;
+}
+
+/* =========================================
+   SEARCH (single, consolidated definition)
+========================================= */
+
 .inventory-search{
-    position:relative;
-    width:320px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    height:48px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    transition:.25s ease;
+    flex:1;
+    min-width:280px;
     max-width:100%;
 }
 
+.inventory-search:focus-within{
+    border-color:#6366f1;
+    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+}
+
 .inventory-search i{
-    position:absolute;
-    left:16px;
-    top:50%;
-    transform:translateY(-50%);
     color:var(--text-muted);
+    font-size:15px;
+    flex-shrink:0;
+    pointer-events:none;
 }
 
 .inventory-search input{
+    flex:1;
     width:100%;
-    height:48px;
-
-    border-radius:14px;
-    border:1px solid var(--border);
-
-    background:var(--bg-main);
+    height:100%;
+    border:none;
+    outline:none;
+    background:transparent;
     color:var(--text-main);
-
-    padding:0 16px 0 46px;
-
-    transition:.25s ease;
+    padding:0;
 }
 
-.inventory-search input:focus{
-    outline:none;
-    border-color:#6366f1;
-    box-shadow:0 0 0 4px rgba(99,102,241,0.12);
+.inventory-search input::placeholder{
+    color:var(--text-muted);
+}
+
+.inventory-search .search-clear{
+    display:none;
+    border:none;
+    background:transparent;
+    color:var(--text-muted);
+    cursor:pointer;
+    padding:4px;
+    border-radius:8px;
+    flex-shrink:0;
+    transition:.2s ease;
+}
+
+.inventory-search .search-clear:hover{
+    color:var(--text-main);
+    background:rgba(99,102,241,.08);
+}
+
+.inventory-search.has-value .search-clear{
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 /* TABLE */
@@ -181,15 +216,11 @@
 .product-icon{
     width:46px;
     height:46px;
-
     border-radius:14px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     background:rgba(99,102,241,0.1);
-
     color:#6366f1;
     font-size:18px;
 }
@@ -215,20 +246,18 @@
 /* ACTION BUTTONS */
 .action-group{
     display:flex;
-    gap:10px;
+    gap:8px;
+    align-items:center;
 }
 
 .action-btn{
     width:40px;
     height:40px;
-
     border:none;
     border-radius:12px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     transition:.25s ease;
     text-decoration:none !important;
 }
@@ -280,8 +309,13 @@
         align-items:stretch;
     }
 
+    .inventory-toolbar form{
+        width:100%;
+    }
+
     .inventory-search{
         width:100%;
+        min-width:100%;
     }
 
     .inventory-header{
@@ -295,180 +329,102 @@
 ========================== */
 
 .inventory-pagination{
-
     display:flex;
     justify-content:center;
     align-items:center;
     gap:10px;
-
     padding:24px;
-
     border-top:1px solid var(--border);
-
 }
 
 .page-btn{
-
     min-width:42px;
     height:42px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     border-radius:12px;
-
     text-decoration:none !important;
-
     border:1px solid var(--border);
-
     background:var(--bg-card);
-
     color:var(--text-main);
-
     font-weight:700;
-
     transition:.25s ease;
-
 }
 
 .page-btn:hover{
-
     transform:translateY(-2px);
-
     background:rgba(99,102,241,.08);
-
 }
 
 .active-page{
-
-    background:linear-gradient(
-        135deg,
-        #6366f1,
-        #4f46e5
-    );
-
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
     color:#fff;
-
     border:none;
-
 }
 
-.inventory-toolbar form{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-}
-
-.inventory-search{
-    min-width:320px;
-    flex:1;
-}
-
-@media(max-width:768px){
-
-    .inventory-toolbar form{
-        width:100%;
-    }
-
-    .inventory-search{
-        width:100%;
-        min-width:100%;
-    }
-}
 /* ==========================
    MODERN THEME-AWARE ACTIONS
 ========================== */
 
-.action-group{
-    display:flex;
-    gap:8px;
-    align-items:center;
-}
-
-.action-group .dropdown-menu{
+.action-dropdown-menu{
+    display:none;
+    position:fixed;
+    z-index:3000;
     background:var(--bg-card);
     border:1px solid var(--border);
     border-radius:16px;
     padding:8px;
     min-width:180px;
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.08);
-
-    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,.18);
 }
 
-.action-group .dropdown-item{
+.action-dropdown-menu.show{
+    display:block;
+    animation:menuFade .15s ease;
+}
 
+@keyframes menuFade{
+    from{ opacity:0; transform:translateY(-4px); }
+    to{ opacity:1; transform:none; }
+}
+
+.action-dropdown-menu .dropdown-item{
     display:flex;
     align-items:center;
     gap:10px;
-
     padding:12px 14px;
-
     border-radius:12px;
-
     color:var(--text-main);
-
     font-size:13px;
     font-weight:600;
-
     transition:.25s ease;
+    text-decoration:none;
 }
 
-.action-group .dropdown-item i{
-    width:18px;
-}
+.action-dropdown-menu .dropdown-item i{ width:18px; }
 
-/* Hover adapts to theme */
-
-.action-group .dropdown-item:hover{
-
+.action-dropdown-menu .dropdown-item:hover{
     background:rgba(99,102,241,.08);
-
     color:var(--text-main);
-
     transform:translateX(3px);
 }
 
-/* Restock */
+.action-dropdown-menu .dropdown-item.text-success{ color:#10b981 !important; }
+.action-dropdown-menu .dropdown-item.text-warning{ color:#f59e0b !important; }
+.action-dropdown-menu .dropdown-item.text-danger{ color:#ef4444 !important; }
 
-.action-group .dropdown-item.text-success{
-    color:#10b981 !important;
-}
-
-/* Damaged */
-
-.action-group .dropdown-item.text-warning{
-    color:#f59e0b !important;
-}
-
-/* Delete */
-
-.action-group .dropdown-item.text-danger{
-    color:#ef4444 !important;
-}
-
-/* More button */
-
-.action-group .dropdown .action-btn{
-
+.action-menu-btn{
     background:var(--bg-main) !important;
-
     color:var(--text-main) !important;
-
     border:1px solid var(--border);
-
 }
 
-.action-group .dropdown .action-btn:hover{
-
+.action-menu-btn:hover{
     background:rgba(99,102,241,.08) !important;
-
     transform:translateY(-2px);
 }
+
 </style>
 
 <div class="content-wrapper">
@@ -480,37 +436,24 @@
 
         <div class="inventory-title">
             <h2>Inventory Management</h2>
-            <p>
-                Manage and monitor your business inventory.
-            </p>
+            <p>Manage and monitor your business inventory.</p>
         </div>
 
         <div class="inventory-actions">
 
-            <a href="{% url 'inventory' %}"
-               class="inventory-btn inventory-btn-primary">
-
+            <a href="{% url 'inventory' %}" class="inventory-btn inventory-btn-primary">
                 <i class="fas fa-plus me-2"></i>
                 Add Inventory
-
             </a>
 
-            <!-- CSV EXPORT -->
-            <button onclick="exportTableToCSV()"
-                    class="inventory-btn inventory-btn-light">
-
+            <button onclick="exportTableToCSV()" class="inventory-btn inventory-btn-light">
                 <i class="fas fa-file-csv me-2"></i>
                 Export CSV
-
             </button>
 
-            <!-- PDF EXPORT -->
-            <button onclick="exportTableToPDF()"
-                    class="inventory-btn inventory-btn-light">
-
+            <button onclick="exportTableToPDF()" class="inventory-btn inventory-btn-light">
                 <i class="fas fa-file-pdf me-2"></i>
                 Export PDF
-
             </button>
 
         </div>
@@ -521,54 +464,40 @@
     <div class="inventory-card">
 
         <!-- TOOLBAR -->
-      <div class="inventory-toolbar">
+        <div class="inventory-toolbar">
 
-    <form method="GET"
-          class="d-flex align-items-center gap-2 flex-wrap">
+            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
 
+                <div class="inventory-search" id="inventorySearchWrap">
+                    <i class="fas fa-search"></i>
+                    <input
+                        id="inventorySearch"
+                        type="text"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search inventory...">
+                    <button type="button" class="search-clear" id="searchClearBtn" aria-label="Clear search" title="Clear search">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
 
-        <div class="inventory-search">
+                <button type="submit" class="inventory-btn inventory-btn-primary">
+                    <i class="fas fa-search me-2"></i>
+                    Search
+                </button>
 
-            <i class="fas fa-search"></i>
+                {% if search %}
+                <a href="{% url 'view_inventory' %}" class="inventory-btn inventory-btn-light">
+                    <i class="fas fa-times me-2"></i>
+                    Clear
+                </a>
+                {% endif %}
 
-            <input
-                id="inventorySearch"
-                type="text"
-                name="search"
-                value="{{ search }}"
-                placeholder="Search inventory..." style="flex:1;"
-            >
+            </form>
+
+            {% include 'partials/_alerts.html' %}
 
         </div>
-
-        <!-- SEARCH BUTTON -->
-        <button
-            type="submit"
-            class="inventory-btn inventory-btn-primary">
-
-            <i class="fas fa-search me-2"></i>
-
-            Search
-
-        </button>
-
-        <!-- CLEAR BUTTON -->
-        {% if search %}
-        <a href="{% url 'view_inventory' %}"
-           class="inventory-btn inventory-btn-light">
-
-            <i class="fas fa-times me-2"></i>
-
-            Clear
-
-        </a>
-        {% endif %}
-
-    </form>
-
-    {% include 'partials/_alerts.html' %}
-
-</div>
 
         <!-- TABLE -->
         <div class="inventory-table-wrap">
@@ -576,7 +505,6 @@
             <table class="inventory-table" id="inventoryTable">
 
                 <thead>
-
                     <tr>
                         <th>Product</th>
                         <th>Stock</th>
@@ -585,7 +513,6 @@
                         <th>Updated</th>
                         <th>Actions</th>
                     </tr>
-
                 </thead>
 
                 <tbody id="inventoryTableBody">
@@ -595,195 +522,130 @@
                     <tr>
 
                         <td>
-
                             <div class="product-info">
-
                                 <div class="product-icon">
                                     <i class="fas fa-box"></i>
                                 </div>
-
                                 <div>
-                                    <strong>
-                                        {{ item.product_name }}
-                                    </strong>
+                                    <strong>{{ item.product_name }}</strong>
                                 </div>
-
                             </div>
-
                         </td>
 
                         <td>
-
                             {% if item.stock_quantity <= 5 %}
-
                                 <span class="stock-badge stock-low">
                                     Low Stock ({{ item.stock_quantity }})
                                 </span>
-
                             {% else %}
-
                                 <span class="stock-badge stock-good">
                                     {{ item.stock_quantity }} In Stock
                                 </span>
-
                             {% endif %}
-
                         </td>
 
-                        <td>
-                            Gh¢{{ item.cost_price }}
-                        </td>
-
-                        <td>
-                            Gh¢{{ item.selling_price }}
-                        </td>
-
-                        <td>
-                            {{ item.updated_at|date:"d M Y" }}
-                        </td>
+                        <td>Gh¢{{ item.cost_price }}</td>
+                        <td>Gh¢{{ item.selling_price }}</td>
+                        <td>{{ item.updated_at|date:"d M Y" }}</td>
 
                         <td>
 
-                           <div class="action-group">
+                            <div class="action-group">
 
-    <!-- PRIMARY: EDIT -->
-    <a href="{% url 'update_inventory' item.id %}"
-       class="action-btn edit-btn"
-       title="Edit">
+                                <a href="{% url 'update_inventory' item.id %}"
+                                   class="action-btn edit-btn"
+                                   title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
 
-        <i class="fas fa-edit"></i>
+                                <button type="button"
+                                        class="action-btn action-menu-btn"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        data-menu-target="actionMenu{{ item.id }}"
+                                        title="More actions">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
 
-    </a>
+                            </div>
 
-    <!-- MORE MENU (SECONDARY ACTIONS) -->
-    <div class="dropdown">
+                            <div class="action-dropdown-menu" id="actionMenu{{ item.id }}" role="menu">
 
-        <button class="action-btn"
-                style="background:rgba(99,102,241,0.12); color:#6366f1;"
-                data-toggle="dropdown">
+                                <a class="dropdown-item text-success"
+                                   href="{% url 'restock_inventory' item.id %}">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Restock
+                                </a>
 
-            <i class="fas fa-ellipsis-v"></i>
+                                <a class="dropdown-item text-warning"
+                                   href="{% url 'damaged_inventory' item.id %}">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Mark Damaged
+                                </a>
 
-        </button>
+                                <div class="dropdown-divider"></div>
 
-        <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item text-danger"
+                                   href="#"
+                                   data-toggle="modal"
+                                   data-bs-toggle="modal"
+                                   data-target="#deleteModal{{ item.id }}"
+                                   data-bs-target="#deleteModal{{ item.id }}">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </a>
 
-            <a class="dropdown-item text-success"
-               href="{% url 'restock_inventory' item.id %}">
-
-                <i class="fas fa-plus-circle mr-2"></i>
-                Restock
-
-            </a>
-
-            <a class="dropdown-item text-warning"
-               href="{% url 'damaged_inventory' item.id %}">
-
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                Mark Damaged
-
-            </a>
-
-            <div class="dropdown-divider"></div>
-
-            <a class="dropdown-item text-danger"
-               data-toggle="modal"
-               data-target="#deleteModal{{ item.id }}">
-
-                <i class="fas fa-trash mr-2"></i>
-                Delete
-
-            </a>
-
-        </div>
-
-    </div>
-
-</div>
+                            </div>
 
                         </td>
 
                     </tr>
 
                     <!-- DELETE MODAL -->
-                    <div class="modal fade"
-                         id="deleteModal{{ item.id }}"
-                         tabindex="-1">
-
+                    <div class="modal fade" id="deleteModal{{ item.id }}" tabindex="-1">
                         <div class="modal-dialog modal-dialog-centered">
-
                             <div class="modal-content">
 
                                 <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        Delete Inventory
-                                    </h5>
-
-                                    <button type="button"
-                                            class="close"
-                                            data-dismiss="modal">
-
+                                    <h5 class="modal-title">Delete Inventory</h5>
+                                    <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal">
                                         <span>&times;</span>
-
                                     </button>
                                 </div>
 
                                 <div class="modal-body">
-
                                     Are you sure you want to delete
-                                    <strong>
-                                        {{ item.product_name }}
-                                    </strong>?
-
+                                    <strong>{{ item.product_name }}</strong>?
+                                    This action cannot be undone.
                                 </div>
 
                                 <div class="modal-footer">
-
-                                    <button type="button"
-                                            class="btn btn-secondary"
-                                            data-dismiss="modal">
-
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">
                                         No
-
                                     </button>
 
-                                    <a href="{% url 'delete_inventory' item.id %}"
-                                       class="btn btn-danger">
-
-                                        Yes Delete
-
-                                    </a>
-
+                                    <form method="POST" action="{% url 'delete_inventory' item.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger">
+                                            Yes, Delete
+                                        </button>
+                                    </form>
                                 </div>
 
                             </div>
-
                         </div>
-
                     </div>
 
                 {% empty %}
 
                     <tr>
-
                         <td colspan="6">
-
                             <div class="empty-state">
-
                                 <i class="fas fa-box-open"></i>
-
-                                <h4>
-                                    No Inventory Found
-                                </h4>
-
-                                <p>
-                                    Start by adding your first inventory item.
-                                </p>
-
+                                <h4>No Inventory Found</h4>
+                                <p>Start by adding your first inventory item.</p>
                             </div>
-
                         </td>
-
                     </tr>
 
                 {% endfor %}
@@ -794,58 +656,35 @@
 
             {% if queryset.has_other_pages %}
 
-<div class="inventory-pagination">
+            <div class="inventory-pagination">
 
-    {% if queryset.has_previous %}
+                {% if queryset.has_previous %}
+                    <a href="?page={{ queryset.previous_page_number }}&search={{ search|urlencode }}"
+                       class="page-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% endif %}
 
-        <a href="?page={{ queryset.previous_page_number }}&search={{ search }}"
-           class="page-btn">
+                {% for num in queryset.paginator.page_range %}
+                    {% if queryset.number == num %}
+                        <span class="page-btn active-page">{{ num }}</span>
+                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+                        <a href="?page={{ num }}&search={{ search|urlencode }}" class="page-btn">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
 
-            <i class="fas fa-chevron-left"></i>
+                {% if queryset.has_next %}
+                    <a href="?page={{ queryset.next_page_number }}&search={{ search|urlencode }}"
+                       class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
 
-        </a>
+            </div>
 
-    {% endif %}
-
-
-    {% for num in queryset.paginator.page_range %}
-
-        {% if queryset.number == num %}
-
-            <span class="page-btn active-page">
-
-                {{ num }}
-
-            </span>
-
-        {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
-
-            <a href="?page={{ num }}&search={{ search }}"
-               class="page-btn">
-
-                {{ num }}
-
-            </a>
-
-        {% endif %}
-
-    {% endfor %}
-
-
-    {% if queryset.has_next %}
-
-        <a href="?page={{ queryset.next_page_number }}&search={{ search }}"
-           class="page-btn">
-
-            <i class="fas fa-chevron-right"></i>
-
-        </a>
-
-    {% endif %}
-
-</div>
-
-{% endif %}
+            {% endif %}
 
         </div>
 
@@ -855,82 +694,44 @@
 
 </div>
 
-<!-- =========================================
-     EXPORT CSV
-========================================= -->
 <script>
-
 function exportTableToCSV() {
-
     let csv = [];
-
-    const rows = document.querySelectorAll("table tr");
+    const rows = document.querySelectorAll("#inventoryTable tr");
 
     rows.forEach(row => {
-
         let cols = row.querySelectorAll("td, th");
-
         let rowData = [];
-
         cols.forEach(col => {
-
-            rowData.push(
-                '"' + col.innerText.replace(/"/g, '""') + '"'
-            );
-
+            rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
         });
-
-        csv.push(rowData.join(","));
-
+        if (rowData.length) csv.push(rowData.join(","));
     });
 
-    const csvFile = new Blob(
-        [csv.join("\n")],
-        { type: "text/csv" }
-    );
-
+    const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
     const downloadLink = document.createElement("a");
-
     downloadLink.download = "inventory.csv";
-
-    downloadLink.href =
-        window.URL.createObjectURL(csvFile);
-
+    downloadLink.href = window.URL.createObjectURL(csvFile);
     downloadLink.style.display = "none";
-
     document.body.appendChild(downloadLink);
-
     downloadLink.click();
-
+    downloadLink.remove();
 }
-
 </script>
 
-<!-- =========================================
-     EXPORT PDF
-========================================= -->
-
 <script>
-
 async function exportTableToPDF() {
-
     const { jsPDF } = window.jspdf;
-
     const doc = new jsPDF();
 
     doc.setFontSize(16);
-
     doc.text("Inventory Report", 14, 20);
 
     let rows = [];
 
-    document.querySelectorAll("#inventoryTable tbody tr")
-    .forEach(row => {
-
+    document.querySelectorAll("#inventoryTable tbody tr").forEach(row => {
         let cols = row.querySelectorAll("td");
-
-        if(cols.length){
-
+        if (cols.length >= 5) {
             rows.push([
                 cols[0].innerText,
                 cols[1].innerText,
@@ -938,25 +739,133 @@ async function exportTableToPDF() {
                 cols[3].innerText,
                 cols[4].innerText
             ]);
-
         }
-
     });
 
+    if (!rows.length) {
+        doc.setFontSize(11);
+        doc.text("No inventory items to export.", 14, 35);
+        doc.save("inventory.pdf");
+        return;
+    }
+
     let y = 35;
-
     rows.forEach(row => {
-
         doc.text(row.join(" | "), 14, y);
-
         y += 10;
-
     });
 
     doc.save("inventory.pdf");
-
 }
+</script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ---- Action dropdown menu (portal to body to avoid clipping) ----
+    let openMenu = null;
+    let openTrigger = null;
+
+    function closeMenu() {
+        if (openMenu) {
+            openMenu.classList.remove("show");
+            if (openMenu._homeParent) {
+                openMenu._homeParent.insertBefore(openMenu, openMenu._homeNextSibling || null);
+            }
+        }
+        if (openTrigger) openTrigger.setAttribute("aria-expanded", "false");
+        openMenu = null;
+        openTrigger = null;
+    }
+
+    function positionMenu(trigger, menu) {
+        const rect = trigger.getBoundingClientRect();
+        const menuWidth = menu.offsetWidth || 180;
+        let left = rect.right - menuWidth;
+        let top = rect.bottom + 6;
+
+        if (left < 8) left = 8;
+        if (left + menuWidth > window.innerWidth - 8) {
+            left = window.innerWidth - menuWidth - 8;
+        }
+
+        const menuHeight = menu.offsetHeight || 0;
+        if (top + menuHeight > window.innerHeight - 8) {
+            top = rect.top - menuHeight - 6;
+        }
+
+        menu.style.top = top + "px";
+        menu.style.left = left + "px";
+    }
+
+    document.querySelectorAll(".action-menu-btn").forEach(function (trigger) {
+        trigger.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const menu = document.getElementById(trigger.getAttribute("data-menu-target"));
+            if (!menu) return;
+
+            if (openMenu === menu) {
+                closeMenu();
+                return;
+            }
+
+            closeMenu();
+
+            menu._homeParent = menu.parentNode;
+            menu._homeNextSibling = menu.nextSibling;
+
+            document.body.appendChild(menu);
+            menu.classList.add("show");
+            positionMenu(trigger, menu);
+
+            trigger.setAttribute("aria-expanded", "true");
+            openMenu = menu;
+            openTrigger = trigger;
+        });
+    });
+
+    document.addEventListener("click", function (e) {
+        if (openMenu && !openMenu.contains(e.target)) {
+            closeMenu();
+        }
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeMenu();
+    });
+
+    window.addEventListener("scroll", function () {
+        if (openMenu && openTrigger) positionMenu(openTrigger, openMenu);
+    }, true);
+
+    window.addEventListener("resize", function () {
+        if (openMenu) closeMenu();
+    });
+
+    // ---- Search box: clear button ----
+    const searchWrap = document.getElementById("inventorySearchWrap");
+    const searchInput = document.getElementById("inventorySearch");
+    const searchClearBtn = document.getElementById("searchClearBtn");
+
+    if (searchWrap && searchInput && searchClearBtn) {
+        function syncClearVisibility() {
+            searchWrap.classList.toggle("has-value", searchInput.value.trim().length > 0);
+        }
+
+        syncClearVisibility();
+
+        searchInput.addEventListener("input", syncClearVisibility);
+
+        searchClearBtn.addEventListener("click", function () {
+            searchInput.value = "";
+            syncClearVisibility();
+            searchInput.focus();
+        });
+    }
+
+});
 </script>
 
 {% endblock %}

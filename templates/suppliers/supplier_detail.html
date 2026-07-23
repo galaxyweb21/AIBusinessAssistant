@@ -1,175 +1,340 @@
 {% extends 'base/base.html' %}
 {% block main_content %}
 
+<style>
+
+.supplier-detail-wrapper{
+    padding:24px;
+}
+
+.supplier-detail-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:18px;
+    margin-bottom:24px;
+}
+
+.supplier-detail-header h3{
+    margin:0 0 6px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.supplier-detail-header p{
+    margin:0;
+    color:var(--text-muted);
+}
+
+.supplier-detail-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.detail-btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 18px;
+    font-weight:600;
+    text-decoration:none !important;
+    transition:.25s ease;
+    cursor:pointer;
+}
+
+.detail-btn-primary{
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
+    color:#fff !important;
+}
+
+.detail-btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 30px rgba(99,102,241,0.25);
+}
+
+.detail-btn-light{
+    background:var(--bg-card);
+    color:var(--text-main) !important;
+    border:1px solid var(--border);
+}
+
+.detail-btn-light:hover{
+    background:var(--hover-bg);
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:18px;
+    margin-bottom:30px;
+}
+
+.kpi-card{
+    position:relative;
+    background:linear-gradient(145deg, var(--bg-card), var(--bg-main));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    overflow:hidden;
+    transition:.3s;
+}
+
+.kpi-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.kpi-card small{
+    display:block;
+    color:var(--text-muted);
+    margin-bottom:8px;
+}
+
+.kpi-card h3{
+    margin:0;
+    font-weight:800;
+    color:var(--text-main);
+    font-size:22px;
+}
+
+.kpi-icon{
+    position:absolute;
+    top:16px;
+    right:16px;
+    font-size:24px;
+    opacity:.1;
+}
+
+.kpi-blue{ border-left:4px solid #3b82f6; }
+.kpi-green{ border-left:4px solid #10b981; }
+.kpi-net{ border-left:4px solid #0ea5e9; }
+.kpi-purple{ border-left:4px solid #8b5cf6; }
+
+.detail-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:24px;
+}
+
+.detail-card h5{
+    color:var(--text-main);
+    font-weight:700;
+    margin-bottom:18px;
+}
+
+.table-responsive{
+    overflow-x:auto;
+    border-radius:14px;
+    border:1px solid var(--border);
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table thead{
+    background:rgba(99,102,241,.06);
+}
+
+.table th{
+    padding:16px;
+    color:var(--text-main);
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+}
+
+.table td{
+    padding:16px;
+    color:var(--text-main);
+    border-top:1px solid var(--border);
+}
+
+.table tbody tr:hover{
+    background:var(--hover-bg);
+}
+
+.status-badge{
+    padding:8px 14px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    text-transform:capitalize;
+}
+
+.status-pending{ background:rgba(245,158,11,.15); color:#f59e0b; }
+.status-partial{ background:rgba(59,130,246,.15); color:#3b82f6; }
+.status-paid{ background:rgba(16,185,129,.15); color:#10b981; }
+.status-received{ background:rgba(99,102,241,.15); color:#6366f1; }
+.status-draft{ background:rgba(148,163,184,.18); color:#64748b; }
+.status-cancelled{ background:rgba(239,68,68,.15); color:#ef4444; }
+
+.detail-pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    padding:20px 0 0;
+}
+
+.page-btn{
+    min-width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    text-decoration:none !important;
+    border:1px solid var(--border);
+    background:var(--bg-card);
+    color:var(--text-main);
+    font-weight:700;
+    transition:.25s ease;
+}
+
+.page-btn:hover{
+    transform:translateY(-2px);
+    background:rgba(99,102,241,.08);
+}
+
+.active-page{
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
+    color:#fff;
+    border:none;
+}
+
+</style>
+
 <div class="content-wrapper">
-
-    <div class="card">
-
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-
-                    <h3>{{ supplier.name }}</h3>
-
-                    <p class="text-muted">
-
-                        {{ supplier.phone }}
-
-                        {% if supplier.email %}
-                        | {{ supplier.email }}
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="row">
-
-                <div class="col-lg-3">
-
-                    <div class="kpi-card kpi-blue">
-
-                        <small>Total Purchases</small>
-
-                        <h3>{{ total_orders }}</h3>
-
-                        <i class="fas fa-shopping-cart kpi-icon"></i>
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-lg-3">
-
-                    <div class="kpi-card kpi-green">
-
-                        <small>Total Amount</small>
-
-                        <h3>GHS {{ total_purchase_amount }}</h3>
-
-                        <i class="fas fa-money-bill-wave kpi-icon"></i>
-
-                    </div>
-
-                </div>
-
-                <div class="col-lg-3">
-
-                    <div class="kpi-card kpi-net">
-
-                        <small>Total Paid</small>
-
-                        <h3>GHS {{ total_paid }}</h3>
-
-                        <i class="fas fa-check-circle kpi-icon"></i>
-
-                    </div>
-
-                </div>
-
-
-                <div class="col-lg-3">
-
-                    <div class="kpi-card kpi-purple">
-
-                        <small>Outstanding</small>
-
-                        <h3>GHS {{ outstanding_amount }}</h3>
-
-                        <i class="fas fa-wallet kpi-icon"></i>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <hr>
-
-
-            <h5 class="mb-3">
-
-                Purchase History
-
-            </h5>
-
-
-            <div class="table-responsive">
-
-                <table class="table">
-
-                    <thead>
-
-                    <tr>
-
-                        <th>Reference</th>
-
-                        <th>Date</th>
-
-                        <th>Status</th>
-
-                        <th>Total</th>
-
-                        <th></th>
-
-                    </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                    {% for purchase in purchases %}
-
-                    <tr>
-
-                        <td>{{ purchase.reference_number }}</td>
-                        <td>{{ purchase.created_at|date:"d M Y" }}</td>
-                        <td>{{ purchase.status }}</td>
-                        <td>GHS {{ purchase.total_cost }}</td>
-                        <td>
-                            <a href="{% url 'view_purchase' purchase.id %}"
-                               class="btn btn-sm btn-primary">
-
-                                View
-
-                            </a>
-
-                        </td>
-
-                    </tr>
-
-                    {% empty %}
-
-                    <tr>
-
-                        <td colspan="5"
-                            class="text-center">
-
-                            No purchases found
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
+<section class="content supplier-detail-wrapper">
+
+    <div class="supplier-detail-header">
+        <div>
+            <h3>{{ supplier.name }}</h3>
+            <p>
+                {{ supplier.phone|default:"No phone on file" }}
+                {% if supplier.email %} | {{ supplier.email }}{% endif %}
+            </p>
+        </div>
+
+        <div class="supplier-detail-actions">
+            <a href="{% url 'update_supplier' supplier.id %}" class="detail-btn detail-btn-light">
+                <i class="fas fa-edit"></i> Edit Supplier
+            </a>
+            <a href="{% url 'create_purchase' %}" class="detail-btn detail-btn-primary">
+                <i class="fas fa-plus"></i> New Purchase
+            </a>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+
+        <div class="kpi-card kpi-blue">
+            <i class="fas fa-shopping-cart kpi-icon"></i>
+            <small>Total Purchases</small>
+            <h3>{{ total_orders }}</h3>
+        </div>
+
+        <div class="kpi-card kpi-green">
+            <i class="fas fa-money-bill-wave kpi-icon"></i>
+            <small>Total Amount</small>
+            <h3>GHS {{ total_purchase_amount }}</h3>
+        </div>
+
+        <div class="kpi-card kpi-net">
+            <i class="fas fa-check-circle kpi-icon"></i>
+            <small>Total Paid</small>
+            <h3>GHS {{ total_paid }}</h3>
+        </div>
+
+        <div class="kpi-card kpi-purple">
+            <i class="fas fa-wallet kpi-icon"></i>
+            <small>Outstanding</small>
+            <h3>GHS {{ outstanding_amount }}</h3>
         </div>
 
     </div>
 
+    <div class="detail-card">
+
+        <h5>Purchase History</h5>
+
+        <div class="table-responsive">
+
+            <table class="table">
+
+                <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.reference_number }}</td>
+                    <td>{{ purchase.created_at|date:"d M Y" }}</td>
+                    <td>
+                        <span class="status-badge status-{{ purchase.status }}">
+                            {{ purchase.get_status_display }}
+                        </span>
+                    </td>
+                    <td>GHS {{ purchase.total_cost }}</td>
+                    <td>
+                        <a href="{% url 'view_purchase' purchase.id %}" class="detail-btn detail-btn-light">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No purchases found</td>
+                </tr>
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% if purchases.has_other_pages %}
+        <div class="detail-pagination">
+
+            {% if purchases.has_previous %}
+                <a href="?page={{ purchases.previous_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% endif %}
+
+            {% for num in purchases.paginator.page_range %}
+                {% if purchases.number == num %}
+                    <span class="page-btn active-page">{{ num }}</span>
+                {% elif num > purchases.number|add:'-3' and num < purchases.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if purchases.has_next %}
+                <a href="?page={{ purchases.next_page_number }}" class="page-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+    </div>
+
+</section>
 </div>
 
 {% endblock %}

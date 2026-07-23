@@ -11,8 +11,11 @@ from . import views
 
 urlpatterns = [
     path('inventory/', views.inventory, name="inventory"),
-    path('update_inventory/<str:pk>/', views.update_inventory, name="update_inventory"),
-    path('delete_inventory/<str:pk>/', views.delete_inventory, name="delete_inventory"),
+    path('inventory/<int:pk>/update/', views.update_inventory, name="update_inventory"),
+    # path('update_inventory/<str:pk>/', views.update_inventory, name="update_inventory"),
+    # path('delete_inventory/<str:pk>/', views.delete_inventory, name="delete_inventory"),
+
+    path('inventory/<int:pk>/delete/', views.delete_inventory, name="delete_inventory"),
     path('view_inventory/', views.view_inventory, name="view_inventory"),
     path('restock_inventory/<int:pk>/', views.restock_inventory, name='restock_inventory'),
     path('damaged_inventory/<int:pk>/', views.damaged_inventory, name='damaged_inventory'),
@@ -30,5 +33,10 @@ urlpatterns = [
     path("purchases/create/", views.create_purchase, name="create_purchase"),
     path("purchases/<int:pk>/", views.view_purchase, name="view_purchase"),
     path("purchases/<int:pk>/post/", views.post_purchase, name="post_purchase"),
+
+
+    path("generate-sku/", views.generate_sku, name="generate_sku"),
+    path("generate-barcode/", views.generate_barcode, name="generate_barcode"),
+    path("generate-qr/", views.generate_qr, name="generate_qr"),
 
 ]

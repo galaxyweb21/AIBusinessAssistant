@@ -23,45 +23,14 @@ def get_file_path(request, filename):
 
 class AuditLog(models.Model):
 
-    user = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
-
-    action = models.CharField(
-        max_length=100
-    )
-
-    description = models.TextField(
-        blank=True,
-        null=True
-    )
-
-    # generic relation (works with Customer, Sales,
-    # Inventory, Staff, etc.)
-
-    content_type = models.ForeignKey(
-        ContentType,
-        on_delete=models.CASCADE, null=True, blank=True
-    )
-
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
     object_id = models.PositiveIntegerField()
-
-    content_object = GenericForeignKey(
-        "content_type",
-        "object_id"
-    )
-
-    ip_address = models.GenericIPAddressField(
-        blank=True,
-        null=True
-    )
-
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    content_object = GenericForeignKey("content_type", "object_id")
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']

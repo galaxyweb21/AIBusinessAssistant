@@ -1,29 +1,115 @@
 from django.db import models
 from business.models import Business
+from catalog.models import Category
 from django.conf import settings
 
 from django.utils import timezone
 from decimal import Decimal
 from django.db import transaction
 from django.contrib.auth.models import User
+import uuid
+from django.utils.text import slugify
+
+
+MOVEMENT_TYPES = (
+    ("OPENING", "Opening Stock"),
+    ("RESTOCK", "Restock"),
+    ("SALE", "Sale"),
+    ("DAMAGE", "Damage"),
+    ("ADJUSTMENT", "Adjustment"),
+    ("RETURN_IN", "Customer Return"),
+    ("RETURN_OUT", "Supplier Return"),
+    ("TRANSFER_IN", "Transfer In"),
+    ("TRANSFER_OUT", "Transfer Out"),
+)
+
+
+UNIT_CHOICES = (
+    ("pcs", "Pieces"),
+    ("box", "Box"),
+    ("pack", "Pack"),
+    ("kg", "Kilogram"),
+    ("g", "Gram"),
+    ("ltr", "Litre"),
+    ("ml", "Millilitre"),
+    ("carton", "Carton"),
+    ("bag", "Bag"),
+    ("roll", "Roll"),
+)
+
+STATUS_CHOICES = (
+    ("active", "Active"),
+    ("inactive", "Inactive"),
+)
 
 
 class Inventory(models.Model):
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
-    barcode = models.CharField(max_length=50, unique=True, null=True, blank=True)
     product_name = models.CharField(max_length=50)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products",
+    )
     stock_quantity = models.IntegerField(default=0)
-    # low_stock = models.PositiveIntegerField(default=5)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='product/', blank=True, null=True)
+
+    # ==========================================
+    # PRODUCT MASTER
+    # ==========================================
+    sku = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    barcode = models.CharField(max_length=120, blank=True, null=True, db_index=True)
+    qr_code = models.CharField(max_length=120, blank=True, null=True)
+    brand = models.CharField(max_length=120, blank=True)
+    unit = models.CharField(max_length=20, choices=UNIT_CHOICES, default="pcs")
+    description = models.TextField(blank=True)
+    minimum_stock = models.PositiveIntegerField(default=0)
+    maximum_stock = models.PositiveIntegerField(default=0)
+    reorder_level = models.PositiveIntegerField(default=0)
+    reorder_quantity = models.PositiveIntegerField(default=0)
+    track_stock = models.BooleanField(default=True)
+    featured = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    product_image = models.ImageField(upload_to="product/", blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        if not self.sku:
+            self.sku = f"SKU-{uuid.uuid4().hex[:8].upper()}"
+
+        if not self.barcode:
+            self.barcode = self.sku.replace("SKU-", "")
+
+        if not self.qr_code:
+            self.qr_code = self.barcode
+
+        super().save(*args, **kwargs)
+
+    @property
     def is_low_stock(self):
-        return self.stock_quantity <= 5
+        return self.stock_quantity <= self.minimum_stock
+
+    @property
+    def is_out_of_stock(self):
+        return self.stock_quantity <= 0
+
+    @property
+    def profit(self):
+        return self.selling_price - self.cost_price
+
+    @property
+    def stock_value(self):
+        return self.stock_quantity * self.cost_price
+
+    @property
+    def retail_value(self):
+        return self.stock_quantity * self.selling_price
 
     def __str__(self):
-        return self.product_name
+        return f"{self.product_name} ({self.sku})"
 
 
 class InventoryStockHistory(models.Model):
@@ -581,3 +667,66 @@ class SupplierPayment(models.Model):
     def __str__(self):
 
         return self.reference
+
+
+class InventoryMovement(models.Model):
+
+    business = models.ForeignKey(
+        Business,
+        on_delete=models.CASCADE,
+        related_name="inventory_movements"
+    )
+
+    product = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name="movements"
+    )
+
+    movement_type = models.CharField(
+        max_length=20,
+        choices=MOVEMENT_TYPES
+    )
+
+    quantity = models.PositiveIntegerField()
+
+    before_quantity = models.PositiveIntegerField(default=0)
+
+    after_quantity = models.PositiveIntegerField(default=0)
+
+    unit_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00")
+    )
+
+    total_cost = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00")
+    )
+
+    reference = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.product} - {self.movement_type}"

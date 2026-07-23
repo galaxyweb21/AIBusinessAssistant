@@ -1012,8 +1012,8 @@ body.sidebar-collapse .menu-badge {
                     </li>
 
                     <!-- INVENTORY -->
-                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}menu-open{% endif %}">
-                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}active{% endif %}">
+                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}active{% endif %}">
                             <span class="menu-icon"><i class="fas fa-boxes"></i></span>
                             <span class="menu-text">
                                 Inventory
@@ -1024,6 +1024,11 @@ body.sidebar-collapse .menu-badge {
                             <i class="right fas fa-chevron-right"></i>
                         </a>
                         <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'category_list' %}" class="nav-link {% if request.resolver_match.url_name == 'category_list' %}active{% endif %}" data-title="Inventory">
+                                    <i class="far fa-circle nav-icon"></i> Category
+                                </a>
+                            </li>
                             <li class="nav-item">
                                 <a href="{% url 'inventory' %}" class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}" data-title="Inventory">
                                     <i class="far fa-circle nav-icon"></i> Add Product
