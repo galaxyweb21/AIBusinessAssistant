@@ -20,6 +20,7 @@ from sales.utils import update_business_metrics
 from dashboard.models import BusinessAlert
 from dashboard.services.alerts import generate_business_alerts
 from dashboard.services.ai.ai import analyze_with_ai
+from accounts.get_business import get_business
 
 
 def get_user_business(user):
@@ -54,9 +55,7 @@ class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        business = get_user_business(
-            request.user
-        )
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -76,9 +75,7 @@ class InventoryModalAPIView(APIView):
 
     def get(self, request):
 
-        business = get_user_business(
-            request.user
-        )
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -119,9 +116,8 @@ class InventoryModalAPIView(APIView):
 
 @login_required
 def index(request):
-    business = get_user_business(
-        request.user
-    )
+
+    business = get_business(request)
 
     if not business:
         return render(
@@ -159,9 +155,8 @@ def index(request):
 
 @login_required
 def mark_ai_read(request, pk):
-    business = get_user_business(
-        request.user
-    )
+
+    business = get_business(request)
 
     if not business:
         return redirect("dashboard")
@@ -178,40 +173,13 @@ def mark_ai_read(request, pk):
     return redirect('dashboard')
 
 
-# @login_required
-# def index(request):
-#     uqueryset = request.user
-#     # squeryset = StaffProfile.objects.get(staff_id=request.user.id)
-#     try:
-#         business = Business.objects.get(owner=request.user)
-#     except Business.DoesNotExist:
-#         return render(request, "dashboard.html", {
-#             "error": "No business found"
-#         })
-#
-#     summary = get_dashboard_data(business)
-#     ai_data = get_business_insights(request.user)
-#
-#     context = {
-#         "uqueryset": uqueryset,
-#         "ai_insights": ai_data["insights"],
-#         "total_revenue": summary["total_revenue"],
-#         "total_profit": summary["total_profit"],
-#         "total_sales": summary["total_sales"],
-#         "best_product": summary["best_product"],
-#         "low_stock_count": summary["low_stock_count"],
-#     }
-#
-#     return render(request, "dashboard/index.html", context)
-
-
 class SalesChartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         period = request.GET.get("period", "7days")
 
-        business = Business.objects.filter(owner=request.user).first()
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -230,7 +198,7 @@ class TopProductsAPIView(APIView):
     def get(self, request):
         period = request.GET.get("period", "7days")
 
-        business = Business.objects.filter(owner=request.user).first()
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -247,9 +215,8 @@ class AIInsightsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        business = get_user_business(
-            request.user
-        )
+
+        business = get_business(request)
 
         if not business:
 
@@ -279,7 +246,7 @@ class ProfitAnalyticsAPIView(APIView):
     def get(self, request):
         period = request.GET.get("period", "7days")
 
-        business = Business.objects.filter(owner=request.user).first()
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -301,9 +268,7 @@ class AIChatAPIView(APIView):
 
         user = request.user
 
-        business = get_user_business(
-            request.user
-        )
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -370,9 +335,7 @@ class AIChatHistoryAPIView(APIView):
 
     def get(self, request):
 
-        business = get_user_business(
-            request.user
-        )
+        business = get_business(request)
 
         if not business:
 
@@ -411,9 +374,7 @@ class BusinessAlertsAPIView(APIView):
 
     def get(self, request):
 
-        business = get_user_business(
-            request.user
-        )
+        business = get_business(request)
 
         if not business:
             return Response({"alerts": []})
@@ -445,9 +406,7 @@ class SalesForecastAPIView(APIView):
 
     def get(self, request):
 
-        business = Business.objects.filter(
-            owner_id=request.user.id
-        ).first()
+        business = get_business(request)
 
         if not business:
             return Response({
@@ -475,9 +434,7 @@ class InventoryForecastAPIView(APIView):
 
     def get(self, request):
 
-        business = Business.objects.filter(
-            owner_id=request.user.id
-        ).first()
+        business = get_business(request)
 
         if not business:
             return Response([])
@@ -491,9 +448,8 @@ class BusinessRiskAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        business = get_user_business(
-            request.user
-        )
+
+        business = get_business(request)
 
         if not business:
             return Response([])

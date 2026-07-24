@@ -336,58 +336,20 @@ class InventoryStockHistory(models.Model):
 
 class Purchase(models.Model):
 
-    business = models.ForeignKey(
-        'business.Business',
-        on_delete=models.CASCADE
-    )
-
-    supplier = models.ForeignKey(
-        'Supplier',
-        on_delete=models.CASCADE
-    )
-
-    reference_number = models.CharField(
-        max_length=50,
-        unique=True
-    )
+    business = models.ForeignKey('business.Business', on_delete=models.CASCADE)
+    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
+    reference_number = models.CharField(max_length=50, unique=True)
 
     # =========================
     # FINANCIALS
     # =========================
 
-    subtotal = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
-    )
-
-    purchase_discount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
-    )
-
-    purchase_tax_percent = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=0
-    )
-
-    total_cost = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
-    )
-
-    paid_amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        default=0
-    )
-
-    payment_status = models.CharField(
-        max_length=20,
-        choices=[
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2,  default=0)
+    purchase_discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    purchase_tax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    total_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payment_status = models.CharField(max_length=20, choices=[
             ("pending", "Pending"),
             ("partial", "Partial"),
             ("paid", "Paid"),
