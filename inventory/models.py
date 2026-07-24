@@ -313,6 +313,14 @@ class InventoryStockHistory(models.Model):
             return self.received_by.get_full_name() or self.received_by.username
         return "-"
 
+    @property
+    def quantity_changed(self):
+        return self.quantity
+
+    @property
+    def performed_by(self):
+        return self.received_by
+
     def __str__(self):
         return (
             f"{self.inventory.product_name} "

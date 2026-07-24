@@ -790,7 +790,10 @@ body.dark-mode .refund-item-card:hover{
     box-shadow: 0 10px 25px rgba(0,0,0,.35);
 }
 
-
+.bg-warning{
+    background:rgba(245,158,11,.12) !important;
+    color:#f59e0b !important;
+}
 
 /* ====================================
    ERP TABS (FIXED - CLEAN + DARK SAFE)
@@ -958,6 +961,9 @@ body.dark-mode .tab-btn.active{
             <a href="?tab=refunded" class="sales-tab {% if tab == 'refunded' %}active-tab{% endif %}">
                 Refunded <span>{{ refunded_sales_count }}</span>
             </a>
+            <a href="?tab=partial" class="sales-tab {% if tab == 'partial' %}active-tab{% endif %}">
+    Partial Refunds <span>{{ partial_refund_sales_count }}</span>
+</a>
             <a href="?tab=proforma" class="sales-tab {% if tab == 'proforma' %}active-tab{% endif %}">
                 Proforma <span>{{ proforma_sales_count }}</span>
             </a>
@@ -1015,12 +1021,14 @@ body.dark-mode .tab-btn.active{
                             </td>
                             <td>
                                 {% if sale.status == 'Refunded' %}
-                                    <span class="badge bg-danger">Refunded</span>
-                                {% elif sale.status == 'Proforma' %}
-                                    <span class="badge bg-secondary">Pro-forma</span>
-                                {% else %}
-                                    <span class="badge bg-success">Completed</span>
-                                {% endif %}
+    <span class="badge bg-danger">Refunded</span>
+{% elif sale.status == 'Partially Refunded' %}
+    <span class="badge bg-warning">Partial Refund</span>
+{% elif sale.status == 'Proforma' %}
+    <span class="badge bg-secondary">Pro-forma</span>
+{% else %}
+    <span class="badge bg-success">Completed</span>
+{% endif %}
                             </td>
                             <td>
                                 <strong>{{ sale.created_at|date:"d M Y" }}</strong><br>
@@ -1158,6 +1166,19 @@ body.dark-mode .tab-btn.active{
                     <div class="text-muted">Loading items...</div>
                 </div>
 
+                <div style="margin-top:14px;">
+    <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">
+        Reason (optional)
+    </label>
+    <textarea
+        name="reason"
+        rows="2"
+        style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--border);
+               background:var(--bg-main); color:var(--text-main); resize:vertical;"
+        placeholder="e.g. Customer changed mind, damaged item..."
+    ></textarea>
+</div>
+
                 <button type="submit"
                         class="sales-btn sales-btn-primary w-100">
 
@@ -1241,7 +1262,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ====================================
-    // OPEN SALES DRAWER (UNCHANGED CORE)
+    // OPEN SALES DRAWER
     // ====================================
     async function openDrawer(id) {
 
@@ -1275,11 +1296,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ====================================
-    // ERP HEADER (YOUR ORIGINAL STYLE FIXED LIGHTLY)
+    // ERP HEADER
     // ====================================
     function renderERP(data) {
 
         const itemsCount = (data.items || []).length;
+
+        const statusBadgeClass =
+            data.status === 'Completed' ? 'bg-success' :
+            data.status === 'Partially Refunded' ? 'bg-warning' :
+            data.status === 'Proforma' ? 'bg-secondary' :
+            'bg-danger';
 
         drawerContent.innerHTML = `
         <div style="padding:15px;border-bottom:1px solid var(--border);">
@@ -1293,9 +1320,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </small>
                 </div>
 
-                <span class="badge ${
-                    data.status === 'Completed' ? 'bg-success' : 'bg-danger'
-                }">
+                <span class="badge ${statusBadgeClass}">
                     ${data.status || '-'}
                 </span>
 
@@ -1383,25 +1408,50 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    // ====================================
+    // AUDIT — includes refund history
+    // ====================================
     function renderAudit() {
+
+        const refundHistoryHtml = (currentSale.refunds || []).length
+            ? currentSale.refunds.map(r => `
+                <div style="padding:12px;border:1px solid var(--border);border-radius:12px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <strong>${r.date}</strong>
+                        <small style="color:var(--text-muted);">by ${r.processed_by}</small>
+                    </div>
+                    ${r.reason && r.reason !== '-' ? `<div style="margin-top:4px;font-size:13px;color:var(--text-muted);">${r.reason}</div>` : ''}
+                    <div style="margin-top:8px;">
+                        ${r.items.map(i => `
+                            <div style="font-size:13px;padding:4px 0;">
+                                ${i.name} × ${i.qty} — Gh¢${i.total.toFixed(2)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')
+            : `<p class="text-muted">No refunds recorded for this sale.</p>`;
+
         document.getElementById('tabContent').innerHTML = `
             <p><b>Refund Allowed:</b> ${currentSale.can_refund ? 'Yes' : 'No'}</p>
-            <p><b>Refund Date:</b> ${currentSale.refund_date || '-'}</p>
+            <p><b>Last Refund Date:</b> ${currentSale.refund_date || '-'}</p>
+            <div style="margin-top:14px;">
+                <h6 style="font-weight:800;margin-bottom:10px;">Refund History</h6>
+                ${refundHistoryHtml}
+            </div>
         `;
     }
 
     // ====================================
-    // CLOSE DRAWER FIXED
+    // CLOSE DRAWER
     // ====================================
     window.closeDrawer = function () {
         document.getElementById('saleDrawer')?.classList.remove('open');
     };
 
 });
-
-
-
 </script>
+
 
 <!-- ====================================
      REFUND DRAWER LOGIC (FIXED + MODERN UI)

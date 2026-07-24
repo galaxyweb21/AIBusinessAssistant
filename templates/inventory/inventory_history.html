@@ -294,6 +294,39 @@
     border:none;
 }
 
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:14px;
+    margin-bottom:20px;
+}
+
+.kpi-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:16px 18px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.03);
+}
+
+.kpi-card .kpi-label{
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:6px;
+}
+
+.kpi-card .kpi-value{
+    font-size:24px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.kpi-card.accent-green .kpi-value{ color:#10b981; }
+.kpi-card.accent-red .kpi-value{ color:#ef4444; }
+.kpi-card.accent-blue .kpi-value{ color:#6366f1; }
+
 @media(max-width:768px){
     .history-wrapper{ padding:14px; }
     .history-toolbar{ flex-direction:column; align-items:stretch; }
@@ -302,71 +335,130 @@
     .history-page-header{ flex-direction:column; align-items:flex-start; }
 }
 
+
 </style>
 
 <div class="content-wrapper">
-<section class="content history-wrapper">
+    <section class="content history-wrapper">
 
-    <div class="history-page-header">
-        <div>
-            <h2>Inventory History</h2>
-            <p>Full audit trail of every stock movement.</p>
+        <div class="history-page-header">
+            <div>
+                <h2>Inventory History</h2>
+                <p>Full audit trail of every stock movement.</p>
+            </div>
+
+            <a href="{% url 'view_inventory' %}" class="history-btn history-btn-light">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Inventory
+            </a>
         </div>
 
-        <a href="{% url 'view_inventory' %}" class="history-btn history-btn-light">
-            <i class="fas fa-arrow-left me-2"></i>
-            Back to Inventory
-        </a>
+        <div class="kpi-grid">
+
+    <div class="kpi-card accent-blue">
+        <div class="kpi-label">Total Movements</div>
+        <div class="kpi-value">{{ total_movements }}</div>
     </div>
 
-    <div class="history-page-card">
+    <div class="kpi-card">
+        <div class="kpi-label">Today</div>
+        <div class="kpi-value">{{ today_movements }}</div>
+    </div>
 
-        <!-- TABS -->
-        <div class="history-tabs">
-            {% for tab_key, tab_label in tabs %}
+    <div class="kpi-card accent-green">
+        <div class="kpi-label">Stock In</div>
+        <div class="kpi-value">{{ total_stock_in }}</div>
+    </div>
+
+    <div class="kpi-card accent-red">
+        <div class="kpi-label">Stock Out</div>
+        <div class="kpi-value">{{ total_stock_out }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Adjustments</div>
+        <div class="kpi-value">{{ adjustment_count }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Damaged</div>
+        <div class="kpi-value">{{ damaged_count }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Transfers</div>
+        <div class="kpi-value">{{ transfer_count }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Returns</div>
+        <div class="kpi-value">{{ return_count }}</div>
+    </div>
+
+</div>
+
+        <div class="history-page-card">
+
+            <!-- TABS -->
+            <div class="history-tabs">
+                {% for tab_key, tab_label in tabs %}
                 <a href="?tab={{ tab_key }}{% if search %}&search={{ search|urlencode }}{% endif %}"
                    class="history-tab {% if tab == tab_key %}active{% endif %}">
                     {{ tab_label }}
                 </a>
-            {% endfor %}
-        </div>
+                {% endfor %}
+            </div>
 
-        <!-- TOOLBAR -->
-        <div class="history-toolbar">
+            <!-- TOOLBAR -->
+            <div class="history-toolbar">
 
-            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
-                <input type="hidden" name="tab" value="{{ tab }}">
+                <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+                    <input type="hidden" name="tab" value="{{ tab }}">
 
-                <div class="history-search">
-                    <i class="fas fa-search"></i>
-                    <input
-                        type="text"
-                        name="search"
-                        value="{{ search }}"
-                        placeholder="Search by product, reference, or user...">
-                </div>
+                    <div class="history-search">
+                        <i class="fas fa-search"></i>
+                        <input
+                                type="text"
+                                name="search"
+                                value="{{ search }}"
+                                placeholder="Search by product, reference, or user...">
+                    </div>
 
-                <button type="submit" class="history-btn history-btn-primary">
-                    <i class="fas fa-search me-2"></i>
-                    Search
-                </button>
+                    <button type="submit" class="history-btn history-btn-primary">
+                        <i class="fas fa-search me-2"></i>
+                        Search
+                    </button>
 
-                {% if search %}
+                    {% if search %}
                     <a href="?tab={{ tab }}" class="history-btn history-btn-light">
                         <i class="fas fa-times me-2"></i>
                         Clear
                     </a>
-                {% endif %}
-            </form>
+                    {% endif %}
+                </form>
 
-        </div>
+                <a
+                        href="{% url 'export_inventory_history_csv' %}?tab={{ tab }}&search={{ search }}&supplier={{ supplier }}&product={{ product }}&staff={{ staff }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                        class="history-btn history-btn-light">
+                    <i class="fas fa-file-csv me-2"></i>
+                    Export CSV
+                </a>
 
-        <!-- TABLE -->
-        <div class="history-table-wrap">
+                <a
+                        href="{% url 'export_inventory_history_pdf' %}?tab={{ tab }}&search={{ search }}&supplier={{ supplier }}&product={{ product }}&staff={{ staff }}&date_from={{ date_from }}&date_to={{ date_to }}"
+                        class="history-btn history-btn-light">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Export PDF
+                </a>
 
-            <table class="history-table">
+            </div>
 
-                <thead>
+            <!-- TABLE -->
+            <div class="history-table-wrap">
+
+                <table class="history-table">
+
+                    <thead>
                     <tr>
                         <th>Product</th>
                         <th>Action</th>
@@ -375,21 +467,21 @@
                         <th>Performed By</th>
                         <th>Date</th>
                     </tr>
-                </thead>
+                    </thead>
 
-                <tbody>
+                    <tbody>
 
-                {% for record in queryset %}
+                    {% for record in queryset %}
 
                     <tr>
 
                         <td>
                             {% if record.inventory %}
-                                <a href="{% url 'update_inventory' record.inventory.id %}" class="product-link">
-                                    {{ record.inventory.product_name }}
-                                </a>
+                            <a href="{% url 'update_inventory' record.inventory.id %}" class="product-link">
+                                {{ record.inventory.product_name }}
+                            </a>
                             {% else %}
-                                <span style="color:var(--text-muted);">Deleted product</span>
+                            <span style="color:var(--text-muted);">Deleted product</span>
                             {% endif %}
                         </td>
 
@@ -414,9 +506,9 @@
 
                         <td>
                             {% if record.performed_by %}
-                                {{ record.performed_by.username }}
+                            {{ record.performed_by.username }}
                             {% else %}
-                                <span style="color:var(--text-muted);">System</span>
+                            <span style="color:var(--text-muted);">System</span>
                             {% endif %}
                         </td>
 
@@ -426,7 +518,7 @@
 
                     </tr>
 
-                {% empty %}
+                    {% empty %}
 
                     <tr>
                         <td colspan="6">
@@ -435,58 +527,58 @@
                                 <h4>No Activity Found</h4>
                                 <p>
                                     {% if search or tab != "all" %}
-                                        Try adjusting your search or filter.
+                                    Try adjusting your search or filter.
                                     {% else %}
-                                        Stock movements will appear here as they happen.
+                                    Stock movements will appear here as they happen.
                                     {% endif %}
                                 </p>
                             </div>
                         </td>
                     </tr>
 
-                {% endfor %}
+                    {% endfor %}
 
-                </tbody>
+                    </tbody>
 
-            </table>
+                </table>
 
-            {% if queryset.has_other_pages %}
+                {% if queryset.has_other_pages %}
 
-            <div class="history-pagination">
+                <div class="history-pagination">
 
-                {% if queryset.has_previous %}
+                    {% if queryset.has_previous %}
                     <a href="?page={{ queryset.previous_page_number }}&tab={{ tab }}&search={{ search|urlencode }}"
                        class="page-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
-                {% endif %}
-
-                {% for num in queryset.paginator.page_range %}
-                    {% if queryset.number == num %}
-                        <span class="page-btn active-page">{{ num }}</span>
-                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
-                        <a href="?page={{ num }}&tab={{ tab }}&search={{ search|urlencode }}" class="page-btn">
-                            {{ num }}
-                        </a>
                     {% endif %}
-                {% endfor %}
 
-                {% if queryset.has_next %}
+                    {% for num in queryset.paginator.page_range %}
+                    {% if queryset.number == num %}
+                    <span class="page-btn active-page">{{ num }}</span>
+                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+                    <a href="?page={{ num }}&tab={{ tab }}&search={{ search|urlencode }}" class="page-btn">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if queryset.has_next %}
                     <a href="?page={{ queryset.next_page_number }}&tab={{ tab }}&search={{ search|urlencode }}"
                        class="page-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
+                    {% endif %}
+
+                </div>
+
                 {% endif %}
 
             </div>
 
-            {% endif %}
-
         </div>
 
-    </div>
-
-</section>
+    </section>
 </div>
 
 {% endblock %}

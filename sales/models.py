@@ -94,7 +94,12 @@ class Sale(models.Model):
         ('Bank Transfer', 'Bank Transfer'),
     )
 
-    SALE_STATUS = (('Completed', 'Completed'), ('Proforma', 'Pro-forma'), ('Refunded', 'Refunded'))
+    SALE_STATUS = (
+        ('Completed', 'Completed'),
+        ('Proforma', 'Pro-forma'),
+        ('Partially Refunded', 'Partially Refunded'),
+        ('Refunded', 'Refunded'),
+    )
 
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True)
@@ -104,13 +109,17 @@ class Sale(models.Model):
     receipt_number = models.CharField(max_length=30, unique=True, blank=True, null=True)
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHODS, blank=True, null=True)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    # NEW — actually persisted now instead of being lost on save()
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
     total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     change = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     staff = models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True, blank=True)
     status = models.CharField(max_length=20, choices=SALE_STATUS, default='Completed')
     refund_date = models.DateTimeField(null=True, blank=True)
-    # is_proforma = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # =========================

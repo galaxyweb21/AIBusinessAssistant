@@ -1,0 +1,97 @@
+<div class="delete-confirm-box">
+
+
+    <div class="delete-icon">
+
+        <i class="fas fa-trash-alt"></i>
+
+    </div>
+
+
+    <h3>
+        Delete Category?
+    </h3>
+
+
+    <p>
+
+        You are about to permanently delete:
+
+        <br>
+
+
+        <strong>
+            {{ category.name }}
+        </strong>
+
+
+    </p>
+
+
+    {% if product_count > 0 %}
+
+
+    <div class="delete-warning">
+
+
+        <i class="fas fa-exclamation-triangle"></i>
+
+
+        This category contains
+
+        <strong>
+            {{ product_count }}
+        </strong>
+
+        products.
+
+
+    </div>
+
+
+    {% endif %}
+
+
+    <form
+            id="deleteCategoryForm"
+            method="POST"
+            action="{% url 'delete_category' category.id %}">
+
+
+        {% csrf_token %}
+
+
+        <div class="delete-actions">
+
+
+            <button
+                    type="button"
+                    class="btn btn-light"
+                    id="cancelDelete">
+
+
+                Cancel
+
+            </button>
+
+
+            <button
+                    type="submit"
+                    class="btn btn-danger">
+
+
+                <i class="fas fa-trash"></i>
+
+                Delete
+
+
+            </button>
+
+
+        </div>
+
+
+    </form>
+
+
+</div>

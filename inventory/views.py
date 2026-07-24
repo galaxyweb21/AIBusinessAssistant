@@ -21,6 +21,16 @@ import uuid
 from django.http import JsonResponse
 from decimal import Decimal, InvalidOperation
 
+from django.db.models import Count
+from django.db.models.functions import Coalesce
+from datetime import timedelta
+
+import csv
+from django.http import HttpResponse
+import io
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+
 
 @login_required
 def generate_sku(request):
@@ -548,7 +558,7 @@ def damaged_inventory(request, pk):
                     quantity_changed=-damaged_qty,
                     new_stock=new_stock,
                     action_type="damaged",
-                    performed_by=request.user,
+                    received_by=request.user,
                     note=note or f"Damaged {damaged_qty} units",
                     reference_number=reference_number,
                 )
@@ -575,6 +585,84 @@ def damaged_inventory(request, pk):
     return render(request, "inventory/damaged_inventory.html", context)
 
 
+def get_inventory_history_queryset(request, business):
+
+    tab = request.GET.get("tab", "all").strip()
+
+    if tab not in VALID_HISTORY_TABS:
+        tab = "all"
+
+    search = request.GET.get("search", "").strip()
+    supplier = request.GET.get("supplier", "").strip()
+    product = request.GET.get("product", "").strip()
+    staff = request.GET.get("staff", "").strip()
+    date_from = request.GET.get("date_from", "").strip()
+    date_to = request.GET.get("date_to", "").strip()
+
+    queryset = (
+        InventoryStockHistory.objects
+        .filter(business=business)
+        .select_related(
+            "inventory",
+            "supplier",
+            "received_by",
+        )
+        .order_by("-created_at")
+    )
+
+    if tab != "all":
+        queryset = queryset.filter(action_type=tab)
+
+    if search:
+
+        queryset = queryset.filter(
+
+            Q(inventory__product_name__icontains=search)
+
+            |
+
+            Q(reference_number__icontains=search)
+
+            |
+
+            Q(invoice_number__icontains=search)
+
+            |
+
+            Q(reference__icontains=search)
+
+            |
+
+            Q(received_by__username__icontains=search)
+
+            |
+
+            Q(received_by__first_name__icontains=search)
+
+            |
+
+            Q(received_by__last_name__icontains=search)
+
+        )
+
+    if supplier:
+        queryset = queryset.filter(supplier_id=supplier)
+
+    if product:
+        queryset = queryset.filter(inventory_id=product)
+
+    if staff:
+        queryset = queryset.filter(received_by_id=staff)
+
+    if date_from:
+        queryset = queryset.filter(created_at__date__gte=date_from)
+
+    if date_to:
+        queryset = queryset.filter(created_at__date__lte=date_to)
+
+    return queryset
+
+
 HISTORY_TABS = [
     ("all", "All Activity"),
     ("restock", "Restock"),
@@ -590,43 +678,373 @@ VALID_HISTORY_TABS = {key for key, _ in HISTORY_TABS}
 
 @login_required
 def inventory_history(request):
+
     business = get_business(request)
 
+    # ============================================
+    # FILTERS
+    # ============================================
+
     tab = request.GET.get("tab", "all").strip()
+
     if tab not in VALID_HISTORY_TABS:
         tab = "all"
 
     search = request.GET.get("search", "").strip()
 
-    queryset = InventoryStockHistory.objects.filter(
-        business=business
-    ).select_related("inventory", "performed_by").order_by("-created_at")
+    supplier = request.GET.get("supplier", "").strip()
+
+    product = request.GET.get("product", "").strip()
+
+    staff = request.GET.get("staff", "").strip()
+
+    date_from = request.GET.get("date_from", "").strip()
+
+    date_to = request.GET.get("date_to", "").strip()
+
+    queryset = get_inventory_history_queryset(
+        request,
+        business,
+    )
+
+    # ============================================
+    # MOVEMENT TYPE
+    # ============================================
 
     if tab != "all":
         queryset = queryset.filter(action_type=tab)
 
+    # ============================================
+    # SEARCH
+    # ============================================
+
     if search:
+
         queryset = queryset.filter(
+
             Q(inventory__product_name__icontains=search) |
+
             Q(reference_number__icontains=search) |
-            Q(performed_by__username__icontains=search) |
-            Q(action_type__icontains=search)
+
+            Q(invoice_number__icontains=search) |
+
+            Q(reference__icontains=search) |
+
+            Q(received_by__username__icontains=search) |
+
+            Q(received_by__first_name__icontains=search) |
+
+            Q(received_by__last_name__icontains=search)
+
         )
 
-    paginator = Paginator(queryset, 10)
+    # ============================================
+    # PRODUCT
+    # ============================================
+
+    if product:
+
+        queryset = queryset.filter(
+            inventory_id=product
+        )
+
+    # ============================================
+    # SUPPLIER
+    # ============================================
+
+    if supplier:
+
+        queryset = queryset.filter(
+            supplier_id=supplier
+        )
+
+    # ============================================
+    # STAFF
+    # ============================================
+
+    if staff:
+
+        queryset = queryset.filter(
+            received_by_id=staff
+        )
+
+    # ============================================
+    # DATE RANGE
+    # ============================================
+
+    if date_from:
+
+        queryset = queryset.filter(
+            created_at__date__gte=date_from
+        )
+
+    if date_to:
+
+        queryset = queryset.filter(
+            created_at__date__lte=date_to
+        )
+
+    # ============================================
+    # KPI CALCULATIONS
+    # ============================================
+
+    today = timezone.now().date()
+
+    history = InventoryStockHistory.objects.filter(
+        business=business
+    )
+
+    total_movements = history.count()
+
+    today_movements = history.filter(
+        created_at__date=today
+    ).count()
+
+    total_stock_in = history.filter(
+
+        action_type__in=[
+            "restock",
+            "returned",
+        ]
+
+    ).aggregate(
+
+        total=Coalesce(
+            Sum("quantity"),
+            0
+        )
+
+    )["total"]
+
+    total_stock_out = history.filter(
+
+        action_type__in=[
+            "sale",
+            "damaged",
+            "transfer",
+        ]
+
+    ).aggregate(
+
+        total=Coalesce(
+            Sum("quantity"),
+            0
+        )
+
+    )["total"]
+
+    adjustment_count = history.filter(
+        action_type="adjustment"
+    ).count()
+
+    damaged_count = history.filter(
+        action_type="damaged"
+    ).count()
+
+    transfer_count = history.filter(
+        action_type="transfer"
+    ).count()
+
+    return_count = history.filter(
+        action_type="returned"
+    ).count()
+
+    # ============================================
+    # PAGINATION
+    # ============================================
+
+    paginator = Paginator(queryset, 20)
+
     page_number = request.GET.get("page")
+
     queryset = paginator.get_page(page_number)
 
     context = {
+
         "queryset": queryset,
+
         "tab": tab,
+
         "search": search,
+
+        "supplier": supplier,
+
+        "product": product,
+
+        "staff": staff,
+
+        "date_from": date_from,
+
+        "date_to": date_to,
+
         "tabs": HISTORY_TABS,
+
         "business": business,
+
         "title": "Inventory History",
+
+        # KPI
+
+        "total_movements": total_movements,
+
+        "today_movements": today_movements,
+
+        "total_stock_in": total_stock_in,
+
+        "total_stock_out": total_stock_out,
+
+        "adjustment_count": adjustment_count,
+
+        "damaged_count": damaged_count,
+
+        "transfer_count": transfer_count,
+
+        "return_count": return_count,
+
+        # FILTER DROPDOWNS
+
+        "products": Inventory.objects.filter(
+            business=business
+        ).order_by("product_name"),
+
+        "suppliers": Supplier.objects.filter(
+            business=business,
+            is_active=True,
+        ).order_by("name"),
+
+        "staffs": User.objects.filter(
+            staffprofile__business=business
+        ).distinct(),
+
     }
 
-    return render(request, "inventory/inventory_history.html", context)
+    return render(
+
+        request,
+
+        "inventory/inventory_history.html",
+
+        context,
+
+    )
+
+
+@login_required
+def export_inventory_history_csv(request):
+
+    business = get_business(request)
+
+    queryset = get_inventory_history_queryset(
+        request,
+        business,
+    )
+
+    response = HttpResponse(
+        content_type="text/csv"
+    )
+
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="inventory_history.csv"'
+
+    writer = csv.writer(response)
+
+    writer.writerow([
+        "Product",
+        "Movement",
+        "Previous Stock",
+        "Quantity",
+        "Current Stock",
+        "Supplier",
+        "Invoice",
+        "Warehouse",
+        "Reference",
+        "Performed By",
+        "Remarks",
+        "Date",
+    ])
+
+    for record in queryset:
+
+        writer.writerow([
+
+            record.inventory.product_name
+            if record.inventory else "",
+
+            record.get_action_type_display(),
+
+            record.previous_stock,
+            record.quantity,
+            record.new_stock,
+            record.supplier_name,
+            record.invoice_number,
+            record.warehouse,
+            record.reference_number,
+            record.received_by_name,
+            record.remarks,
+            record.created_at.strftime(
+                "%d %b %Y %H:%M"
+            ),
+
+        ])
+
+    return response
+
+
+@login_required
+def export_inventory_history_pdf(request):
+
+    business = get_business(request)
+
+    queryset = get_inventory_history_queryset(
+        request,
+        business,
+    )
+
+    tab = request.GET.get("tab", "all").strip()
+    if tab not in VALID_HISTORY_TABS:
+        tab = "all"
+
+    tab_label = dict(HISTORY_TABS).get(tab, "All Activity")
+
+    context = {
+        "records": queryset,
+        "business": business,
+        "tab_label": tab_label,
+        "generated_at": timezone.now(),
+        "search": request.GET.get("search", "").strip(),
+        "supplier": request.GET.get("supplier", "").strip(),
+        "product": request.GET.get("product", "").strip(),
+        "staff": request.GET.get("staff", "").strip(),
+        "date_from": request.GET.get("date_from", "").strip(),
+        "date_to": request.GET.get("date_to", "").strip(),
+        "total_records": queryset.count(),
+    }
+
+    html = render_to_string(
+        "inventory/inventory_history_pdf.html",
+        context,
+    )
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = (
+        'attachment; filename="inventory_history.pdf"'
+    )
+
+    result = io.BytesIO()
+    pisa_status = pisa.CreatePDF(
+        src=html,
+        dest=result,
+    )
+
+    if pisa_status.err:
+        return HttpResponse(
+            "Error generating PDF",
+            status=500,
+        )
+
+    response.write(result.getvalue())
+    return response
 
 
 @login_required
@@ -658,6 +1076,7 @@ def supplier_list(request):
     }
 
     return render(request, "suppliers/supplier_list.html", context)
+
 
 @login_required
 @transaction.atomic

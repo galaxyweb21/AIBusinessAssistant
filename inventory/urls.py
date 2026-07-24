@@ -20,6 +20,8 @@ urlpatterns = [
     path('restock_inventory/<int:pk>/', views.restock_inventory, name='restock_inventory'),
     path('damaged_inventory/<int:pk>/', views.damaged_inventory, name='damaged_inventory'),
     path('inventory-history/', views.inventory_history, name='inventory_history'),
+    path("inventory/history/export/csv/", views.export_inventory_history_csv, name="export_inventory_history_csv"),
+    path("inventory/history/export/pdf/", views.export_inventory_history_pdf, name="export_inventory_history_pdf",),
 
     path("supplier_list/", views.supplier_list, name="supplier_list"),
     path('suppliers/<int:pk>/', views.supplier_detail, name='supplier_detail'),

@@ -26,6 +26,9 @@ from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from django.template.loader import get_template
 import json
+from django.db.models import Sum
+
+from django.core.exceptions import ValidationError  # keep if you use it elsewhere; not required below
 
 
 @login_required
@@ -448,6 +451,11 @@ def delete_discount(request, pk):
     return redirect('discount_list')
 
 
+class InsufficientStockError(Exception):
+    """Raised to cleanly abort and roll back a sale inside the atomic block."""
+    pass
+
+
 @login_required
 @transaction.atomic
 def sales(request):
@@ -459,6 +467,39 @@ def sales(request):
     )
 
     business = staff.business
+
+    # =====================================
+    # TODAY'S KPIs + RECENT SALES
+    # (for the animated counters and the Recent Sales drawer)
+    # =====================================
+    today = timezone.now().date()
+
+    today_sales_qs = Sale.objects.filter(
+        business=business,
+        status__in=['Completed', 'Partially Refunded'],
+        created_at__date=today,
+    )
+
+    today_orders_count = today_sales_qs.count()
+    today_sales_total = today_sales_qs.aggregate(
+        total=Sum('total')
+    )['total'] or Decimal('0.00')
+
+    recent_sales_qs = Sale.objects.filter(
+        business=business
+    ).exclude(status='Proforma').select_related('customer').order_by('-created_at')[:8]
+
+    recent_sales_json = [
+        {
+            "id": s.id,
+            "receipt": s.receipt_number,
+            "customer": s.customer.full_name if s.customer else "Walk-in Customer",
+            "total": float(s.total),
+            "status": s.status,
+            "created_at": s.created_at.strftime("%d %b, %H:%M"),
+        }
+        for s in recent_sales_qs
+    ]
 
     # =====================================
     # SEARCH
@@ -474,19 +515,15 @@ def sales(request):
             Q(product_name__icontains=search)
         )
 
-    # ALWAYS DISTINCT (prevents duplicates)
     products_queryset = products_queryset.distinct()
 
     # =====================================
-    # PAGINATION (ALWAYS RUNS)
+    # PAGINATION
     # =====================================
     paginator = Paginator(products_queryset, 12)
     page_number = request.GET.get('page', 1)
     products_page = paginator.get_page(page_number)
 
-    # =====================================
-    # AJAX LOAD MORE SUPPORT
-    # =====================================
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
             "html": render_to_string(
@@ -502,14 +539,8 @@ def sales(request):
             )
         })
 
-    # =====================================
-    # ACTIVE TAXES
-    # =====================================
     taxes = Tax.objects.filter(business=business, active=True)
 
-    # =====================================
-    # ACTIVE DISCOUNTS
-    # =====================================
     discounts = []
     for discount in Discount.objects.filter(business=business, active=True):
         if discount.is_valid():
@@ -517,9 +548,6 @@ def sales(request):
 
     valid_discount_ids = [d.id for d in discounts]
 
-    # =====================================
-    # FORM
-    # =====================================
     form = SaleForm()
     form.fields['customer'].queryset = Customer.objects.filter(
         business=business
@@ -529,9 +557,6 @@ def sales(request):
         id__in=valid_discount_ids
     )
 
-    # =====================================
-    # CREATE SALE
-    # =====================================
     if request.method == 'POST':
 
         form = SaleForm(request.POST)
@@ -551,136 +576,140 @@ def sales(request):
             quantities = request.POST.getlist('quantity')
             raw_amount_paid = request.POST.get('amount_paid', '0')
 
-            # EMPTY CART VALIDATION
             if not product_ids:
                 messages.error(request, 'Please select at least one product.')
                 return redirect('sales')
 
-            # CREATE SALE
-            sale = form.save(commit=False)
-            sale.business = business
+            try:
+                # Nested atomic block = savepoint. If InsufficientStockError
+                # is raised anywhere inside, only THIS block rolls back —
+                # the outer @transaction.atomic on the view keeps running
+                # so we can redirect with a clean error message instead
+                # of crashing with a 500.
+                with transaction.atomic():
 
-            sale.subtotal = Decimal('0.00')
-            sale.tax_amount = Decimal('0.00')
-            sale.discount_amount = Decimal('0.00')
-            sale.total = Decimal('0.00')
-            sale.amount_paid = Decimal('0.00')
-            sale.change = Decimal('0.00')
-            sale.staff = user
-            sale.status = sale_type
-            sale.save()
+                    sale = form.save(commit=False)
+                    sale.business = business
 
-            subtotal = Decimal('0.00')
-            total_profit = Decimal('0.00')
-            sale_items_created = 0
+                    sale.subtotal = Decimal('0.00')
+                    sale.tax_amount = Decimal('0.00')
+                    sale.discount_amount = Decimal('0.00')
+                    sale.total = Decimal('0.00')
+                    sale.amount_paid = Decimal('0.00')
+                    sale.change = Decimal('0.00')
+                    sale.staff = user
+                    sale.status = sale_type
+                    sale.save()
 
-            # PROCESS ITEMS
-            for product_id, qty in zip(product_ids, quantities):
+                    subtotal = Decimal('0.00')
+                    total_profit = Decimal('0.00')
+                    sale_items_created = 0
 
-                try:
-                    qty = int(qty)
-                    product = Inventory.objects.select_for_update().get(
-                        id=product_id,
-                        business=business
-                    )
-                except (Inventory.DoesNotExist, ValueError, TypeError):
-                    continue
+                    for product_id, qty in zip(product_ids, quantities):
 
-                if qty <= 0:
-                    continue
+                        try:
+                            qty = int(qty)
+                            product = Inventory.objects.select_for_update().get(
+                                id=product_id,
+                                business=business
+                            )
+                        except (Inventory.DoesNotExist, ValueError, TypeError):
+                            continue
 
-                if qty > product.stock_quantity:
-                    messages.error(
-                        request,
-                        f"{product.product_name} only has {product.stock_quantity} left in stock."
-                    )
-                    raise ValidationError("Insufficient stock.")
+                        if qty <= 0:
+                            continue
 
-                item_price = Decimal(str(product.selling_price))
-                item_cost = Decimal(str(product.cost_price))
+                        if qty > product.stock_quantity:
+                            raise InsufficientStockError(
+                                f"{product.product_name} only has "
+                                f"{product.stock_quantity} left in stock."
+                            )
 
-                item_total = item_price * qty
-                item_profit = (item_price - item_cost) * qty
+                        item_price = Decimal(str(product.selling_price))
+                        item_cost = Decimal(str(product.cost_price))
 
-                SaleItem.objects.create(
-                    sale=sale,
-                    product=product,
-                    quantity=qty,
-                    price=item_price,
-                    cost_price=item_cost,
-                    total=item_total,
-                    profit=item_profit
-                )
+                        item_total = item_price * qty
+                        item_profit = (item_price - item_cost) * qty
 
-                if sale.status == "Completed":
-                    previous_stock = product.stock_quantity
-                    product.stock_quantity -= qty
-                    product.save()
+                        SaleItem.objects.create(
+                            sale=sale,
+                            product=product,
+                            quantity=qty,
+                            price=item_price,
+                            cost_price=item_cost,
+                            total=item_total,
+                            profit=item_profit
+                        )
 
-                    InventoryStockHistory.objects.create(
-                        business=business,
-                        inventory=product,
-                        previous_stock=previous_stock,
-                        quantity_changed=-qty,
-                        new_stock=product.stock_quantity,
-                        action_type='sale',
-                        reference_number=f"SALE-{sale.receipt_number}",
-                        performed_by=request.user,
-                        note=f"Stock deducted from sale #{sale.receipt_number}"
-                    )
+                        if sale.status == "Completed":
+                            previous_stock = product.stock_quantity
+                            product.stock_quantity -= qty
+                            product.save()
 
-                subtotal += item_total
-                total_profit += item_profit
-                sale_items_created += 1
+                            InventoryStockHistory.objects.create(
+                                business=business,
+                                inventory=product,
+                                previous_stock=previous_stock,
+                                quantity=-qty,               # was quantity_changed (invalid field)
+                                new_stock=product.stock_quantity,
+                                action_type='sale',
+                                reference_number=f"SALE-{sale.receipt_number}",
+                                received_by=request.user,     # was performed_by (invalid field)
+                                remarks=f"Stock deducted from sale #{sale.receipt_number}"
+                            )
 
-            if sale_items_created == 0:
-                sale.delete()
-                messages.error(request, 'No valid products selected.')
+                        subtotal += item_total
+                        total_profit += item_profit
+                        sale_items_created += 1
+
+                    if sale_items_created == 0:
+                        raise InsufficientStockError("No valid products selected.")
+
+                    # TAX
+                    tax_amount = Decimal('0.00')
+                    if sale.tax and sale.tax.active:
+                        tax_amount = (
+                            subtotal * Decimal(str(sale.tax.tax_percentage))
+                        ) / Decimal('100')
+
+                    # DISCOUNT
+                    discount_amount = Decimal('0.00')
+                    if sale.discount and sale.discount.is_valid():
+                        discount_amount = (
+                            subtotal * Decimal(str(sale.discount.percentage))
+                        ) / Decimal('100')
+
+                    grand_total = subtotal + tax_amount - discount_amount
+                    if grand_total < 0:
+                        grand_total = Decimal('0.00')
+
+                    if sale.status == "Proforma":
+                        amount_paid = Decimal('0.00')
+                        customer_change = Decimal('0.00')
+                    else:
+                        try:
+                            amount_paid = Decimal(str(raw_amount_paid))
+                        except Exception:
+                            amount_paid = Decimal('0.00')
+
+                        customer_change = Decimal('0.00')
+                        if amount_paid > grand_total:
+                            customer_change = amount_paid - grand_total
+
+                    sale.subtotal = subtotal
+                    sale.tax_amount = tax_amount            # now actually persisted
+                    sale.discount_amount = discount_amount   # now actually persisted
+                    sale.total = grand_total
+                    sale.amount_paid = amount_paid
+                    sale.change = customer_change
+                    sale.save()
+
+                    if sale.status == "Completed":
+                        update_business_metrics(business, sale)
+
+            except InsufficientStockError as e:
+                messages.error(request, str(e))
                 return redirect('sales')
-
-            # TAX
-            tax_amount = Decimal('0.00')
-            if sale.tax and sale.tax.active:
-                tax_amount = (
-                    subtotal * Decimal(str(sale.tax.tax_percentage))
-                ) / Decimal('100')
-
-            # DISCOUNT
-            discount_amount = Decimal('0.00')
-            if sale.discount and sale.discount.is_valid():
-                discount_amount = (
-                    subtotal * Decimal(str(sale.discount.percentage))
-                ) / Decimal('100')
-
-            # TOTAL
-            grand_total = subtotal + tax_amount - discount_amount
-            if grand_total < 0:
-                grand_total = Decimal('0.00')
-
-            # AMOUNT PAID & CHANGE HANDLING
-            if sale.status == "Proforma":
-                amount_paid = Decimal('0.00')
-                customer_change = Decimal('0.00')
-            else:
-                try:
-                    amount_paid = Decimal(str(raw_amount_paid))
-                except:
-                    amount_paid = Decimal('0.00')
-
-                customer_change = Decimal('0.00')
-                if amount_paid > grand_total:
-                    customer_change = amount_paid - grand_total
-
-            sale.subtotal = subtotal
-            sale.tax_amount = tax_amount
-            sale.discount_amount = discount_amount
-            sale.total = grand_total
-            sale.amount_paid = amount_paid
-            sale.change = customer_change
-            sale.save()
-
-            if sale.status == "Completed":
-                update_business_metrics(business, sale)
 
             AuditLog.objects.create(
                 user=request.user,
@@ -712,9 +741,6 @@ def sales(request):
         else:
             messages.error(request, 'Please correct the form errors.')
 
-    # =====================================
-    # CONTEXT
-    # =====================================
     context = {
         "form": form,
         "user": user,
@@ -724,6 +750,11 @@ def sales(request):
         "taxes": taxes,
         "discounts": discounts,
         "title": "Enterprise POS",
+
+        # NEW — powers the KPI counters and Recent Sales drawer
+        "today_orders_count": today_orders_count,
+        "today_sales_total": today_sales_total,
+        "recent_sales_json": recent_sales_json,
     }
 
     return render(request, 'sales/sales.html', context)
@@ -821,34 +852,25 @@ def refund_sale(request, pk):
     )
 
     if not sale.can_refund:
-        messages.error(
-            request,
-            "Refund not allowed."
-        )
+        messages.error(request, "Refund not allowed.")
         return redirect('view_sales')
 
     if request.method != "POST":
         return redirect('view_sales')
 
     sale_item_ids = request.POST.getlist("items")
+    reason = request.POST.get("reason", "").strip()
 
     if not sale_item_ids:
-        messages.error(
-            request,
-            "No items selected."
-        )
+        messages.error(request, "No items selected.")
         return redirect('view_sales')
 
-    # Create refund record
     refund = Refund.objects.create(
         sale=sale,
         business=business,
-        processed_by=request.user
+        processed_by=request.user,
+        reason=reason,
     )
-
-    # =====================================
-    # PROCESS REFUND ITEMS
-    # =====================================
 
     for sale_item_id in sale_item_ids:
 
@@ -858,40 +880,26 @@ def refund_sale(request, pk):
             sale=sale
         )
 
-        qty = int(
-            request.POST.get(
-                f"qty_{sale_item_id}",
-                1
-            )
-        )
+        qty = int(request.POST.get(f"qty_{sale_item_id}", 1))
 
-        remaining_qty = (
-                sale_item.quantity -
-                sale_item.refunded_quantity
-        )
+        remaining_qty = sale_item.quantity - sale_item.refunded_quantity
 
-        # Safety validation
         if qty <= 0 or qty > remaining_qty:
             messages.error(
                 request,
                 f"Invalid quantity for {sale_item.product.product_name}"
             )
-
             return redirect("view_sales")
 
         product = sale_item.product
-
         old_stock = product.stock_quantity
 
-        # Restore stock
         product.stock_quantity += qty
         product.save()
 
-        # Update refunded quantity
         sale_item.refunded_quantity += qty
         sale_item.save()
 
-        # Save refund item
         RefundItem.objects.create(
             refund=refund,
             sale_item=sale_item,
@@ -899,94 +907,79 @@ def refund_sale(request, pk):
             unit_price=sale_item.price
         )
 
-        # Inventory history
         InventoryStockHistory.objects.create(
             business=business,
             inventory=product,
             previous_stock=old_stock,
-            quantity_changed=qty,
+            quantity=qty,                 # was quantity_changed (invalid field)
             new_stock=product.stock_quantity,
             action_type='returned',
             reference_number=f"REFUND-{sale.receipt_number}",
-            performed_by=request.user
+            received_by=request.user,     # was performed_by (invalid field)
+            remarks=reason or f"Refund against sale #{sale.receipt_number}"
         )
 
     # =====================================
-    # RECALCULATE SALE VALUES
+    # RECALCULATE REMAINING TOTAL
+    # (proportional to original tax/discount, not a flat re-sum)
     # =====================================
 
-    remaining_total = 0
+    remaining_subtotal = Decimal('0.00')
 
     for item in sale.items.all():
-
         remaining_qty = item.quantity - item.refunded_quantity
-
-        # skip fully refunded items
         if remaining_qty <= 0:
             continue
+        remaining_subtotal += remaining_qty * item.price
 
-        # recalculate remaining sale amount
-        remaining_total += (
-                remaining_qty * item.price
-        )
+    if sale.subtotal and sale.subtotal > 0:
+        tax_rate = sale.tax_amount / sale.subtotal
+        discount_rate = sale.discount_amount / sale.subtotal
+    else:
+        tax_rate = Decimal('0.00')
+        discount_rate = Decimal('0.00')
 
-    # update only real database field
+    remaining_tax = remaining_subtotal * tax_rate
+    remaining_discount = remaining_subtotal * discount_rate
+
+    remaining_total = remaining_subtotal + remaining_tax - remaining_discount
+    if remaining_total < 0:
+        remaining_total = Decimal('0.00')
+
     sale.total = remaining_total
 
     # =====================================
     # UPDATE STATUS
     # =====================================
 
-    total_items = sum(
-        i.quantity
-        for i in sale.items.all()
-    )
-
-    total_refunded = sum(
-        i.refunded_quantity
-        for i in sale.items.all()
-    )
+    total_items = sum(i.quantity for i in sale.items.all())
+    total_refunded = sum(i.refunded_quantity for i in sale.items.all())
 
     if total_refunded == 0:
-
         sale.status = "Completed"
-
     elif total_refunded < total_items:
-
         sale.status = "Partially Refunded"
-
     else:
-
         sale.status = "Refunded"
 
     sale.refund_date = timezone.now()
-
     sale.save()
 
     AuditLog.objects.create(
-
         user=request.user,
-
         action="Sale Refunded",
-
         description=(
             f"{request.user.username} processed refund "
             f"for sale #{sale.receipt_number}. "
             f"Status: {sale.status} | Remaining total: {sale.total}"
+            + (f" | Reason: {reason}" if reason else "")
         ),
-
         content_type=ContentType.objects.get_for_model(Sale),
-
         object_id=sale.id,
-
         ip_address=request.META.get("REMOTE_ADDR")
     )
 
-    messages.success(
-        request,
-        "Refund processed successfully"
-    )
-
+    messages.success(request, "Refund processed successfully")
     return redirect('view_sales')
 
 
@@ -1000,23 +993,15 @@ def view_sales(request):
 
     business = staff.business
 
-    # =====================================
-    # INITIALIZE VARIABLES (Prevents NameError)
-    # =====================================
     total_revenue = Decimal('0.00')
     total_profit = Decimal('0.00')
 
-    # =====================================
-    # FILTER TYPE
-    # =====================================
     tab = request.GET.get('tab', 'all')
 
-    # BASE QUERY
     sales_queryset = Sale.objects.filter(
         business=business
     ).select_related('customer').prefetch_related('items', 'items__product').order_by('-id')
 
-    # SEARCH
     search = request.GET.get('search', '').strip()
     if search:
         sales_queryset = sales_queryset.filter(
@@ -1025,23 +1010,18 @@ def view_sales(request):
             Q(customer__full_name__icontains=search)
         )
 
-    # STATUS FILTERING
     if tab == 'completed':
         sales_queryset = sales_queryset.filter(status='Completed')
     elif tab == 'refunded':
         sales_queryset = sales_queryset.filter(status='Refunded')
+    elif tab == 'partial':
+        sales_queryset = sales_queryset.filter(status='Partially Refunded')
     elif tab == 'proforma':
         sales_queryset = sales_queryset.filter(status='Proforma')
     else:
-        # Default 'all' hides Proforma
         sales_queryset = sales_queryset.exclude(status='Proforma')
 
-    # =====================================
-    # CALCULATIONS
-    # =====================================
-    # We calculate based on the filtered queryset
     for sale in sales_queryset:
-        # Calculate Remaining Items and Live Profit
         remaining_items = 0
         live_profit = 0
 
@@ -1054,18 +1034,16 @@ def view_sales(request):
         sale.remaining_items = remaining_items
         sale.live_profit = live_profit
 
-        # KPI Totals (Only for Completed sales)
-        if sale.status == 'Completed':
+        if sale.status in ('Completed', 'Partially Refunded'):
             total_revenue += sale.total
             total_profit += sale.live_profit
 
-    # Counts for Tabs
     total_sales = sales_queryset.count()
     completed_sales_count = Sale.objects.filter(business=business, status='Completed').count()
     refunded_sales_count = Sale.objects.filter(business=business, status='Refunded').count()
+    partial_refund_sales_count = Sale.objects.filter(business=business, status='Partially Refunded').count()
     proforma_sales_count = Sale.objects.filter(business=business, status='Proforma').count()
 
-    # PAGINATION
     paginator = Paginator(sales_queryset, 15)
     page_number = request.GET.get('page')
     sales = paginator.get_page(page_number)
@@ -1079,6 +1057,7 @@ def view_sales(request):
         "total_profit": total_profit,
         "completed_sales_count": completed_sales_count,
         "refunded_sales_count": refunded_sales_count,
+        "partial_refund_sales_count": partial_refund_sales_count,
         "proforma_sales_count": proforma_sales_count,
         "business": business,
         "user": user,
@@ -1802,32 +1781,49 @@ def sale_detail_api(request, pk):
     business = staff.business
 
     sale = get_object_or_404(
-        Sale.objects.select_related('customer').prefetch_related('items__product'),
+        Sale.objects.select_related('customer').prefetch_related(
+            'items__product',
+            'refund_set__items__sale_item__product',
+        ),
         id=pk,
         business=business
     )
 
     items = []
-
     for item in sale.items.all():
         remaining_qty = item.quantity - item.refunded_quantity
-
         items.append({
             "id": item.id,
             "name": item.product.product_name,
-
-            # core quantities
             "qty": item.quantity,
             "refunded_qty": item.refunded_quantity,
             "remaining_qty": remaining_qty,
-
-            # safety flags
             "can_refund": remaining_qty > 0,
             "is_fully_refunded": remaining_qty == 0,
-
-            # pricing
             "price": float(item.price),
             "total": float(item.total),
+        })
+
+    # NEW — refund history for the Audit tab
+    refunds = []
+    for refund in sale.refund_set.all().order_by('-created_at'):
+        refunds.append({
+            "id": refund.id,
+            "date": refund.created_at.strftime("%d %b %Y %H:%M"),
+            "processed_by": (
+                refund.processed_by.username
+                if refund.processed_by else "-"
+            ),
+            "reason": refund.reason or "-",
+            "items": [
+                {
+                    "name": ri.sale_item.product.product_name,
+                    "qty": ri.quantity,
+                    "unit_price": float(ri.unit_price),
+                    "total": float(ri.unit_price * ri.quantity),
+                }
+                for ri in refund.items.all()
+            ],
         })
 
     data = {
@@ -1836,6 +1832,8 @@ def sale_detail_api(request, pk):
         "invoice": sale.invoice_number,
         "customer": sale.customer.full_name if sale.customer else "Walk-in Customer",
         "subtotal": float(sale.subtotal),
+        "tax_amount": float(sale.tax_amount),
+        "discount_amount": float(sale.discount_amount),
         "total": float(sale.total),
         "paid": float(sale.amount_paid),
         "change": float(sale.change),
@@ -1844,11 +1842,9 @@ def sale_detail_api(request, pk):
         "date": sale.created_at.strftime("%d %b %Y %H:%M"),
         "refund_date": sale.refund_date.strftime("%d %b %Y %H:%M") if sale.refund_date else None,
         "created_at": sale.created_at.strftime("%d %b %Y %H:%M"),
-
-        # FIXED
         "can_refund": sale.can_refund,
-
         "items": items,
+        "refunds": refunds,
         "total_profit": float(sale.total_profit),
     }
 
@@ -1968,9 +1964,8 @@ def sales_report_pdf(request):
     )
 
     response['Content-Disposition'] = (
-        'filename="sales-report.pdf"'
+        'attachment; filename="sales-report.pdf"'  # was missing "attachment; "
     )
-
     pisa_status = pisa.CreatePDF(
         html,
         dest=response

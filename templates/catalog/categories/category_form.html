@@ -1,0 +1,166 @@
+{% load static %}
+
+
+<form method="POST"
+      enctype="multipart/form-data"
+      action="{{ request.path }}">
+
+{% csrf_token %}
+
+
+
+<div class="drawer-form">
+
+
+<div class="form-group">
+
+<label>
+{{ form.name.label }}
+</label>
+
+{{ form.name }}
+
+{{ form.name.errors }}
+
+</div>
+
+
+
+
+
+<div class="form-group">
+
+<label>
+{{ form.description.label }}
+</label>
+
+
+{{ form.description }}
+
+{{ form.description.errors }}
+
+</div>
+
+
+
+
+
+<div class="row">
+
+
+<div class="col-md-6">
+
+
+<label>
+{{ form.icon.label }}
+</label>
+
+
+{{ form.icon }}
+
+
+</div>
+
+
+
+
+<div class="col-md-6">
+
+
+<label>
+{{ form.color.label }}
+</label>
+
+
+{{ form.color }}
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div class="form-group mt-3">
+
+
+<label>
+{{ form.image.label }}
+</label>
+
+
+{{ form.image }}
+
+
+
+</div>
+
+
+
+
+
+
+<div class="form-group mt-3">
+
+
+<label>
+
+{{ form.sort_order.label }}
+
+</label>
+
+
+{{ form.sort_order }}
+
+
+</div>
+
+
+
+
+
+
+<div class="form-check mt-3">
+
+
+{{ form.is_active }}
+
+
+<label>
+
+Active Category
+
+</label>
+
+
+</div>
+
+
+
+
+
+
+
+<button
+class="btn btn-primary w-100 mt-4"
+type="submit">
+
+
+<i class="fas fa-save"></i>
+
+{{ button_text }}
+
+
+</button>
+
+
+
+</div>
+
+
+</form>

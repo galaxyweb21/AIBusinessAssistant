@@ -1,53 +1,115 @@
 {% for product in products %}
 
-<div class="product-card {% if product.stock_quantity <= 0 %}disabled{% endif %}"
+<div class="product-item"
+     data-category="{{ product.category.id }}"
+     data-name="{{ product.name|lower }}"
      data-barcode="{{ product.barcode|default:'' }}"
+     data-view="grid">
 
-     {% if product.stock_quantity > 0 %}
-     onclick="selectProduct(
-        '{{ product.id }}',
-        '{{ product.product_name }}',
-        '{{ product.selling_price }}',
-        '{{ product.stock_quantity }}'
-     )"
-     {% endif %}>
+    <div class="enterprise-product-card
+                {% if product.stock_quantity <= 0 %}out-stock{% endif %}
+                {% if product.stock_quantity > 0 and product.stock_quantity <= product.low_stock_level %}low-stock{% endif %}"
 
-    <!-- STOCK BADGE -->
-    {% if product.stock_quantity > 5 %}
-        <div class="stock-badge stock-top stock-success">
-            In Stock
+         onclick="selectProduct(
+             '{{ product.id }}',
+             '{{ product.name|escapejs }}',
+             '{{ product.selling_price }}',
+             '{{ product.stock_quantity }}'
+         )">
+
+        <!-- PRODUCT IMAGE -->
+
+        <div class="product-image-area">
+
+            {% if product.image %}
+
+                <img src="{{ product.image.url }}">
+
+            {% else %}
+
+                <div class="product-placeholder">
+
+                    <i class="fas fa-box-open"></i>
+
+                </div>
+
+            {% endif %}
+
+            {% if product.stock_quantity <= 0 %}
+
+                <div class="stock-overlay">
+
+                    Out of Stock
+
+                </div>
+
+            {% endif %}
+
         </div>
 
-    {% elif product.stock_quantity > 0 %}
-        <div class="stock-badge stock-top stock-warning stock-flash">
-            Low Stock
+        <!-- BODY -->
+
+        <div class="product-body">
+
+            <h4 class="product-title">
+
+                {{ product.name }}
+
+            </h4>
+
+            <div class="product-category">
+
+                {{ product.category }}
+
+            </div>
+
+            <div class="product-meta">
+
+                <span>
+
+                    SKU:
+                    {{ product.sku|default:"-" }}
+
+                </span>
+
+                <span>
+
+                    {{ product.barcode|default:"No Barcode" }}
+
+                </span>
+
+            </div>
+
+            <div class="product-footer">
+
+                <div>
+
+                    <div class="price">
+
+                        GH¢{{ product.selling_price }}
+
+                    </div>
+
+                    <div class="stock-count">
+
+                        {{ product.stock_quantity }} in stock
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="add-cart-btn">
+
+                    <i class="fas fa-plus"></i>
+
+                </button>
+
+            </div>
+
         </div>
 
-    {% else %}
-        <div class="stock-badge stock-top stock-danger">
-            Out of Stock
-        </div>
-    {% endif %}
-
-    <!-- IMAGE -->
-    <div class="product-image-wrapper">
-
-        {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.product_name }}">
-        {% else %}
-            <div class="no-image">No Image</div>
-        {% endif %}
-
-    </div>
-
-    <!-- NAME -->
-    <div class="product-name">
-        {{ product.product_name }}
-    </div>
-
-    <!-- PRICE -->
-    <div class="product-price">
-        GH¢{{ product.selling_price }}
     </div>
 
 </div>
