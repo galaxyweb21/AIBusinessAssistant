@@ -4,25 +4,96 @@
 {% block main_content %}
 
 <style>
+
+.purchase-wrapper{
+    padding:24px;
+}
+
+.purchase-form-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:24px;
+}
+
+.purchase-header-left{
+    display:flex;
+    align-items:center;
+    gap:16px;
+}
+
+.purchase-header-icon{
+    width:52px;
+    height:52px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff;
+    font-size:22px;
+    flex-shrink:0;
+}
+
+.purchase-header-left h3{
+    margin:0;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.purchase-header-left p{
+    margin:4px 0 0;
+    color:var(--text-muted);
+    font-size:13px;
+}
+
+.purchase-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:26px;
+}
+
+.purchase-section-title{
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--text-muted);
+    margin-bottom:12px;
+}
+
+.supplier-select-box{
+    max-width:420px;
+    margin-bottom:26px;
+}
+
+.purchase-lines-wrap{
+    overflow-x:auto;
+    border-radius:14px;
+    border:1px solid var(--border);
+}
+
 #purchaseTable {
     width: 100%;
+    min-width: 900px;
     border-collapse: separate;
     border-spacing: 0;
     background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
 }
 
 #purchaseTable thead.purchase-thead th {
     background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.04));
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     padding: 14px 12px;
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
     letter-spacing: .4px;
+    white-space:nowrap;
 }
 
 .dark-mode #purchaseTable thead.purchase-thead th {
@@ -31,9 +102,19 @@
 }
 
 #purchaseTable tbody td {
-    padding: 12px;
+    padding: 10px;
     border-bottom: 1px solid var(--border);
     color: var(--text-main);
+    vertical-align:middle;
+}
+
+#purchaseTable tbody tr{
+    animation:rowIn .2s ease;
+}
+
+@keyframes rowIn{
+    from{ opacity:0; transform:translateY(-4px); }
+    to{ opacity:1; transform:translateY(0); }
 }
 
 #purchaseTable tbody tr:hover {
@@ -43,6 +124,12 @@
 #purchaseTable .form-control {
     border-radius: 10px;
     height: 42px;
+}
+
+#purchaseTable .line-total{
+    font-weight:700;
+    color:var(--primary);
+    white-space:nowrap;
 }
 
 #purchaseTable .btn-danger {
@@ -55,13 +142,34 @@
     cursor:not-allowed;
 }
 
-.purchase-form-header{
+.expiry-hint{
+    margin-top:14px;
+    padding:12px 16px;
+    border-radius:12px;
+    background:rgba(99,102,241,.06);
+    border:1px dashed rgba(99,102,241,.25);
+    font-size:12px;
+    color:var(--text-muted);
     display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-bottom:20px;
+    align-items:flex-start;
+    gap:10px;
+}
+
+.expiry-hint i{
+    color:var(--primary);
+    margin-top:2px;
+}
+
+.purchase-extras{
+    margin-top:24px;
+}
+
+.purchase-extras label{
+    font-weight:700;
+    font-size:13px;
+    color:var(--text-main);
+    margin-bottom:6px;
+    display:block;
 }
 
 .total-card{
@@ -70,10 +178,11 @@
     align-items:center;
     flex-wrap:wrap;
     gap:16px;
-    padding:20px;
+    padding:22px;
     border-radius:16px;
     border:1px solid var(--border);
     background:linear-gradient(135deg, rgba(99,102,241,.08), rgba(99,102,241,.02));
+    margin-top:22px;
 }
 
 .total-card small{
@@ -85,36 +194,85 @@
     color:var(--text-main);
 }
 
+.total-card h3{
+    color:var(--primary);
+    font-weight:800;
+}
+
 .purchase-form-actions{
     display:flex;
     gap:12px;
-    margin-top:20px;
+    margin-top:22px;
     flex-wrap:wrap;
 }
 
-.purchase-form-actions .btn:disabled{
+.purchase-btn{
+    padding:12px 20px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:700;
+    border:none;
+    text-decoration:none;
+    transition:.25s ease;
+    cursor:pointer;
+}
+
+.purchase-btn:hover{ transform:translateY(-2px); }
+
+.purchase-btn:disabled{
     opacity:.6;
     cursor:not-allowed;
+    transform:none;
 }
+
+.purchase-btn-light{
+    background:var(--bg-main);
+    color:var(--text-main);
+    border:1px solid var(--border);
+}
+
+.purchase-btn-primary{
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff;
+}
+
+.purchase-btn-primary:hover{
+    box-shadow:0 12px 30px rgba(99,102,241,.25);
+}
+
+@media(max-width:768px){
+    .purchase-wrapper{ padding:14px; }
+    .purchase-card{ padding:18px; }
+    .total-card{ flex-direction:column; align-items:flex-start; }
+}
+
 </style>
 
 <div class="content-wrapper">
-    <section class="content">
+    <section class="content purchase-wrapper">
 
-        <div class="staff-card p-4">
-
-            <div class="purchase-form-header">
-                <h3 style="margin:0;">New Purchase (ERP Mode)</h3>
+        <div class="purchase-form-header">
+            <div class="purchase-header-left">
+                <div class="purchase-header-icon">
+                    <i class="fas fa-cart-plus"></i>
+                </div>
+                <div>
+                    <h3>New Purchase</h3>
+                    <p>Record stock received from a supplier — Enterprise Purchasing</p>
+                </div>
             </div>
+        </div>
 
-            {% include 'partials/_alerts.html' %}
+        {% include 'partials/_alerts.html' %}
+
+        <div class="purchase-card">
 
             <form method="POST" id="purchaseForm">
                 {% csrf_token %}
 
-                <!-- SUPPLIER -->
-                <div class="mb-3">
-                    <label>Supplier</label>
+                <div class="purchase-section-title">Supplier</div>
+
+                <div class="supplier-select-box">
                     <select name="supplier" class="form-control" required>
                         <option value="">Select Supplier</option>
                         {% for s in suppliers %}
@@ -123,69 +281,89 @@
                     </select>
                 </div>
 
-                <table class="table table-bordered" id="purchaseTable">
+                <div class="purchase-section-title">Line Items</div>
 
-                    <thead class="purchase-thead">
-                    <tr>
-                        <th style="width:30%">Product</th>
-                        <th>Qty</th>
-                        <th>Unit Cost</th>
-                        <th>Discount</th>
-                        <th>Tax %</th>
-                        <th>Total</th>
-                        <th></th>
-                    </tr>
-                    </thead>
+                <div class="purchase-lines-wrap">
 
-                    <tbody id="lines">
+                    <table class="table table-bordered" id="purchaseTable">
 
-                    <tr>
+                        <thead class="purchase-thead">
+                        <tr>
+                            <th style="width:22%">Product</th>
+                            <th style="width:9%">Qty</th>
+                            <th style="width:11%">Unit Cost</th>
+                            <th style="width:11%">Discount</th>
+                            <th style="width:9%">Tax %</th>
+                            <th style="width:14%">Expiry (optional)</th>
+                            <th style="width:11%">Total</th>
+                            <th></th>
+                        </tr>
+                        </thead>
 
-                        <td>
-                            <select class="form-control product">
-                                <option value="">Select Product</option>
-                                {% for p in products %}
-                                <option
-                                        value="{{ p.id }}"
-                                        data-cost="{{ p.cost_price|default:'0' }}"
-                                >
-                                    {{ p.product_name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </td>
+                        <tbody id="lines">
 
-                        <td>
-                            <input type="number" class="form-control qty" value="1" min="1">
-                        </td>
+                        <tr>
 
-                        <td>
-                            <input type="number" class="form-control cost" value="0" step="0.01" min="0">
-                        </td>
+                            <td>
+                                <select class="form-control product">
+                                    <option value="">Select Product</option>
+                                    {% for p in products %}
+                                    <option
+                                            value="{{ p.id }}"
+                                            data-cost="{{ p.cost_price|default:'0' }}"
+                                    >
+                                        {{ p.product_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
 
-                        <td>
-                            <input type="number" class="form-control discount" value="0" step="0.01" min="0">
-                        </td>
+                            <td>
+                                <input type="number" class="form-control qty" value="1" min="1">
+                            </td>
 
-                        <td>
-                            <input type="number" class="form-control tax" value="0" step="0.01" min="0">
-                        </td>
+                            <td>
+                                <input type="number" class="form-control cost" value="0" step="0.01" min="0">
+                            </td>
 
-                        <td class="line-total">0.00</td>
+                            <td>
+                                <input type="number" class="form-control discount" value="0" step="0.01" min="0">
+                            </td>
 
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm remove">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </td>
+                            <td>
+                                <input type="number" class="form-control tax" value="0" step="0.01" min="0">
+                            </td>
 
-                    </tr>
+                            <td>
+                                <input type="date" class="form-control expiry">
+                            </td>
 
-                    </tbody>
+                            <td class="line-total">0.00</td>
 
-                </table>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
 
-                <div class="row mt-4">
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <div class="expiry-hint">
+                    <i class="fas fa-circle-info"></i>
+                    <div>
+                        Set an expiry date on a line to automatically create a tracked batch in
+                        <strong>Expiry Management</strong> once this purchase is marked as received.
+                        Leave it blank for products that don't expire.
+                    </div>
+                </div>
+
+                <div class="row purchase-extras">
 
                     <div class="col-md-3">
                         <label>Purchase Discount</label>
@@ -201,7 +379,7 @@
 
                 </div>
 
-                <div class="total-card mt-3">
+                <div class="total-card">
                     <div>
                         <small>Subtotal</small>
                         <h5 id="subtotalDisplay">0.00</h5>
@@ -215,12 +393,12 @@
                 <input type="hidden" name="items_json" id="items_json">
 
                 <div class="purchase-form-actions">
-                    <button type="button" class="btn btn-secondary" id="addRow">
-                        + Add Line
+                    <button type="button" class="purchase-btn purchase-btn-light" id="addRow">
+                        <i class="fas fa-plus me-1"></i> Add Line
                     </button>
 
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        Save Purchase
+                    <button type="submit" class="purchase-btn purchase-btn-primary" id="submitBtn">
+                        <i class="fas fa-floppy-disk me-1"></i> Save Purchase
                     </button>
                 </div>
 
@@ -327,6 +505,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (newRow.querySelector(".discount")) newRow.querySelector(".discount").value = 0;
         if (newRow.querySelector(".tax")) newRow.querySelector(".tax").value = 0;
+        if (newRow.querySelector(".expiry")) newRow.querySelector(".expiry").value = "";
 
         newRow.querySelector(".line-total").innerText = "0.00";
 
@@ -357,7 +536,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     qty: qty,
                     cost: cost,
                     discount: row.querySelector(".discount")?.value || 0,
-                    tax: row.querySelector(".tax")?.value || 0
+                    tax: row.querySelector(".tax")?.value || 0,
+                    expiry: row.querySelector(".expiry")?.value || ""
                 });
             }
         });

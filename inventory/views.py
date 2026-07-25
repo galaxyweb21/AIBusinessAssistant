@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from business.models import Business
 from inventory.models import *
 from inventory.forms import *
+from sales.models import *
+from collections import OrderedDict
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from dashboard.services.alerts import generate_business_alerts
@@ -31,6 +33,7 @@ from django.http import HttpResponse
 import io
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
+from datetime import datetime, timedelta
 
 
 @login_required
@@ -1234,8 +1237,25 @@ def create_purchase(request):
                     "business": business, "suppliers": suppliers, "products": products,
                 })
 
-            # Ownership check: the product MUST belong to this business —
-            # prevents attaching another business's inventory via a tampered request.
+            # NEW — optional per-line expiry date
+            expiry_date = None
+            raw_expiry = (item.get("expiry") or "").strip()
+
+            if raw_expiry:
+                try:
+                    expiry_date = datetime.strptime(raw_expiry, "%Y-%m-%d").date()
+                except ValueError:
+                    messages.error(request, f"Item {index}: expiry date is not a valid date.")
+                    return render(request, "purchases/create_purchase.html", {
+                        "business": business, "suppliers": suppliers, "products": products,
+                    })
+
+                if expiry_date <= timezone.now().date():
+                    messages.error(request, f"Item {index}: expiry date must be in the future.")
+                    return render(request, "purchases/create_purchase.html", {
+                        "business": business, "suppliers": suppliers, "products": products,
+                    })
+
             product = Inventory.objects.filter(pk=product_id, business=business).first()
             if not product:
                 messages.error(request, f"Item {index}: product not found in your inventory.")
@@ -1249,9 +1269,10 @@ def create_purchase(request):
                 "cost": cost,
                 "discount": discount,
                 "tax_percent": tax_percent,
+                "expiry_date": expiry_date,  # NEW
             })
 
-        # Everything validated — now safe to create records.
+    # Everything validated — now safe to create records.
         purchase = Purchase.objects.create(
             business=business,
             supplier=supplier,
@@ -1269,6 +1290,7 @@ def create_purchase(request):
                 unit_cost=validated["cost"],
                 discount=validated["discount"],
                 tax_percent=validated["tax_percent"],
+                expiry_date=validated["expiry_date"],
             )
 
         purchase.calculate_totals(
@@ -1336,13 +1358,64 @@ def view_purchase(request, pk):
 
     items = purchase.items.select_related("product")
 
+    # NEW — batches auto-created when this purchase was received
+    batches = purchase.batches_created.select_related("product").order_by("expiry_date")
+
     context = {
         "purchase": purchase,
         "items": items,
+        "batches": batches,   # NEW
         "business": business,
     }
 
     return render(request, "purchases/view_purchase.html", context)
+
+
+@login_required
+def purchase_list(request):
+    business = get_business(request)
+
+    search = request.GET.get("search", "").strip()
+    status = request.GET.get("status", "").strip()
+
+    purchases = Purchase.objects.filter(
+        business=business
+    ).select_related("supplier", "created_by").order_by("-created_at")
+
+    if search:
+        purchases = purchases.filter(
+            Q(reference_number__icontains=search) |
+            Q(supplier__name__icontains=search)
+        )
+
+    if status in ["draft", "pending", "received", "cancelled"]:
+        purchases = purchases.filter(status=status)
+
+    total_purchases = purchases.count()
+
+    total_value = purchases.aggregate(
+        total=Coalesce(Sum("total_cost"), Decimal("0.00"))
+    )["total"]
+
+    total_outstanding = purchases.aggregate(
+        total=Coalesce(Sum(F("total_cost") - F("paid_amount")), Decimal("0.00"))
+    )["total"]
+
+    paginator = Paginator(purchases, 15)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "purchases": page_obj,
+        "search": search,
+        "status": status,
+        "total_purchases": total_purchases,
+        "total_value": total_value,
+        "total_outstanding": total_outstanding,
+        "business": business,
+        "title": "Purchases",
+    }
+
+    return render(request, "purchases/purchase_list.html", context)
 
 
 @login_required
@@ -1768,4 +1841,253 @@ def export_expiry_csv(request):
         ])
 
     return response
+
+
+def _sales_window_stats(sale_items_queryset):
+    """Sum units/revenue/profit net of refunds, using the model's own
+    remaining_* properties rather than raw quantity — a fully or
+    partially refunded item should not count as sold."""
+
+    units = 0
+    revenue = Decimal("0.00")
+    profit = Decimal("0.00")
+
+    for item in sale_items_queryset:
+        units += item.remaining_quantity
+        revenue += item.remaining_total
+        profit += item.remaining_profit
+
+    return units, revenue, profit
+
+
+@login_required
+def product_intelligence(request, pk):
+
+    business = get_business(request)
+
+    product = get_object_or_404(
+        Inventory.objects.select_related("category"),
+        pk=pk,
+        business=business,
+    )
+
+    today = timezone.now().date()
+
+    # =====================================
+    # STOCK MOVEMENT HISTORY
+    # =====================================
+    history = (
+        InventoryStockHistory.objects
+        .filter(business=business, inventory=product)
+        .select_related("supplier", "received_by")
+        .order_by("-created_at")
+    )
+
+    recent_movements = history[:15]
+
+    restock_history = history.filter(action_type="restock")
+    damage_history = history.filter(action_type="damaged")
+    return_history = history.filter(action_type="returned")
+
+    total_restocked = restock_history.aggregate(
+        total=Coalesce(Sum("quantity"), 0)
+    )["total"]
+
+    monthly_restocked = restock_history.filter(
+        created_at__month=today.month,
+        created_at__year=today.year,
+    ).aggregate(total=Coalesce(Sum("quantity"), 0))["total"]
+
+    total_damaged = abs(
+        damage_history.aggregate(total=Coalesce(Sum("quantity"), 0))["total"]
+    )
+
+    average_purchase_cost = (
+        restock_history.exclude(purchase_cost=0)
+        .aggregate(avg=Avg("purchase_cost"))["avg"]
+        or product.cost_price
+    )
+
+    last_restock = restock_history.first()
+    last_damage = damage_history.first()
+
+    # =====================================
+    # SUPPLIER BREAKDOWN
+    # =====================================
+    supplier_breakdown = (
+        restock_history.filter(supplier__isnull=False)
+        .values("supplier__id", "supplier__name")
+        .annotate(total_qty=Sum("quantity"), orders=Count("id"))
+        .order_by("-total_qty")[:5]
+    )
+
+    # =====================================
+    # EXPIRY / BATCHES
+    # =====================================
+    active_batches = list(
+        ProductBatch.objects
+        .filter(business=business, product=product, status="active")
+        .order_by("expiry_date")
+    )
+
+    expired_batches_count = sum(1 for b in active_batches if b.expiry_status == "expired")
+    critical_batches_count = sum(1 for b in active_batches if b.expiry_status == "critical")
+    warning_batches_count = sum(1 for b in active_batches if b.expiry_status == "warning")
+
+    expiry_value_at_risk = sum(
+        b.batch_value for b in active_batches
+        if b.expiry_status in ("expired", "critical", "warning")
+    ) or Decimal("0.00")
+
+    nearest_expiry = active_batches[0] if active_batches else None
+
+    # =====================================
+    # SALES HISTORY + VELOCITY
+    # =====================================
+    sale_items = (
+        SaleItem.objects
+        .filter(product=product, sale__business=business,
+                sale__status__in=["Completed", "Partially Refunded", "Refunded"])
+        .select_related("sale", "sale__customer")
+        .order_by("-sale__created_at")
+    )
+
+    last_30 = list(sale_items.filter(sale__created_at__date__gte=today - timedelta(days=30)))
+    last_90 = list(sale_items.filter(sale__created_at__date__gte=today - timedelta(days=90)))
+
+    units_sold_30d, revenue_30d, profit_30d = _sales_window_stats(last_30)
+    units_sold_90d, revenue_90d, profit_90d = _sales_window_stats(last_90)
+    all_time_units, all_time_revenue, all_time_profit = _sales_window_stats(sale_items)
+
+    recent_sales = sale_items[:10]
+
+    avg_daily_units_30d = (units_sold_30d / 30) if units_sold_30d else 0
+
+    # =====================================
+    # FORECAST
+    # =====================================
+    if avg_daily_units_30d > 0:
+        days_of_stock_left = round(product.stock_quantity / avg_daily_units_30d, 1)
+    else:
+        days_of_stock_left = None
+
+    if product.maximum_stock and product.maximum_stock > product.stock_quantity:
+        suggested_reorder_qty = product.maximum_stock - product.stock_quantity
+    else:
+        suggested_reorder_qty = product.reorder_quantity or 0
+
+    if days_of_stock_left is None:
+        forecast_status = "insufficient_data"
+    elif days_of_stock_left <= 7:
+        forecast_status = "critical"
+    elif days_of_stock_left <= 21:
+        forecast_status = "watch"
+    else:
+        forecast_status = "healthy"
+
+    # =====================================
+    # CHART DATA
+    # =====================================
+    chart_movements = list(history.order_by("created_at")[:60])
+    stock_chart_labels = [m.created_at.strftime("%d %b") for m in chart_movements]
+    stock_chart_values = [m.new_stock for m in chart_movements]
+
+    sales_by_day = OrderedDict()
+    cursor = today - timedelta(days=29)
+    while cursor <= today:
+        sales_by_day[cursor] = 0
+        cursor += timedelta(days=1)
+
+    for item in last_30:
+        day = item.sale.created_at.date()
+        if day in sales_by_day:
+            sales_by_day[day] += item.remaining_quantity
+
+    sales_chart_labels = [d.strftime("%d %b") for d in sales_by_day.keys()]
+    sales_chart_values = list(sales_by_day.values())
+
+    # =====================================
+    # ALERTS (product-specific, rule-based)
+    # =====================================
+    alerts = []
+
+    if product.is_out_of_stock:
+        alerts.append({"type": "danger", "icon": "fas fa-circle-xmark",
+                        "message": "This product is completely out of stock."})
+    elif product.is_low_stock:
+        alerts.append({"type": "warning", "icon": "fas fa-triangle-exclamation",
+                        "message": f"Stock is at or below the minimum threshold ({product.minimum_stock})."})
+
+    if product.maximum_stock and product.stock_quantity >= product.maximum_stock:
+        alerts.append({"type": "info", "icon": "fas fa-box-archive",
+                        "message": "Stock is at or above the configured maximum — consider pausing restocks."})
+
+    if expired_batches_count:
+        alerts.append({"type": "danger", "icon": "fas fa-skull-crossbones",
+                        "message": f"{expired_batches_count} batch(es) have already expired and should be disposed."})
+
+    if critical_batches_count:
+        alerts.append({"type": "warning", "icon": "fas fa-clock",
+                        "message": f"{critical_batches_count} batch(es) expire within 7 days."})
+
+    if forecast_status == "critical":
+        alerts.append({"type": "danger", "icon": "fas fa-hourglass-end",
+                        "message": f"At current sales velocity, stock runs out in about {days_of_stock_left} day(s)."})
+    elif forecast_status == "watch":
+        alerts.append({"type": "warning", "icon": "fas fa-hourglass-half",
+                        "message": f"Stock is projected to last about {days_of_stock_left} day(s) — plan a reorder."})
+
+    if not alerts:
+        alerts.append({"type": "success", "icon": "fas fa-circle-check",
+                        "message": "No active risks detected for this product right now."})
+
+    context = {
+        "product": product,
+        "business": business,
+
+        "recent_movements": recent_movements,
+        "total_restocked": total_restocked,
+        "monthly_restocked": monthly_restocked,
+        "last_restock": last_restock,
+        "average_purchase_cost": average_purchase_cost,
+
+        "damage_history": damage_history[:10],
+        "total_damaged": total_damaged,
+        "damage_count": damage_history.count(),
+        "last_damage": last_damage,
+
+        "return_count": return_history.count(),
+
+        "supplier_breakdown": supplier_breakdown,
+
+        "active_batches": active_batches,
+        "expired_batches_count": expired_batches_count,
+        "critical_batches_count": critical_batches_count,
+        "warning_batches_count": warning_batches_count,
+        "expiry_value_at_risk": expiry_value_at_risk,
+        "nearest_expiry": nearest_expiry,
+
+        "recent_sales": recent_sales,
+        "units_sold_30d": units_sold_30d,
+        "revenue_30d": revenue_30d,
+        "profit_30d": profit_30d,
+        "units_sold_90d": units_sold_90d,
+        "all_time_units": all_time_units,
+        "all_time_revenue": all_time_revenue,
+
+        "days_of_stock_left": days_of_stock_left,
+        "suggested_reorder_qty": suggested_reorder_qty,
+        "forecast_status": forecast_status,
+
+        "stock_chart_labels": json.dumps(stock_chart_labels),
+        "stock_chart_values": json.dumps(stock_chart_values),
+        "sales_chart_labels": json.dumps(sales_chart_labels),
+        "sales_chart_values": json.dumps(sales_chart_values),
+
+        "alerts": alerts,
+
+        "title": f"{product.product_name} — Intelligence",
+    }
+
+    return render(request, "inventory/product_intelligence.html", context)
 

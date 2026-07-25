@@ -1,0 +1,428 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+.purchase-list-wrapper{
+    padding:24px;
+}
+
+.purchase-list-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:24px;
+}
+
+.purchase-list-header h2{
+    font-size:28px;
+    font-weight:800;
+    color:var(--text-main);
+    margin-bottom:6px;
+}
+
+.purchase-list-header p{
+    color:var(--text-muted);
+    margin:0;
+}
+
+.purchase-btn{
+    padding:12px 18px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:700;
+    border:none;
+    text-decoration:none;
+    transition:.25s ease;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+}
+
+.purchase-btn:hover{ transform:translateY(-2px); }
+
+.purchase-primary{
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff !important;
+}
+
+.purchase-light{
+    background:var(--bg-card);
+    color:var(--text-main) !important;
+    border:1px solid var(--border);
+}
+
+.purchase-kpi{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:18px;
+    margin-bottom:24px;
+}
+
+.purchase-kpi-card{
+    position:relative;
+    background:linear-gradient(145deg, var(--bg-card), var(--bg-main));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    overflow:hidden;
+    transition:.3s;
+}
+
+.purchase-kpi-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.purchase-kpi-card i{
+    position:absolute;
+    top:15px;
+    right:15px;
+    opacity:.1;
+    font-size:24px;
+}
+
+.purchase-kpi-card small{ color:var(--text-muted); }
+
+.purchase-kpi-card h4{
+    margin-top:12px;
+    font-size:20px;
+    font-weight:700;
+    color:var(--text-main);
+    word-break:break-word;
+}
+
+.kpi-blue{ border-left:4px solid #3b82f6; }
+.kpi-green{ border-left:4px solid #10b981; }
+.kpi-orange{ border-left:4px solid #f59e0b; }
+
+.purchase-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:24px;
+    overflow:hidden;
+}
+
+.purchase-toolbar{
+    padding:22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:15px;
+    border-bottom:1px solid var(--border);
+}
+
+.purchase-toolbar form{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    flex:1;
+}
+
+.purchase-search{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    height:48px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    flex:1;
+    min-width:240px;
+}
+
+.purchase-search i{ color:var(--text-muted); font-size:15px; }
+
+.purchase-search input{
+    flex:1;
+    width:100%;
+    height:100%;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:var(--text-main);
+}
+
+.purchase-select{
+    height:48px;
+    border-radius:14px;
+    padding:0 14px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+}
+
+.purchase-table-wrap{ overflow-x:auto; }
+
+.purchase-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.purchase-table thead{ background:rgba(99,102,241,0.05); }
+
+.purchase-table th{
+    padding:16px 20px;
+    color:var(--text-main);
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    border-bottom:1px solid var(--border);
+    text-align:left;
+}
+
+.purchase-table td{
+    padding:16px 20px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-main);
+    vertical-align:middle;
+}
+
+.purchase-table tbody tr{
+    cursor:pointer;
+    transition:.15s ease;
+}
+
+.purchase-table tbody tr:hover{
+    background:rgba(99,102,241,0.03);
+}
+
+.status-badge{
+    padding:8px 14px;
+    border-radius:30px;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    white-space:nowrap;
+}
+
+.status-pending{ background:rgba(245,158,11,.15); color:#f59e0b; }
+.status-partial{ background:rgba(59,130,246,.15); color:#3b82f6; }
+.status-paid{ background:rgba(16,185,129,.15); color:#10b981; }
+.status-received{ background:rgba(99,102,241,.15); color:#6366f1; }
+.status-draft{ background:rgba(148,163,184,.18); color:#64748b; }
+.status-cancelled{ background:rgba(239,68,68,.15); color:#ef4444; }
+
+.empty-state{
+    padding:70px 20px;
+    text-align:center;
+}
+
+.empty-state i{
+    font-size:60px;
+    margin-bottom:20px;
+    color:var(--text-muted);
+}
+
+.empty-state h4{ color:var(--text-main); font-weight:700; }
+.empty-state p{ color:var(--text-muted); }
+
+.list-pagination{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    padding:24px;
+    border-top:1px solid var(--border);
+}
+
+.page-btn{
+    min-width:42px;
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    text-decoration:none !important;
+    border:1px solid var(--border);
+    background:var(--bg-card);
+    color:var(--text-main);
+    font-weight:700;
+    transition:.25s ease;
+}
+
+.page-btn:hover{
+    transform:translateY(-2px);
+    background:rgba(99,102,241,.08);
+}
+
+.active-page{
+    background:linear-gradient(135deg, #6366f1, #4f46e5);
+    color:#fff;
+    border:none;
+}
+
+@media(max-width:768px){
+    .purchase-list-wrapper{ padding:14px; }
+    .purchase-toolbar{ flex-direction:column; align-items:stretch; }
+    .purchase-toolbar form{ width:100%; }
+    .purchase-list-header{ flex-direction:column; align-items:flex-start; }
+}
+
+</style>
+
+<div class="content-wrapper">
+<section class="content purchase-list-wrapper">
+
+    <div class="purchase-list-header">
+        <div>
+            <h2>Purchases</h2>
+            <p>All stock purchases recorded for {{ business.name }}.</p>
+        </div>
+
+        <a href="{% url 'create_purchase' %}" class="purchase-btn purchase-primary">
+            <i class="fas fa-plus"></i>
+            New Purchase
+        </a>
+    </div>
+
+    <div class="purchase-kpi">
+
+        <div class="purchase-kpi-card kpi-blue">
+            <i class="fas fa-receipt"></i>
+            <small>Total Purchases</small>
+            <h4>{{ total_purchases }}</h4>
+        </div>
+
+        <div class="purchase-kpi-card kpi-green">
+            <i class="fas fa-sack-dollar"></i>
+            <small>Total Value</small>
+            <h4>GHS {{ total_value|floatformat:2 }}</h4>
+        </div>
+
+        <div class="purchase-kpi-card kpi-orange">
+            <i class="fas fa-hourglass-half"></i>
+            <small>Outstanding Balance</small>
+            <h4>GHS {{ total_outstanding|floatformat:2 }}</h4>
+        </div>
+
+    </div>
+
+    <div class="purchase-card">
+
+        <div class="purchase-toolbar">
+
+            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+
+                <div class="purchase-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" value="{{ search }}"
+                           placeholder="Search by reference or supplier...">
+                </div>
+
+                <select name="status" class="purchase-select" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="received" {% if status == 'received' %}selected{% endif %}>Received</option>
+                    <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+
+                <button type="submit" class="purchase-btn purchase-primary">
+                    <i class="fas fa-search"></i>
+                    Filter
+                </button>
+
+                {% if search or status %}
+                    <a href="{% url 'purchase_list' %}" class="purchase-btn purchase-light">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </a>
+                {% endif %}
+
+            </form>
+
+        </div>
+
+        <div class="purchase-table-wrap">
+
+            <table class="purchase-table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Supplier</th>
+                        <th>Total Cost</th>
+                        <th>Balance Due</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for purchase in purchases %}
+                    <tr onclick="window.location='{% url 'view_purchase' purchase.id %}'">
+                        <td><strong>{{ purchase.reference_number }}</strong></td>
+                        <td>{{ purchase.supplier.name }}</td>
+                        <td>GHS {{ purchase.total_cost }}</td>
+                        <td>GHS {{ purchase.balance }}</td>
+                        <td>
+                            <span class="status-badge status-{{ purchase.status }}">
+                                {{ purchase.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ purchase.created_at|date:"d M Y" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-boxes-stacked"></i>
+                                <h4>No Purchases Found</h4>
+                                <p>
+                                    {% if search or status %}
+                                        Try adjusting your search or filter.
+                                    {% else %}
+                                        Purchases you record will show up here.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            {% if purchases.has_other_pages %}
+            <div class="list-pagination">
+
+                {% if purchases.has_previous %}
+                    <a href="?page={{ purchases.previous_page_number }}&search={{ search|urlencode }}&status={{ status }}" class="page-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for num in purchases.paginator.page_range %}
+                    {% if purchases.number == num %}
+                        <span class="page-btn active-page">{{ num }}</span>
+                    {% elif num > purchases.number|add:'-3' and num < purchases.number|add:'3' %}
+                        <a href="?page={{ num }}&search={{ search|urlencode }}&status={{ status }}" class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if purchases.has_next %}
+                    <a href="?page={{ purchases.next_page_number }}&search={{ search|urlencode }}&status={{ status }}" class="page-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</section>
+</div>
+
+{% endblock %}

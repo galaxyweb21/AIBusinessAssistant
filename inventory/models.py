@@ -507,13 +507,29 @@ class Purchase(models.Model):
                     business=self.business,
                     inventory=inventory,
                     previous_stock=previous_stock,
-                    quantity_changed=item.quantity,
+                    quantity=item.quantity,  # was quantity_changed (invalid field)
                     new_stock=new_stock,
                     action_type="restock",
-                    performed_by=user,
+                    received_by=user,  # was performed_by (invalid field)
+                    supplier=self.supplier,
                     reference_number=self.reference_number,
-                    note=f"Purchase received: {self.reference_number}"
+                    remarks=f"Purchase received: {self.reference_number}",
                 )
+
+                # NEW — auto-create an expiry-tracked batch if this line
+                # had an expiry date captured at purchase time.
+                if item.expiry_date:
+                    ProductBatch.objects.create(
+                        business=self.business,
+                        product=inventory,
+                        purchase=self,
+                        quantity=item.quantity,
+                        cost_price=item.unit_cost,
+                        expiry_date=item.expiry_date,
+                        supplier=self.supplier,
+                        received_date=timezone.now().date(),
+                        notes=f"Auto-created from purchase {self.reference_number}",
+                    )
 
             self.status = "received"
             self.save(update_fields=["status"])
@@ -521,7 +537,7 @@ class Purchase(models.Model):
             supplier = self.supplier
 
             supplier.total_purchases += (
-                self.total_cost or Decimal("0.00")
+                    self.total_cost or Decimal("0.00")
             )
 
             supplier.total_items_supplied += sum(
@@ -534,6 +550,51 @@ class Purchase(models.Model):
             supplier.save()
 
 
+    # def post_purchase(self, user=None):
+    #
+    #     with transaction.atomic():
+    #
+    #         for item in self.items.all():
+    #
+    #             inventory = item.product
+    #
+    #             previous_stock = inventory.stock_quantity
+    #             new_stock = previous_stock + item.quantity
+    #
+    #             inventory.stock_quantity = new_stock
+    #             inventory.save()
+    #
+    #             InventoryStockHistory.objects.create(
+    #                 business=self.business,
+    #                 inventory=inventory,
+    #                 previous_stock=previous_stock,
+    #                 quantity_changed=item.quantity,
+    #                 new_stock=new_stock,
+    #                 action_type="restock",
+    #                 performed_by=user,
+    #                 reference_number=self.reference_number,
+    #                 note=f"Purchase received: {self.reference_number}"
+    #             )
+    #
+    #         self.status = "received"
+    #         self.save(update_fields=["status"])
+    #
+    #         supplier = self.supplier
+    #
+    #         supplier.total_purchases += (
+    #             self.total_cost or Decimal("0.00")
+    #         )
+    #
+    #         supplier.total_items_supplied += sum(
+    #             i.quantity
+    #             for i in self.items.all()
+    #         )
+    #
+    #         supplier.last_supply_date = timezone.now()
+    #
+    #         supplier.save()
+
+
 class PurchaseItem(models.Model):
 
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name="items", null=True)
@@ -543,6 +604,7 @@ class PurchaseItem(models.Model):
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     tax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     total_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    expiry_date = models.DateField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
 
@@ -745,6 +807,10 @@ class ProductBatch(models.Model):
 
     business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="product_batches")
     product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name="batches")
+    purchase = models.ForeignKey(
+        'Purchase', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="batches_created"
+    )
 
     batch_number = models.CharField(max_length=60, blank=True)
 

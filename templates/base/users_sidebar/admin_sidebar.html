@@ -1009,11 +1009,24 @@ body.sidebar-collapse .menu-badge {
                     </li>
 
                     <!-- PURCHASES -->
-                    <li class="nav-item">
-                        <a href="{% url 'create_purchase' %}" class="nav-link {% if request.resolver_match.url_name == 'create_purchase' %}active{% endif %}" data-title="Purchase">
+                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'create_purchase' or request.resolver_match.url_name == 'purchase_list' or request.resolver_match.url_name == 'view_purchase' %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'create_purchase' or request.resolver_match.url_name == 'purchase_list' or request.resolver_match.url_name == 'view_purchase' %}active{% endif %}">
                             <span class="menu-icon"><i class="fas fa-shopping-cart"></i></span>
                             <span class="menu-text">Purchases</span>
+                            <i class="right fas fa-chevron-right"></i>
                         </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="{% url 'create_purchase' %}" class="nav-link {% if request.resolver_match.url_name == 'create_purchase' %}active{% endif %}" data-title="New Purchase">
+                                    <i class="far fa-circle nav-icon"></i> New Purchase
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'purchase_list' %}" class="nav-link {% if request.resolver_match.url_name == 'purchase_list' or request.resolver_match.url_name == 'view_purchase' %}active{% endif %}" data-title="All Purchases">
+                                    <i class="far fa-circle nav-icon"></i> All Purchases
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <!-- INVENTORY -->

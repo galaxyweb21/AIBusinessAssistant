@@ -1,0 +1,927 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+.pi-wrapper{ padding:24px; }
+
+/* HEADER */
+.pi-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:18px;
+    margin-bottom:22px;
+}
+
+.pi-header-left{
+    display:flex;
+    gap:16px;
+    align-items:center;
+}
+
+.pi-avatar{
+    width:64px;
+    height:64px;
+    border-radius:18px;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    flex-shrink:0;
+    overflow:hidden;
+}
+
+.pi-avatar img{ width:100%; height:100%; object-fit:cover; }
+
+.pi-header-left h2{
+    margin:0;
+    font-weight:800;
+    color:var(--text-main);
+    font-size:24px;
+}
+
+.pi-meta-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:8px;
+}
+
+.pi-chip{
+    font-size:11px;
+    font-weight:700;
+    padding:5px 12px;
+    border-radius:999px;
+    background:rgba(99,102,241,.1);
+    color:var(--primary);
+}
+
+.pi-back-btn{
+    padding:10px 16px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--bg-card);
+    color:var(--text-main);
+    text-decoration:none !important;
+    font-weight:600;
+    font-size:13px;
+}
+
+/* ALERTS */
+.pi-alerts{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:22px;
+}
+
+.pi-alert{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    border-radius:14px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.pi-alert.danger{ background:rgba(239,68,68,.1); color:#ef4444; }
+.pi-alert.warning{ background:rgba(245,158,11,.1); color:#f59e0b; }
+.pi-alert.info{ background:rgba(59,130,246,.1); color:#3b82f6; }
+.pi-alert.success{ background:rgba(16,185,129,.1); color:#10b981; }
+
+.pi-alert i{ margin-top:2px; }
+
+/* KPI */
+.pi-kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(190px,1fr));
+    gap:16px;
+    margin-bottom:24px;
+}
+
+.pi-kpi-card{
+    background:linear-gradient(145deg, var(--bg-card), var(--bg-main));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    position:relative;
+    overflow:hidden;
+    transition:.25s ease;
+}
+
+.pi-kpi-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 28px rgba(0,0,0,.08);
+}
+
+.pi-kpi-card i{
+    position:absolute;
+    top:14px;
+    right:14px;
+    opacity:.12;
+    font-size:22px;
+}
+
+.pi-kpi-card small{ color:var(--text-muted); font-size:11px; font-weight:700; text-transform:uppercase; }
+
+.pi-kpi-card h4{
+    margin-top:8px;
+    font-size:20px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+/* TABS */
+.pi-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:22px;
+    overflow:hidden;
+}
+
+.pi-tabs{
+    display:flex;
+    gap:4px;
+    padding:14px 18px 0;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+}
+
+.pi-tab-btn{
+    padding:10px 16px;
+    border-radius:12px 12px 0 0;
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-muted);
+    border:1px solid transparent;
+    border-bottom:none;
+    background:none;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.pi-tab-btn:hover{ color:var(--text-main); background:rgba(99,102,241,.05); }
+
+.pi-tab-btn.active{
+    color:#6366f1;
+    background:var(--bg-card);
+    border-color:var(--border);
+    position:relative;
+    top:1px;
+}
+
+.pi-tab-panel{
+    display:none;
+    padding:24px;
+}
+
+.pi-tab-panel.active{ display:block; }
+
+.pi-section-title{
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--text-muted);
+    margin-bottom:14px;
+}
+
+/* TABLES */
+.pi-table-wrap{ overflow-x:auto; border-radius:14px; border:1px solid var(--border); margin-bottom:20px; }
+
+.pi-table{ width:100%; border-collapse:collapse; }
+
+.pi-table thead{ background:rgba(99,102,241,0.05); }
+
+.pi-table th{
+    padding:12px 16px;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    color:var(--text-main);
+    border-bottom:1px solid var(--border);
+    text-align:left;
+    white-space:nowrap;
+}
+
+.pi-table td{
+    padding:12px 16px;
+    border-bottom:1px solid var(--border);
+    color:var(--text-main);
+    font-size:13px;
+}
+
+.pi-table tbody tr:hover{ background:rgba(99,102,241,.03); }
+
+.pi-empty{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--text-muted);
+}
+
+.pi-empty i{ font-size:34px; margin-bottom:10px; display:block; opacity:.5; }
+
+/* BADGES */
+.pi-badge{
+    padding:5px 11px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:700;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+}
+
+.pi-badge.restock{ background:rgba(16,185,129,.12); color:#10b981; }
+.pi-badge.sale{ background:rgba(59,130,246,.12); color:#3b82f6; }
+.pi-badge.adjustment{ background:rgba(245,158,11,.12); color:#f59e0b; }
+.pi-badge.damaged{ background:rgba(239,68,68,.12); color:#ef4444; }
+.pi-badge.returned{ background:rgba(139,92,246,.12); color:#8b5cf6; }
+.pi-badge.transfer{ background:rgba(14,165,233,.12); color:#0ea5e9; }
+.pi-badge.expired{ background:rgba(239,68,68,.12); color:#ef4444; }
+
+.pi-badge.status-expired{ background:rgba(239,68,68,.14); color:#ef4444; }
+.pi-badge.status-critical{ background:rgba(249,115,22,.14); color:#f97316; }
+.pi-badge.status-warning{ background:rgba(234,179,8,.14); color:#ca8a04; }
+.pi-badge.status-healthy{ background:rgba(16,185,129,.14); color:#10b981; }
+
+.batch-code{ font-family:monospace; font-size:12px; color:var(--text-muted); }
+
+/* CHARTS */
+.pi-chart-box{
+    background:var(--bg-main);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:20px;
+}
+
+.pi-chart-box h6{
+    margin:0 0 14px;
+    font-weight:700;
+    color:var(--text-main);
+    font-size:13px;
+}
+
+.pi-chart-canvas-wrap{ position:relative; height:260px; }
+
+/* FORECAST */
+.forecast-hero{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding:22px;
+    border-radius:18px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+}
+
+.forecast-hero.critical{ background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.2); }
+.forecast-hero.watch{ background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); }
+.forecast-hero.healthy{ background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); }
+.forecast-hero.insufficient_data{ background:rgba(148,163,184,.08); border:1px solid rgba(148,163,184,.2); }
+
+.forecast-hero .fh-number{
+    font-size:38px;
+    font-weight:800;
+    color:var(--text-main);
+}
+
+.forecast-hero .fh-label{
+    color:var(--text-muted);
+    font-size:13px;
+}
+
+/* AI PANEL */
+.ai-panel{
+    background:linear-gradient(135deg, rgba(99,102,241,.06), rgba(16,185,129,.04));
+    border:1px dashed rgba(99,102,241,.25);
+    border-radius:18px;
+    padding:22px;
+}
+
+.ai-ask-btn{
+    border:none;
+    border-radius:14px;
+    padding:12px 20px;
+    font-weight:700;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color:#fff;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+}
+
+.ai-ask-btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.ai-response-box{
+    margin-top:18px;
+    padding:18px;
+    border-radius:14px;
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    display:none;
+    font-size:14px;
+    line-height:1.7;
+    color:var(--text-main);
+}
+
+.ai-response-box h4, .ai-response-box h3{
+    font-size:14px;
+    font-weight:800;
+    margin:14px 0 6px;
+    color:var(--primary);
+}
+
+.ai-response-box ul{ margin:0 0 10px 18px; padding:0; }
+
+@media(max-width:768px){
+    .pi-wrapper{ padding:14px; }
+    .pi-tab-panel{ padding:16px; }
+}
+
+</style>
+
+<div class="content-wrapper">
+<section class="content pi-wrapper">
+
+    <!-- HEADER -->
+    <div class="pi-header">
+        <div class="pi-header-left">
+            <div class="pi-avatar">
+                {% if product.product_image %}
+                    <img src="{{ product.product_image.url }}" alt="{{ product.product_name }}">
+                {% else %}
+                    <i class="fas fa-box-open"></i>
+                {% endif %}
+            </div>
+            <div>
+                <h2>{{ product.product_name }}</h2>
+                <div class="pi-meta-row">
+                    <span class="pi-chip">SKU: {{ product.sku }}</span>
+                    <span class="pi-chip">{{ product.category.name|default:"Uncategorized" }}</span>
+                    <span class="pi-chip">Stock: {{ product.stock_quantity }} {{ product.get_unit_display }}</span>
+                    <span class="pi-chip">GHS {{ product.selling_price }}</span>
+                </div>
+            </div>
+        </div>
+
+        <a href="{% url 'view_inventory' %}" class="pi-back-btn">
+            <i class="fas fa-arrow-left me-1"></i> Back to Inventory
+        </a>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="pi-alerts">
+        {% for alert in alerts %}
+        <div class="pi-alert {{ alert.type }}">
+            <i class="{{ alert.icon }}"></i>
+            <div>{{ alert.message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- KPI -->
+    <div class="pi-kpi-grid">
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-cubes"></i>
+            <small>Current Stock</small>
+            <h4>{{ product.stock_quantity }}</h4>
+        </div>
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-sack-dollar"></i>
+            <small>Stock Value</small>
+            <h4>GHS {{ product.stock_value|floatformat:2 }}</h4>
+        </div>
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-chart-line"></i>
+            <small>Sold (30 Days)</small>
+            <h4>{{ units_sold_30d }}</h4>
+        </div>
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-money-bill-wave"></i>
+            <small>Revenue (30 Days)</small>
+            <h4>GHS {{ revenue_30d|floatformat:2 }}</h4>
+        </div>
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-hourglass-half"></i>
+            <small>Days Of Stock Left</small>
+            <h4>{% if days_of_stock_left %}{{ days_of_stock_left }}{% else %}—{% endif %}</h4>
+        </div>
+
+        <div class="pi-kpi-card">
+            <i class="fas fa-calendar-xmark"></i>
+            <small>Batches At Risk</small>
+            <h4>{{ expired_batches_count|add:critical_batches_count }}</h4>
+        </div>
+
+    </div>
+
+    <!-- TABBED CARD -->
+    <div class="pi-card">
+
+        <div class="pi-tabs" id="piTabs">
+            <button class="pi-tab-btn active" data-tab="overview">Overview</button>
+            <button class="pi-tab-btn" data-tab="stock">Stock Movements</button>
+            <button class="pi-tab-btn" data-tab="damages">Damages</button>
+            <button class="pi-tab-btn" data-tab="expiry">Expiry</button>
+            <button class="pi-tab-btn" data-tab="suppliers">Suppliers</button>
+            <button class="pi-tab-btn" data-tab="sales">Sales</button>
+            <button class="pi-tab-btn" data-tab="forecast">Forecast &amp; Charts</button>
+            <button class="pi-tab-btn" data-tab="ai">AI Insights</button>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="pi-tab-panel active" data-panel="overview">
+
+            <div class="pi-section-title">Product Snapshot</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <tbody>
+                        <tr><td style="width:220px;"><strong>Product Name</strong></td><td>{{ product.product_name }}</td></tr>
+                        <tr><td><strong>SKU</strong></td><td>{{ product.sku }}</td></tr>
+                        <tr><td><strong>Barcode</strong></td><td>{{ product.barcode|default:"—" }}</td></tr>
+                        <tr><td><strong>Category</strong></td><td>{{ product.category.name|default:"Uncategorized" }}</td></tr>
+                        <tr><td><strong>Brand</strong></td><td>{{ product.brand|default:"—" }}</td></tr>
+                        <tr><td><strong>Cost Price</strong></td><td>GHS {{ product.cost_price }}</td></tr>
+                        <tr><td><strong>Selling Price</strong></td><td>GHS {{ product.selling_price }}</td></tr>
+                        <tr><td><strong>Retail Value (all stock)</strong></td><td>GHS {{ product.retail_value|floatformat:2 }}</td></tr>
+                        <tr><td><strong>Minimum / Reorder / Maximum Stock</strong></td><td>{{ product.minimum_stock }} / {{ product.reorder_level }} / {{ product.maximum_stock }}</td></tr>
+                        <tr><td><strong>All-Time Units Sold</strong></td><td>{{ all_time_units }}</td></tr>
+                        <tr><td><strong>All-Time Revenue</strong></td><td>GHS {{ all_time_revenue|floatformat:2 }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- STOCK MOVEMENTS (Inventory History + Restock History) -->
+        <div class="pi-tab-panel" data-panel="stock">
+
+            <div class="pi-kpi-grid" style="margin-bottom:20px;">
+                <div class="pi-kpi-card"><small>Total Restocked</small><h4>{{ total_restocked }}</h4></div>
+                <div class="pi-kpi-card"><small>Restocked This Month</small><h4>{{ monthly_restocked }}</h4></div>
+                <div class="pi-kpi-card"><small>Avg Purchase Cost</small><h4>GHS {{ average_purchase_cost|floatformat:2 }}</h4></div>
+                <div class="pi-kpi-card"><small>Returns Recorded</small><h4>{{ return_count }}</h4></div>
+            </div>
+
+            <div class="pi-section-title">Recent Movements</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Change</th>
+                            <th>Stock Path</th>
+                            <th>Reference</th>
+                            <th>Performed By</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in recent_movements %}
+                        <tr>
+                            <td><span class="pi-badge {{ m.action_type }}">{{ m.get_action_type_display }}</span></td>
+                            <td>{% if m.quantity_changed > 0 %}+{% endif %}{{ m.quantity_changed }}</td>
+                            <td>{{ m.previous_stock }} → {{ m.new_stock }}</td>
+                            <td>{{ m.reference_number|default:"—" }}</td>
+                            <td>{{ m.received_by_name }}</td>
+                            <td>{{ m.created_at|date:"d M Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6"><div class="pi-empty"><i class="fas fa-clock-rotate-left"></i>No stock movements recorded yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- DAMAGES -->
+        <div class="pi-tab-panel" data-panel="damages">
+
+            <div class="pi-kpi-grid" style="margin-bottom:20px;">
+                <div class="pi-kpi-card"><small>Total Units Damaged</small><h4>{{ total_damaged }}</h4></div>
+                <div class="pi-kpi-card"><small>Damage Events</small><h4>{{ damage_count }}</h4></div>
+                <div class="pi-kpi-card">
+                    <small>Last Damage Event</small>
+                    <h4>{% if last_damage %}{{ last_damage.created_at|date:"d M Y" }}{% else %}—{% endif %}</h4>
+                </div>
+            </div>
+
+            <div class="pi-section-title">Damage History</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <thead>
+                        <tr>
+                            <th>Quantity</th>
+                            <th>Remarks</th>
+                            <th>Recorded By</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in damage_history %}
+                        <tr>
+                            <td>{{ d.quantity_changed }}</td>
+                            <td>{{ d.remarks|default:"—" }}</td>
+                            <td>{{ d.received_by_name }}</td>
+                            <td>{{ d.created_at|date:"d M Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4"><div class="pi-empty"><i class="fas fa-box-open"></i>No damage recorded for this product.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- EXPIRY -->
+        <div class="pi-tab-panel" data-panel="expiry">
+
+            <div class="pi-kpi-grid" style="margin-bottom:20px;">
+                <div class="pi-kpi-card"><small>Active Batches</small><h4>{{ active_batches|length }}</h4></div>
+                <div class="pi-kpi-card"><small>Expired</small><h4>{{ expired_batches_count }}</h4></div>
+                <div class="pi-kpi-card"><small>Critical (≤7 days)</small><h4>{{ critical_batches_count }}</h4></div>
+                <div class="pi-kpi-card"><small>Value At Risk</small><h4>GHS {{ expiry_value_at_risk|floatformat:2 }}</h4></div>
+            </div>
+
+            <div class="pi-section-title">Batches</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <thead>
+                        <tr>
+                            <th>Batch #</th>
+                            <th>Quantity</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Supplier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in active_batches %}
+                        <tr>
+                            <td><span class="batch-code">{{ b.batch_number }}</span></td>
+                            <td>{{ b.quantity }}</td>
+                            <td>{{ b.expiry_date|date:"d M Y" }}</td>
+                            <td>
+                                <span class="pi-badge status-{{ b.expiry_status }}">
+                                    {% if b.expiry_status == 'expired' %}<i class="fas fa-triangle-exclamation"></i> Expired
+                                    {% elif b.expiry_status == 'critical' %}<i class="fas fa-clock"></i> Critical
+                                    {% elif b.expiry_status == 'warning' %}<i class="fas fa-hourglass-half"></i> Warning
+                                    {% else %}<i class="fas fa-circle-check"></i> Healthy
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ b.supplier_name }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5"><div class="pi-empty"><i class="fas fa-calendar-check"></i>No batches are being tracked for this product.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <a href="{% url 'add_batch' %}?product={{ product.id }}" class="pi-back-btn">
+                <i class="fas fa-plus me-1"></i> Add A Batch For This Product
+            </a>
+
+        </div>
+
+        <!-- SUPPLIERS -->
+        <div class="pi-tab-panel" data-panel="suppliers">
+
+            <div class="pi-section-title">Top Suppliers For This Product</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <thead>
+                        <tr>
+                            <th>Supplier</th>
+                            <th>Total Quantity Supplied</th>
+                            <th>Restock Orders</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in supplier_breakdown %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'supplier_detail' s.supplier__id %}" style="color:var(--text-main); font-weight:600; text-decoration:none;">
+                                    {{ s.supplier__name }}
+                                </a>
+                            </td>
+                            <td>{{ s.total_qty }}</td>
+                            <td>{{ s.orders }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3"><div class="pi-empty"><i class="fas fa-truck"></i>No supplier-linked restocks recorded for this product yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- SALES -->
+        <div class="pi-tab-panel" data-panel="sales">
+
+            <div class="pi-kpi-grid" style="margin-bottom:20px;">
+                <div class="pi-kpi-card"><small>Units Sold (30d)</small><h4>{{ units_sold_30d }}</h4></div>
+                <div class="pi-kpi-card"><small>Units Sold (90d)</small><h4>{{ units_sold_90d }}</h4></div>
+                <div class="pi-kpi-card"><small>Profit (30d)</small><h4>GHS {{ profit_30d|floatformat:2 }}</h4></div>
+                <div class="pi-kpi-card"><small>All-Time Revenue</small><h4>GHS {{ all_time_revenue|floatformat:2 }}</h4></div>
+            </div>
+
+            <div class="pi-section-title">Recent Sales</div>
+
+            <div class="pi-table-wrap">
+                <table class="pi-table">
+                    <thead>
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Customer</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for si in recent_sales %}
+                        <tr>
+                            <td>{{ si.sale.receipt_number|default:si.sale.invoice_number }}</td>
+                            <td>{{ si.sale.customer.full_name|default:"Walk-in" }}</td>
+                            <td>{{ si.remaining_quantity }}</td>
+                            <td>GHS {{ si.remaining_total|floatformat:2 }}</td>
+                            <td>{{ si.sale.created_at|date:"d M Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5"><div class="pi-empty"><i class="fas fa-receipt"></i>No sales recorded for this product yet.</div></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- FORECAST & CHARTS -->
+        <div class="pi-tab-panel" data-panel="forecast">
+
+            <div class="forecast-hero {{ forecast_status }}">
+                <div>
+                    <div class="fh-number">
+                        {% if days_of_stock_left %}{{ days_of_stock_left }}{% else %}—{% endif %}
+                    </div>
+                    <div class="fh-label">Estimated days of stock remaining</div>
+                </div>
+                <div style="flex:1; min-width:220px;">
+                    {% if forecast_status == 'critical' %}
+                        <strong>Critical</strong> — reorder soon. Suggested reorder quantity: <strong>{{ suggested_reorder_qty }}</strong> units.
+                    {% elif forecast_status == 'watch' %}
+                        <strong>Watch</strong> — stock is comfortable for now but worth planning a reorder of about <strong>{{ suggested_reorder_qty }}</strong> units.
+                    {% elif forecast_status == 'healthy' %}
+                        <strong>Healthy</strong> — no reorder action needed at current sales velocity.
+                    {% else %}
+                        <strong>Not enough sales data yet</strong> to forecast reliably for this product.
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="pi-chart-box">
+                <h6>Stock Level Trend</h6>
+                <div class="pi-chart-canvas-wrap">
+                    <canvas id="stockTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="pi-chart-box">
+                <h6>Daily Units Sold — Last 30 Days</h6>
+                <div class="pi-chart-canvas-wrap">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- AI INSIGHTS -->
+        <div class="pi-tab-panel" data-panel="ai">
+
+            <div class="ai-panel">
+                <div class="pi-section-title" style="margin-bottom:8px;">AI Insights</div>
+                <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+                    Ask your AI business advisor for a summary of this product's stock,
+                    sales performance, and expiry risk — powered by the same assistant
+                    already built into your dashboard.
+                </p>
+
+                <button type="button" class="ai-ask-btn" id="askAiBtn">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    Get AI Insights For This Product
+                </button>
+
+                <div class="ai-response-box" id="aiResponseBox"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ====================================
+    // TABS
+    // ====================================
+    const tabButtons = document.querySelectorAll('.pi-tab-btn');
+    const panels = document.querySelectorAll('.pi-tab-panel');
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+
+            this.classList.add('active');
+            document.querySelector(`.pi-tab-panel[data-panel="${this.dataset.tab}"]`).classList.add('active');
+
+            if (this.dataset.tab === 'forecast') {
+                ensureChartsLoaded(renderCharts);
+            }
+        });
+    });
+
+    // ====================================
+    // CHART DATA (from server)
+    // ====================================
+    const stockLabels = {{ stock_chart_labels|safe }};
+    const stockValues = {{ stock_chart_values|safe }};
+    const salesLabels = {{ sales_chart_labels|safe }};
+    const salesValues = {{ sales_chart_values|safe }};
+
+    let chartsRendered = false;
+
+    function ensureChartsLoaded(callback) {
+        if (typeof Chart !== 'undefined') {
+            callback();
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function renderCharts() {
+        if (chartsRendered) return;
+        chartsRendered = true;
+
+        const gridColor = 'rgba(148,163,184,.15)';
+
+        new Chart(document.getElementById('stockTrendChart'), {
+            type: 'line',
+            data: {
+                labels: stockLabels,
+                datasets: [{
+                    label: 'Stock Level',
+                    data: stockValues,
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,.12)',
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor } },
+                    y: { grid: { color: gridColor }, beginAtZero: true }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('salesTrendChart'), {
+            type: 'bar',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Units Sold',
+                    data: salesValues,
+                    backgroundColor: '#10b981',
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: { color: gridColor }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // If the page loads with the forecast tab already relevant later,
+    // charts render lazily the first time that tab is opened (above).
+
+    // ====================================
+    // AI INSIGHTS
+    // ====================================
+    const askBtn = document.getElementById('askAiBtn');
+    const responseBox = document.getElementById('aiResponseBox');
+
+    function renderAiMarkdownLite(text) {
+        // Minimal, safe markdown-ish rendering for the AI's ### headings
+        // and • bullet lines — no external library needed.
+        const escaped = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        const lines = escaped.split('\n');
+        let html = '';
+        let inList = false;
+
+        lines.forEach(line => {
+            const trimmed = line.trim();
+
+            if (trimmed.startsWith('###')) {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<h4>${trimmed.replace(/^#+\s*/, '')}</h4>`;
+            } else if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+                if (!inList) { html += '<ul>'; inList = true; }
+                html += `<li>${trimmed.replace(/^[•-]\s*/, '')}</li>`;
+            } else if (trimmed === '') {
+                if (inList) { html += '</ul>'; inList = false; }
+            } else {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<p style="margin:4px 0;">${trimmed}</p>`;
+            }
+        });
+
+        if (inList) html += '</ul>';
+        return html;
+    }
+
+    if (askBtn) {
+        askBtn.addEventListener('click', function () {
+
+            askBtn.disabled = true;
+            askBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Thinking...';
+
+            const question = `Give me a business intelligence summary and practical recommendations for the product "{{ product.product_name|escapejs }}" — cover its current stock level, recent sales performance, and any expiry risk.`;
+
+            fetch("{% url 'ai-chat' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify({ message: question }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                responseBox.innerHTML = renderAiMarkdownLite(data.reply || 'No response received.');
+                responseBox.style.display = 'block';
+            })
+            .catch(() => {
+                responseBox.innerHTML = '<p style="color:#ef4444;">AI request failed. Please try again.</p>';
+                responseBox.style.display = 'block';
+            })
+            .finally(() => {
+                askBtn.disabled = false;
+                askBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Get AI Insights For This Product';
+            });
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

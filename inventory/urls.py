@@ -36,6 +36,8 @@ urlpatterns = [
     path("purchases/<int:pk>/", views.view_purchase, name="view_purchase"),
     path("purchases/<int:pk>/post/", views.post_purchase, name="post_purchase"),
 
+    path("purchases/", views.purchase_list, name="purchase_list"),
+
 
     path("generate-sku/", views.generate_sku, name="generate_sku"),
     path("generate-barcode/", views.generate_barcode, name="generate_barcode"),
@@ -45,5 +47,7 @@ urlpatterns = [
     path("inventory/expiry/add/", views.add_batch, name="add_batch"),
     path("inventory/expiry/<int:pk>/dispose/", views.dispose_batch, name="dispose_batch"),
     path("inventory/expiry/export/csv/", views.export_expiry_csv, name="export_expiry_csv"),
+
+    path("inventory/<int:pk>/intelligence/", views.product_intelligence, name="product_intelligence"),
 
 ]

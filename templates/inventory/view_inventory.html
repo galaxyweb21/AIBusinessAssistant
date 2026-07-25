@@ -425,86 +425,88 @@
     transform:translateY(-2px);
 }
 
+
 </style>
 
 <div class="content-wrapper">
 
-<section class="content inventory-wrapper">
+    <section class="content inventory-wrapper">
 
-    <!-- HEADER -->
-    <div class="inventory-header">
+        <!-- HEADER -->
+        <div class="inventory-header">
 
-        <div class="inventory-title">
-            <h2>Inventory Management</h2>
-            <p>Manage and monitor your business inventory.</p>
-        </div>
+            <div class="inventory-title">
+                <h2>Inventory Management</h2>
+                <p>Manage and monitor your business inventory.</p>
+            </div>
 
-        <div class="inventory-actions">
+            <div class="inventory-actions">
 
-            <a href="{% url 'inventory' %}" class="inventory-btn inventory-btn-primary">
-                <i class="fas fa-plus me-2"></i>
-                Add Inventory
-            </a>
+                <a href="{% url 'inventory' %}" class="inventory-btn inventory-btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Add Inventory
+                </a>
 
-            <button onclick="exportTableToCSV()" class="inventory-btn inventory-btn-light">
-                <i class="fas fa-file-csv me-2"></i>
-                Export CSV
-            </button>
-
-            <button onclick="exportTableToPDF()" class="inventory-btn inventory-btn-light">
-                <i class="fas fa-file-pdf me-2"></i>
-                Export PDF
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- CARD -->
-    <div class="inventory-card">
-
-        <!-- TOOLBAR -->
-        <div class="inventory-toolbar">
-
-            <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
-
-                <div class="inventory-search" id="inventorySearchWrap">
-                    <i class="fas fa-search"></i>
-                    <input
-                        id="inventorySearch"
-                        type="text"
-                        name="search"
-                        value="{{ search }}"
-                        placeholder="Search inventory...">
-                    <button type="button" class="search-clear" id="searchClearBtn" aria-label="Clear search" title="Clear search">
-                        <i class="fas fa-times-circle"></i>
-                    </button>
-                </div>
-
-                <button type="submit" class="inventory-btn inventory-btn-primary">
-                    <i class="fas fa-search me-2"></i>
-                    Search
+                <button onclick="exportTableToCSV()" class="inventory-btn inventory-btn-light">
+                    <i class="fas fa-file-csv me-2"></i>
+                    Export CSV
                 </button>
 
-                {% if search %}
-                <a href="{% url 'view_inventory' %}" class="inventory-btn inventory-btn-light">
-                    <i class="fas fa-times me-2"></i>
-                    Clear
-                </a>
-                {% endif %}
+                <button onclick="exportTableToPDF()" class="inventory-btn inventory-btn-light">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Export PDF
+                </button>
 
-            </form>
-
-            {% include 'partials/_alerts.html' %}
+            </div>
 
         </div>
 
-        <!-- TABLE -->
-        <div class="inventory-table-wrap">
+        <!-- CARD -->
+        <div class="inventory-card">
 
-            <table class="inventory-table" id="inventoryTable">
+            <!-- TOOLBAR -->
+            <div class="inventory-toolbar">
 
-                <thead>
+                <form method="GET" class="d-flex align-items-center gap-2 flex-wrap">
+
+                    <div class="inventory-search" id="inventorySearchWrap">
+                        <i class="fas fa-search"></i>
+                        <input
+                                id="inventorySearch"
+                                type="text"
+                                name="search"
+                                value="{{ search }}"
+                                placeholder="Search inventory...">
+                        <button type="button" class="search-clear" id="searchClearBtn" aria-label="Clear search"
+                                title="Clear search">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+
+                    <button type="submit" class="inventory-btn inventory-btn-primary">
+                        <i class="fas fa-search me-2"></i>
+                        Search
+                    </button>
+
+                    {% if search %}
+                    <a href="{% url 'view_inventory' %}" class="inventory-btn inventory-btn-light">
+                        <i class="fas fa-times me-2"></i>
+                        Clear
+                    </a>
+                    {% endif %}
+
+                </form>
+
+                {% include 'partials/_alerts.html' %}
+
+            </div>
+
+            <!-- TABLE -->
+            <div class="inventory-table-wrap">
+
+                <table class="inventory-table" id="inventoryTable">
+
+                    <thead>
                     <tr>
                         <th>Product</th>
                         <th>Stock</th>
@@ -513,11 +515,11 @@
                         <th>Updated</th>
                         <th>Actions</th>
                     </tr>
-                </thead>
+                    </thead>
 
-                <tbody id="inventoryTableBody">
+                    <tbody id="inventoryTableBody">
 
-                {% for item in queryset %}
+                    {% for item in queryset %}
 
                     <tr>
 
@@ -534,11 +536,11 @@
 
                         <td>
                             {% if item.stock_quantity <= 5 %}
-                                <span class="stock-badge stock-low">
+                            <span class="stock-badge stock-low">
                                     Low Stock ({{ item.stock_quantity }})
                                 </span>
                             {% else %}
-                                <span class="stock-badge stock-good">
+                            <span class="stock-badge stock-good">
                                     {{ item.stock_quantity }} In Stock
                                 </span>
                             {% endif %}
@@ -595,6 +597,13 @@
                                     Delete
                                 </a>
 
+                                 <div class="dropdown-divider"></div>
+
+                                <a class="dropdown-item text-info" href="{% url 'product_intelligence' item.id %}"
+                                   title="Product Intelligence">
+                                    <i class="fas fa-chart-line"></i> AI Intelligence
+                                </a>
+
                             </div>
 
                         </td>
@@ -620,11 +629,13 @@
                                 </div>
 
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                            data-bs-dismiss="modal">
                                         No
                                     </button>
 
-                                    <form method="POST" action="{% url 'delete_inventory' item.id %}" style="display:inline;">
+                                    <form method="POST" action="{% url 'delete_inventory' item.id %}"
+                                          style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-danger">
                                             Yes, Delete
@@ -636,7 +647,7 @@
                         </div>
                     </div>
 
-                {% empty %}
+                    {% empty %}
 
                     <tr>
                         <td colspan="6">
@@ -648,49 +659,49 @@
                         </td>
                     </tr>
 
-                {% endfor %}
+                    {% endfor %}
 
-                </tbody>
+                    </tbody>
 
-            </table>
+                </table>
 
-            {% if queryset.has_other_pages %}
+                {% if queryset.has_other_pages %}
 
-            <div class="inventory-pagination">
+                <div class="inventory-pagination">
 
-                {% if queryset.has_previous %}
+                    {% if queryset.has_previous %}
                     <a href="?page={{ queryset.previous_page_number }}&search={{ search|urlencode }}"
                        class="page-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
-                {% endif %}
-
-                {% for num in queryset.paginator.page_range %}
-                    {% if queryset.number == num %}
-                        <span class="page-btn active-page">{{ num }}</span>
-                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
-                        <a href="?page={{ num }}&search={{ search|urlencode }}" class="page-btn">
-                            {{ num }}
-                        </a>
                     {% endif %}
-                {% endfor %}
 
-                {% if queryset.has_next %}
+                    {% for num in queryset.paginator.page_range %}
+                    {% if queryset.number == num %}
+                    <span class="page-btn active-page">{{ num }}</span>
+                    {% elif num > queryset.number|add:'-3' and num < queryset.number|add:'3' %}
+                    <a href="?page={{ num }}&search={{ search|urlencode }}" class="page-btn">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if queryset.has_next %}
                     <a href="?page={{ queryset.next_page_number }}&search={{ search|urlencode }}"
                        class="page-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
+                    {% endif %}
+
+                </div>
+
                 {% endif %}
 
             </div>
 
-            {% endif %}
-
         </div>
 
-    </div>
-
-</section>
+    </section>
 
 </div>
 
@@ -717,6 +728,7 @@ function exportTableToCSV() {
     downloadLink.click();
     downloadLink.remove();
 }
+
 </script>
 
 <script>
@@ -757,6 +769,7 @@ async function exportTableToPDF() {
 
     doc.save("inventory.pdf");
 }
+
 </script>
 
 <script>
@@ -866,6 +879,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
+
 </script>
 
 {% endblock %}
