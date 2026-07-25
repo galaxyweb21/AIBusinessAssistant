@@ -360,3 +360,85 @@ class SupplierPaymentForm(forms.Form):
                 f"Payment exceeds remaining balance of Gh¢{self.purchase.balance}."
             )
         return amount
+
+
+
+class ProductBatchForm(forms.ModelForm):
+
+    also_add_to_stock = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Also add this quantity to the product's stock",
+        help_text="Leave unchecked if you already restocked this quantity separately.",
+    )
+
+    class Meta:
+        model = ProductBatch
+        fields = [
+            "product", "batch_number", "quantity", "cost_price",
+            "manufacture_date", "expiry_date", "received_date",
+            "supplier", "notes",
+        ]
+        widgets = {
+            "product": forms.Select(attrs={"class": "form-control"}),
+            "batch_number": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Leave blank to auto-generate",
+            }),
+            "quantity": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
+            "cost_price": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": 0}),
+            "manufacture_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "expiry_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "received_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "supplier": forms.Select(attrs={"class": "form-control"}),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["batch_number"].required = False
+        self.fields["manufacture_date"].required = False
+        self.fields["supplier"].required = False
+        self.fields["notes"].required = False
+
+        if business:
+            self.fields["product"].queryset = Inventory.objects.filter(
+                business=business
+            ).order_by("product_name")
+            self.fields["supplier"].queryset = Supplier.objects.filter(
+                business=business, is_active=True
+            ).order_by("name")
+
+    def clean(self):
+        cleaned = super().clean()
+        expiry = cleaned.get("expiry_date")
+        manufacture = cleaned.get("manufacture_date")
+
+        if expiry and manufacture and expiry <= manufacture:
+            self.add_error("expiry_date", "Expiry date must be after the manufacture date.")
+
+        if expiry and expiry <= timezone.now().date():
+            self.add_error("expiry_date", "Expiry date must be in the future — this batch would already be expired.")
+
+        return cleaned
+
+
+class DisposeBatchForm(forms.Form):
+
+    quantity = forms.IntegerField(min_value=1, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    reason = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 2, "placeholder": "e.g. Expired, damaged in storage..."}),
+    )
+
+    def __init__(self, *args, batch=None, **kwargs):
+        self.batch = batch
+        super().__init__(*args, **kwargs)
+
+    def clean_quantity(self):
+        qty = self.cleaned_data["quantity"]
+        if self.batch and qty > self.batch.quantity:
+            raise forms.ValidationError(
+                f"Only {self.batch.quantity} unit(s) remain in this batch."
+            )
+        return qty

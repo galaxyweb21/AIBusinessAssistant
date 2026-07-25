@@ -222,6 +222,7 @@ class InventoryStockHistory(models.Model):
         ('damaged', 'Damaged'),
         ('returned', 'Returned'),
         ('transfer', 'Transfer'),
+        ('expired', 'Expired / Disposed'),
     ]
 
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
@@ -727,6 +728,105 @@ class SupplierPayment(models.Model):
     def __str__(self):
 
         return self.reference
+
+
+class ProductBatch(models.Model):
+
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("disposed", "Disposed"),
+    ]
+
+    # Thresholds for expiry_status — kept as class constants so both the
+    # model and views/templates agree on the same cutoffs. Adjust here
+    # if you want them configurable per business later.
+    NEAR_EXPIRY_WARNING_DAYS = 30
+    NEAR_EXPIRY_CRITICAL_DAYS = 7
+
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="product_batches")
+    product = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name="batches")
+
+    batch_number = models.CharField(max_length=60, blank=True)
+
+    quantity = models.PositiveIntegerField()
+    initial_quantity = models.PositiveIntegerField(default=0)
+
+    cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+
+    manufacture_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(db_index=True)
+
+    supplier = models.ForeignKey(
+        Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name="product_batches"
+    )
+
+    received_date = models.DateField(default=timezone.now)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+
+    disposed_quantity = models.PositiveIntegerField(default=0)
+    disposed_at = models.DateTimeField(null=True, blank=True)
+    disposed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    disposal_reason = models.TextField(blank=True)
+
+    notes = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["expiry_date"]
+        unique_together = ("business", "batch_number")
+        verbose_name = "Product Batch"
+        verbose_name_plural = "Product Batches"
+
+    def save(self, *args, **kwargs):
+        if not self.batch_number:
+            self.batch_number = f"BATCH-{uuid.uuid4().hex[:8].upper()}"
+        if not self.initial_quantity:
+            self.initial_quantity = self.quantity
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.product_name} — {self.batch_number}"
+
+    # =========================
+    # EXPIRY LOGIC
+    # =========================
+    @property
+    def days_to_expiry(self):
+        return (self.expiry_date - timezone.now().date()).days
+
+    @property
+    def is_expired(self):
+        return self.days_to_expiry < 0
+
+    @property
+    def expiry_status(self):
+        """One of: disposed, expired, critical, warning, healthy."""
+        if self.status == "disposed":
+            return "disposed"
+
+        days = self.days_to_expiry
+
+        if days < 0:
+            return "expired"
+        if days <= self.NEAR_EXPIRY_CRITICAL_DAYS:
+            return "critical"
+        if days <= self.NEAR_EXPIRY_WARNING_DAYS:
+            return "warning"
+        return "healthy"
+
+    @property
+    def batch_value(self):
+        return self.quantity * self.cost_price
+
+    @property
+    def supplier_name(self):
+        return self.supplier.name if self.supplier else "-"
+
 
 
 class InventoryMovement(models.Model):

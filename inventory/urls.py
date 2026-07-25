@@ -41,4 +41,9 @@ urlpatterns = [
     path("generate-barcode/", views.generate_barcode, name="generate_barcode"),
     path("generate-qr/", views.generate_qr, name="generate_qr"),
 
+    path("inventory/expiry/", views.expiry_dashboard, name="expiry_dashboard"),
+    path("inventory/expiry/add/", views.add_batch, name="add_batch"),
+    path("inventory/expiry/<int:pk>/dispose/", views.dispose_batch, name="dispose_batch"),
+    path("inventory/expiry/export/csv/", views.export_expiry_csv, name="export_expiry_csv"),
+
 ]

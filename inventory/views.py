@@ -24,6 +24,7 @@ from decimal import Decimal, InvalidOperation
 from django.db.models import Count
 from django.db.models.functions import Coalesce
 from datetime import timedelta
+from django.db.models import F
 
 import csv
 from django.http import HttpResponse
@@ -555,7 +556,7 @@ def damaged_inventory(request, pk):
                     business=business,
                     inventory=locked_item,
                     previous_stock=previous_stock,
-                    quantity_changed=-damaged_qty,
+                    quantity=-damaged_qty,
                     new_stock=new_stock,
                     action_type="damaged",
                     received_by=request.user,
@@ -1484,4 +1485,287 @@ def supplier_payment_history(request):
 
     return render(request, "suppliers/supplier_payment_history.html", context)
 
+
+
+# =====================================
+# EXPIRY MANAGEMENT
+# =====================================
+
+def _get_expiry_queryset(request, business):
+    """Shared filtering logic for the dashboard view and the CSV export,
+    so the two can never silently drift apart."""
+
+    tab = request.GET.get("tab", "all").strip()
+    search = request.GET.get("search", "").strip()
+    product_id = request.GET.get("product", "").strip()
+    supplier_id = request.GET.get("supplier", "").strip()
+
+    queryset = ProductBatch.objects.filter(
+        business=business, status="active"
+    ).select_related("product", "supplier").order_by("expiry_date")
+
+    if search:
+        queryset = queryset.filter(
+            Q(product__product_name__icontains=search) |
+            Q(batch_number__icontains=search)
+        )
+
+    if product_id:
+        queryset = queryset.filter(product_id=product_id)
+
+    if supplier_id:
+        queryset = queryset.filter(supplier_id=supplier_id)
+
+    today = timezone.now().date()
+    warning_cutoff = today + timedelta(days=ProductBatch.NEAR_EXPIRY_WARNING_DAYS)
+    critical_cutoff = today + timedelta(days=ProductBatch.NEAR_EXPIRY_CRITICAL_DAYS)
+
+    if tab == "expired":
+        queryset = queryset.filter(expiry_date__lt=today)
+    elif tab == "critical":
+        queryset = queryset.filter(expiry_date__gte=today, expiry_date__lte=critical_cutoff)
+    elif tab == "warning":
+        queryset = queryset.filter(expiry_date__gt=critical_cutoff, expiry_date__lte=warning_cutoff)
+    elif tab == "healthy":
+        queryset = queryset.filter(expiry_date__gt=warning_cutoff)
+
+    return queryset
+
+
+@login_required
+def expiry_dashboard(request):
+
+    business = get_business(request)
+
+    queryset = _get_expiry_queryset(request, business)
+
+    today = timezone.now().date()
+    warning_cutoff = today + timedelta(days=ProductBatch.NEAR_EXPIRY_WARNING_DAYS)
+    critical_cutoff = today + timedelta(days=ProductBatch.NEAR_EXPIRY_CRITICAL_DAYS)
+
+    # KPI counts always reflect the FULL active set, not the tab-filtered
+    # queryset — so the tab counters stay accurate no matter which tab
+    # you're currently viewing.
+    base_active = ProductBatch.objects.filter(business=business, status="active")
+
+    expired_count = base_active.filter(expiry_date__lt=today).count()
+    critical_count = base_active.filter(expiry_date__gte=today, expiry_date__lte=critical_cutoff).count()
+    warning_count = base_active.filter(expiry_date__gt=critical_cutoff, expiry_date__lte=warning_cutoff).count()
+    healthy_count = base_active.filter(expiry_date__gt=warning_cutoff).count()
+    total_batches = base_active.count()
+
+    value_at_risk = base_active.filter(
+        expiry_date__lte=warning_cutoff
+    ).aggregate(
+        total=Coalesce(Sum(F("quantity") * F("cost_price")), Decimal("0.00"))
+    )["total"]
+
+    paginator = Paginator(queryset, 20)
+    batches = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "batches": batches,
+        "tab": request.GET.get("tab", "all").strip(),
+        "search": request.GET.get("search", "").strip(),
+        "product_id": request.GET.get("product", "").strip(),
+        "supplier_id": request.GET.get("supplier", "").strip(),
+
+        "total_batches": total_batches,
+        "expired_count": expired_count,
+        "critical_count": critical_count,
+        "warning_count": warning_count,
+        "healthy_count": healthy_count,
+        "value_at_risk": value_at_risk,
+
+        "products": Inventory.objects.filter(business=business).order_by("product_name"),
+        "suppliers": Supplier.objects.filter(business=business, is_active=True).order_by("name"),
+
+        "dispose_form": DisposeBatchForm(),
+
+        "business": business,
+        "title": "Expiry Management",
+    }
+
+    return render(request, "inventory/expiry_dashboard.html", context)
+
+
+@login_required
+@transaction.atomic
+def add_batch(request):
+
+    business = get_business(request)
+
+    initial = {}
+    preselected_product = request.GET.get("product")
+    if preselected_product:
+        initial["product"] = preselected_product
+
+    form = ProductBatchForm(business=business, initial=initial)
+
+    if request.method == "POST":
+        form = ProductBatchForm(request.POST, business=business)
+
+        if form.is_valid():
+            also_add_to_stock = form.cleaned_data.pop("also_add_to_stock", False)
+
+            batch = form.save(commit=False)
+            batch.business = business
+            batch.save()
+
+            if also_add_to_stock:
+                locked_product = Inventory.objects.select_for_update().get(pk=batch.product_id)
+                previous_stock = locked_product.stock_quantity
+                new_stock = previous_stock + batch.quantity
+
+                locked_product.stock_quantity = new_stock
+                locked_product.save(update_fields=["stock_quantity", "updated_at"])
+
+                InventoryStockHistory.objects.create(
+                    business=business,
+                    inventory=locked_product,
+                    previous_stock=previous_stock,
+                    quantity=batch.quantity,
+                    new_stock=new_stock,
+                    action_type="restock",
+                    supplier=batch.supplier,
+                    received_by=request.user,
+                    received_date=batch.received_date,
+                    reference_number=batch.batch_number,
+                    remarks=f"Batch {batch.batch_number} received (expiry tracked)",
+                )
+
+            AuditLog.objects.create(
+                user=request.user,
+                action="Batch Added",
+                description=(
+                    f"{request.user.username} added batch '{batch.batch_number}' "
+                    f"for '{batch.product.product_name}' — {batch.quantity} unit(s), "
+                    f"expiring {batch.expiry_date}."
+                ),
+                content_type=ContentType.objects.get_for_model(ProductBatch),
+                object_id=batch.id,
+                ip_address=request.META.get("REMOTE_ADDR"),
+            )
+
+            messages.success(request, f'Batch "{batch.batch_number}" added successfully.')
+            return redirect("expiry_dashboard")
+
+    context = {
+        "form": form,
+        "business": business,
+        "title": "Add Batch",
+    }
+    return render(request, "inventory/add_batch.html", context)
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def dispose_batch(request, pk):
+
+    business = get_business(request)
+
+    batch = get_object_or_404(
+        ProductBatch.objects.select_for_update(),
+        pk=pk, business=business, status="active",
+    )
+
+    form = DisposeBatchForm(request.POST, batch=batch)
+
+    if not form.is_valid():
+        for field_errors in form.errors.values():
+            for error in field_errors:
+                messages.error(request, error)
+        return redirect("expiry_dashboard")
+
+    qty = form.cleaned_data["quantity"]
+    reason = form.cleaned_data["reason"]
+
+    locked_product = Inventory.objects.select_for_update().get(pk=batch.product_id)
+    previous_stock = locked_product.stock_quantity
+
+    # Defensive: never push stock negative even if this batch's tracked
+    # quantity has drifted from the product's real stock over time.
+    deduction = min(qty, previous_stock)
+    new_stock = previous_stock - deduction
+
+    locked_product.stock_quantity = new_stock
+    locked_product.save(update_fields=["stock_quantity", "updated_at"])
+
+    InventoryStockHistory.objects.create(
+        business=business,
+        inventory=locked_product,
+        previous_stock=previous_stock,
+        quantity=-deduction,
+        new_stock=new_stock,
+        action_type="expired",
+        received_by=request.user,
+        reference_number=batch.batch_number,
+        remarks=reason or f"Batch {batch.batch_number} disposed (expired)",
+    )
+
+    batch.disposed_quantity += qty
+    batch.quantity -= qty
+    batch.disposal_reason = reason
+    batch.disposed_by = request.user
+    batch.disposed_at = timezone.now()
+
+    if batch.quantity <= 0:
+        batch.quantity = 0
+        batch.status = "disposed"
+
+    batch.save()
+
+    AuditLog.objects.create(
+        user=request.user,
+        action="Batch Disposed",
+        description=(
+            f"{request.user.username} disposed {qty} unit(s) of batch "
+            f"'{batch.batch_number}' ({locked_product.product_name}). "
+            f"Reason: {reason or 'Expired'}"
+        ),
+        content_type=ContentType.objects.get_for_model(ProductBatch),
+        object_id=batch.id,
+        ip_address=request.META.get("REMOTE_ADDR"),
+    )
+
+    generate_business_alerts(business)
+
+    messages.success(
+        request,
+        f'{qty} unit(s) of batch "{batch.batch_number}" disposed and removed from stock.'
+    )
+    return redirect("expiry_dashboard")
+
+
+@login_required
+def export_expiry_csv(request):
+
+    business = get_business(request)
+    queryset = _get_expiry_queryset(request, business)
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="expiry_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "Product", "Batch Number", "Quantity", "Cost Price", "Batch Value",
+        "Expiry Date", "Days To Expiry", "Status", "Supplier", "Received Date",
+    ])
+
+    for batch in queryset:
+        writer.writerow([
+            batch.product.product_name,
+            batch.batch_number,
+            batch.quantity,
+            batch.cost_price,
+            batch.batch_value,
+            batch.expiry_date.strftime("%d %b %Y"),
+            batch.days_to_expiry,
+            batch.expiry_status.title(),
+            batch.supplier_name,
+            batch.received_date.strftime("%d %b %Y") if batch.received_date else "-",
+        ])
+
+    return response
 

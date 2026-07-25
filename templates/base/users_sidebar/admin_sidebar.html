@@ -983,8 +983,8 @@ body.sidebar-collapse .menu-badge {
                     </li>
 
                     <!-- SUPPLIERS -->
-                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'create_supplier' or request.resolver_match.url_name == 'supplier_list' %}menu-open{% endif %}">
-                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'create_supplier' or request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">
+                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'create_supplier' or request.resolver_match.url_name == 'supplier_list' or request.resolver_match.url_name == 'supplier_detail' or request.resolver_match.url_name == 'supplier_payment' or request.resolver_match.url_name == 'supplier_payment_history' %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'create_supplier' or request.resolver_match.url_name == 'supplier_list' or request.resolver_match.url_name == 'supplier_detail' or request.resolver_match.url_name == 'supplier_payment' or request.resolver_match.url_name == 'supplier_payment_history' %}active{% endif %}">
                             <span class="menu-icon"><i class="fas fa-truck"></i></span>
                             <span class="menu-text">Suppliers</span>
                             <i class="right fas fa-chevron-right"></i>
@@ -1000,6 +1000,11 @@ body.sidebar-collapse .menu-badge {
                                     <i class="far fa-circle nav-icon"></i> View Suppliers
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{% url 'supplier_payment_history' %}" class="nav-link {% if request.resolver_match.url_name == 'supplier_payment_history' %}active{% endif %}" data-title="Payment History">
+                                    <i class="far fa-circle nav-icon"></i> Payment History
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -1012,8 +1017,8 @@ body.sidebar-collapse .menu-badge {
                     </li>
 
                     <!-- INVENTORY -->
-                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}menu-open{% endif %}">
-                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' %}active{% endif %}">
+                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}active{% endif %}">
                             <span class="menu-icon"><i class="fas fa-boxes"></i></span>
                             <span class="menu-text">
                                 Inventory
@@ -1042,6 +1047,14 @@ body.sidebar-collapse .menu-badge {
                             <li class="nav-item">
                                 <a href="{% url 'inventory_history' %}" class="nav-link {% if request.resolver_match.url_name == 'inventory_history' %}active{% endif %}" data-title="Inventory History">
                                     <i class="far fa-circle nav-icon"></i> History
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'expiry_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}active{% endif %}" data-title="Expiry Management">
+                                    <i class="far fa-circle nav-icon"></i> Expiry Management
+                                    {% if expiring_batches_count %}
+                                    <span class="menu-badge" style="margin-left:auto;">{{ expiring_batches_count }}</span>
+                                    {% endif %}
                                 </a>
                             </li>
                         </ul>
