@@ -1,0 +1,750 @@
+<!-- purchases/create_purchase_order.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       ENTERPRISE FORM - SAP Fiori Style
+    ============================================ */
+
+    :root {
+        --primary: #0a5c8c;
+        --primary-light: #e6f0f8;
+        --secondary: #64748b;
+        --form-bg: #f8fafc;
+        --border-color: #e2e8f0;
+        --card-radius: 12px;
+        --transition: all 0.25s ease;
+    }
+
+    .form-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0 16px 0;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .form-page-header h4 {
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+        font-size: 22px;
+    }
+
+    .form-page-header .subtitle {
+        color: var(--secondary);
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    /* Form Container */
+    .form-card {
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid #f1f5f9;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-card .card-title {
+        font-weight: 600;
+        font-size: 16px;
+        color: #1a1a2e;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .form-card .card-title i {
+        color: var(--primary);
+        margin-right: 8px;
+    }
+
+    /* Form Fields - Enterprise Style */
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        font-size: 13px;
+        color: #1a1a2e;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .form-group label .required {
+        color: #d93025;
+        margin-left: 2px;
+    }
+
+    .form-group .form-control,
+    .form-group .form-select {
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        padding: 10px 14px;
+        font-size: 14px;
+        transition: var(--transition);
+        background: var(--form-bg);
+    }
+
+    .form-group .form-control:focus,
+    .form-group .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(10,92,140,0.1);
+        background: #fff;
+    }
+
+    .form-group .form-control.is-invalid,
+    .form-group .form-select.is-invalid {
+        border-color: #d93025;
+    }
+
+    .form-group .help-text {
+        font-size: 12px;
+        color: var(--secondary);
+        margin-top: 4px;
+    }
+
+    .form-group .error-text {
+        font-size: 12px;
+        color: #d93025;
+        margin-top: 4px;
+    }
+
+    /* Product Line Items - Table Style */
+    .line-items-section {
+        margin-top: 20px;
+    }
+
+    .line-items-section .table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .line-items-section .table-toolbar .btn-add {
+        background: var(--primary-light);
+        color: var(--primary);
+        border: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 13px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .line-items-section .table-toolbar .btn-add:hover {
+        background: #d4e4f0;
+        transform: translateY(-1px);
+    }
+
+    .line-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .line-items-table thead {
+        background: #f8fafc;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .line-items-table thead th {
+        padding: 10px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--secondary);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .line-items-table tbody td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .line-items-table tbody td input,
+    .line-items-table tbody td select {
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        padding: 6px 10px;
+        font-size: 13px;
+        width: 100%;
+        transition: var(--transition);
+        background: #fafbfc;
+    }
+
+    .line-items-table tbody td input:focus,
+    .line-items-table tbody td select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(10,92,140,0.1);
+        background: #fff;
+    }
+
+    .line-items-table tbody td input[type="number"] {
+        width: 80px;
+    }
+
+    .line-items-table tbody .btn-remove-item {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: var(--secondary);
+        transition: var(--transition);
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .line-items-table tbody .btn-remove-item:hover {
+        background: #fce8e6;
+        color: #d93025;
+    }
+
+    /* Summary Section */
+    .summary-section {
+        background: var(--form-bg);
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-top: 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+
+    .summary-section .summary-item {
+        text-align: right;
+    }
+
+    .summary-section .summary-item .label {
+        font-size: 12px;
+        color: var(--secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-section .summary-item .value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-top: 2px;
+    }
+
+    .summary-section .summary-item .value.total {
+        color: var(--primary);
+        font-size: 24px;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+        margin-top: 24px;
+        flex-wrap: wrap;
+    }
+
+    .btn-save-modern {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 10px 32px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save-modern:hover {
+        background: #064269;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(10,92,140,0.3);
+        color: #fff;
+    }
+
+    .btn-cancel-modern {
+        background: transparent;
+        color: var(--secondary);
+        border: 1px solid var(--border-color);
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .btn-cancel-modern:hover {
+        background: #f1f5f9;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-card {
+            padding: 16px;
+        }
+
+        .line-items-table {
+            display: block;
+            overflow-x: auto;
+        }
+
+        .summary-section {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .summary-section .summary-item {
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .summary-section .summary-item .value {
+            font-size: 18px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .form-actions .btn-save-modern,
+        .form-actions .btn-cancel-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Animations */
+    .fade-in {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Select2 Override */
+    .select2-container--default .select2-selection--single {
+        border-radius: 8px;
+        border-color: var(--border-color);
+        height: 44px;
+        padding: 4px 8px;
+        background: var(--form-bg);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px;
+        color: #1a1a2e;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 42px;
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4">
+
+    <!-- ==========================================
+         PAGE HEADER
+    ========================================== -->
+    <div class="form-page-header">
+        <div>
+            <h4>
+                <i class="fas fa-plus-circle me-2" style="color: var(--primary);"></i>
+                Create Purchase Order
+            </h4>
+            <div class="subtitle">
+                Enter purchase order details and line items
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'purchase_order_list' %}" class="btn-cancel-modern">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MAIN FORM
+    ========================================== -->
+    <form method="POST" id="poForm">
+        {% csrf_token %}
+
+        <!-- Supplier & Header Info -->
+        <div class="form-card">
+            <div class="card-title">
+                <i class="fas fa-truck"></i> Supplier & Order Details
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Supplier <span class="required">*</span></label>
+                        <select name="supplier" class="form-select" id="supplierSelect" required>
+                            <option value="">Select Supplier...</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Expected Delivery Date</label>
+                        <input type="date" name="expected_date" class="form-control">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes for this purchase order..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             LINE ITEMS
+        ========================================== -->
+        <div class="form-card">
+            <div class="card-title">
+                <i class="fas fa-list-ul"></i> Line Items
+            </div>
+
+            <div class="line-items-section">
+                <div class="table-toolbar">
+                    <span style="font-size: 13px; color: var(--secondary);">
+                        <span id="itemCount">0</span> item(s)
+                    </span>
+                    <button type="button" class="btn-add" onclick="addLineItem()">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="line-items-table" id="lineItemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">Product</th>
+                                <th style="width: 12%;">Qty</th>
+                                <th style="width: 18%;">Unit Cost</th>
+                                <th style="width: 12%;">Discount</th>
+                                <th style="width: 12%;">Tax %</th>
+                                <th style="width: 14%;">Total</th>
+                                <th style="width: 2%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody">
+                            <!-- Items will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary -->
+                <div class="summary-section">
+                    <div class="summary-item">
+                        <div class="label">Subtotal</div>
+                        <div class="value" id="subtotal">GHS 0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="label">Tax</div>
+                        <div class="value" id="taxTotal">GHS 0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="label">Discount</div>
+                        <div class="value" id="discountTotal">GHS 0.00</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="label">Grand Total</div>
+                        <div class="value total" id="grandTotal">GHS 0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'purchase_order_list' %}" class="btn-cancel-modern">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save-modern">
+                    <i class="fas fa-save me-2"></i> Create Purchase Order
+                </button>
+            </div>
+        </div>
+
+        <!-- Hidden field for items JSON -->
+        <input type="hidden" name="items_json" id="itemsJson">
+    </form>
+</div>
+
+<!-- ==========================================
+     PRODUCT SEARCH SCRIPT
+========================================== -->
+<script>
+// ============================================
+// PRODUCT DATA
+// ============================================
+const products = [
+    {% for product in products %}
+    {
+        id: {{ product.id }},
+        name: "{{ product.product_name|escapejs }}",
+        price: {{ product.selling_price|floatformat:2 }},
+        stock: {{ product.stock_quantity }}
+    },
+    {% endfor %}
+];
+
+let lineItems = [];
+let itemCounter = 0;
+
+// ============================================
+// ADD LINE ITEM
+// ============================================
+function addLineItem(productId, qty, cost, discount, tax) {
+    itemCounter++;
+    const tbody = document.getElementById('itemsBody');
+    const row = document.createElement('tr');
+    row.className = 'fade-in';
+    row.dataset.index = itemCounter;
+
+    let productOptions = '<option value="">Select Product</option>';
+    products.forEach(p => {
+        const selected = p.id === productId ? 'selected' : '';
+        productOptions += `<option value="${p.id}" data-price="${p.price}" ${selected}>${p.name}</option>`;
+    });
+
+    row.innerHTML = `
+        <td>
+            <select name="product_${itemCounter}" class="form-select product-select" onchange="updateItemTotal(this)">
+                ${productOptions}
+            </select>
+        </td>
+        <td>
+            <input type="number" name="qty_${itemCounter}" class="form-control qty-input"
+                   value="${qty || 1}" min="1" onchange="updateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" name="cost_${itemCounter}" class="form-control cost-input"
+                   value="${cost || ''}" step="0.01" min="0" onchange="updateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" name="discount_${itemCounter}" class="form-control discount-input"
+                   value="${discount || 0}" step="0.01" min="0" onchange="updateItemTotal(this)">
+        </td>
+        <td>
+            <input type="number" name="tax_${itemCounter}" class="form-control tax-input"
+                   value="${tax || 0}" step="0.01" min="0" onchange="updateItemTotal(this)">
+        </td>
+        <td>
+            <span class="item-total" style="font-weight: 600;">GHS 0.00</span>
+        </td>
+        <td>
+            <button type="button" class="btn-remove-item" onclick="removeLineItem(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+
+    // If product ID provided, auto-fill cost
+    if (productId) {
+        const product = products.find(p => p.id === productId);
+        if (product && !cost) {
+            const costInput = row.querySelector('.cost-input');
+            costInput.value = product.price;
+            updateItemTotal(costInput);
+        }
+    }
+
+    updateSummary();
+}
+
+// ============================================
+// REMOVE LINE ITEM
+// ============================================
+function removeLineItem(btn) {
+    const row = btn.closest('tr');
+    row.style.opacity = '0';
+    row.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => {
+        row.remove();
+        updateSummary();
+    }, 300);
+}
+
+// ============================================
+// UPDATE ITEM TOTAL
+// ============================================
+function updateItemTotal(element) {
+    const row = element.closest('tr');
+    const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+    const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+    const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
+    const tax = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+    const subtotal = qty * cost;
+    const discountAmount = subtotal * (discount / 100);
+    const afterDiscount = subtotal - discountAmount;
+    const taxAmount = afterDiscount * (tax / 100);
+    const total = afterDiscount + taxAmount;
+
+    row.querySelector('.item-total').textContent = `GHS ${total.toFixed(2)}`;
+
+    // Auto-fill cost when product selected
+    const select = row.querySelector('.product-select');
+    if (select.value && !row.querySelector('.cost-input').value) {
+        const product = products.find(p => p.id === parseInt(select.value));
+        if (product) {
+            row.querySelector('.cost-input').value = product.price;
+            updateItemTotal(row.querySelector('.cost-input'));
+        }
+    }
+
+    updateSummary();
+}
+
+// ============================================
+// UPDATE SUMMARY
+// ============================================
+function updateSummary() {
+    const rows = document.querySelectorAll('#itemsBody tr');
+    let subtotal = 0;
+    let taxTotal = 0;
+    let discountTotal = 0;
+    let grandTotal = 0;
+
+    rows.forEach(row => {
+        const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+        const cost = parseFloat(row.querySelector('.cost-input').value) || 0;
+        const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
+        const tax = parseFloat(row.querySelector('.tax-input').value) || 0;
+
+        const itemSubtotal = qty * cost;
+        const discountAmount = itemSubtotal * (discount / 100);
+        const afterDiscount = itemSubtotal - discountAmount;
+        const taxAmount = afterDiscount * (tax / 100);
+        const total = afterDiscount + taxAmount;
+
+        subtotal += itemSubtotal;
+        discountTotal += discountAmount;
+        taxTotal += taxAmount;
+        grandTotal += total;
+    });
+
+    document.getElementById('subtotal').textContent = `GHS ${subtotal.toFixed(2)}`;
+    document.getElementById('discountTotal').textContent = `GHS ${discountTotal.toFixed(2)}`;
+    document.getElementById('taxTotal').textContent = `GHS ${taxTotal.toFixed(2)}`;
+    document.getElementById('grandTotal').textContent = `GHS ${grandTotal.toFixed(2)}`;
+    document.getElementById('itemCount').textContent = rows.length;
+
+    // Update hidden JSON
+    updateItemsJson();
+}
+
+// ============================================
+// UPDATE ITEMS JSON
+// ============================================
+function updateItemsJson() {
+    const rows = document.querySelectorAll('#itemsBody tr');
+    const items = [];
+
+    rows.forEach(row => {
+        const productId = row.querySelector('.product-select').value;
+        if (!productId) return;
+
+        items.push({
+            product_id: parseInt(productId),
+            qty: parseInt(row.querySelector('.qty-input').value) || 0,
+            cost: parseFloat(row.querySelector('.cost-input').value) || 0,
+            discount: parseFloat(row.querySelector('.discount-input').value) || 0,
+            tax: parseFloat(row.querySelector('.tax-input').value) || 0,
+        });
+    });
+
+    document.getElementById('itemsJson').value = JSON.stringify(items);
+}
+
+// ============================================
+// PRODUCT SELECT AUTO-FILL
+// ============================================
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const row = e.target.closest('tr');
+        const product = products.find(p => p.id === parseInt(e.target.value));
+        if (product) {
+            const costInput = row.querySelector('.cost-input');
+            if (!costInput.value) {
+                costInput.value = product.price;
+                updateItemTotal(costInput);
+            }
+        }
+    }
+});
+
+// ============================================
+// FORM SUBMIT VALIDATION
+// ============================================
+document.getElementById('poForm').addEventListener('submit', function(e) {
+    const items = JSON.parse(document.getElementById('itemsJson').value);
+    if (items.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one item to the purchase order.');
+        return false;
+    }
+
+    const supplier = document.getElementById('supplierSelect').value;
+    if (!supplier) {
+        e.preventDefault();
+        alert('Please select a supplier.');
+        return false;
+    }
+
+    // Validate all items have products and quantities
+    for (const item of items) {
+        if (!item.product_id || item.qty <= 0 || item.cost <= 0) {
+            e.preventDefault();
+            alert('Please ensure all items have valid product, quantity, and cost.');
+            return false;
+        }
+    }
+
+    return true;
+});
+
+// ============================================
+// KEYBOARD SHORTCUTS
+// ============================================
+document.addEventListener('keydown', function(e) {
+    // Ctrl + Enter to submit
+    if (e.ctrlKey && e.key === 'Enter') {
+        document.getElementById('poForm').dispatchEvent(new Event('submit'));
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,385 @@
+<!-- purchases/goods_receipt_list.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       GOODS RECEIPT LIST - NetSuite Style
+    ============================================ */
+
+    :root {
+        --primary: #0a5c8c;
+        --secondary: #64748b;
+        --success: #0f9d58;
+        --warning: #f4b400;
+        --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        --card-radius: 12px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0 16px 0;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header h4 {
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+        font-size: 22px;
+    }
+
+    .page-header .subtitle {
+        color: var(--secondary);
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border-radius: var(--card-radius);
+        padding: 16px 18px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        text-align: center;
+    }
+
+    .kpi-card .kpi-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+
+    .kpi-card .kpi-label {
+        font-size: 12px;
+        color: var(--secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-bar {
+        background: #fff;
+        border-radius: var(--card-radius);
+        padding: 14px 18px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-bar input {
+        flex: 1;
+        min-width: 200px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 8px 14px;
+        font-size: 14px;
+        background: #f8fafc;
+    }
+
+    .filter-bar input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(10,92,140,0.1);
+        outline: none;
+    }
+
+    .table-container {
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        overflow: hidden;
+    }
+
+    .table-container .table-header {
+        padding: 14px 18px;
+        background: #fafbfc;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .table-enterprise {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .table-enterprise thead {
+        background: #f8fafc;
+    }
+
+    .table-enterprise thead th {
+        padding: 10px 14px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--secondary);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-enterprise tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .table-enterprise tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-badge .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-badge.draft { background: #f1f3f4; color: #5f6368; }
+    .status-badge.draft .status-dot { background: #5f6368; }
+    .status-badge.received { background: #e6f4ea; color: #0f9d58; }
+    .status-badge.received .status-dot { background: #0f9d58; }
+    .status-badge.cancelled { background: #fce8e6; color: #d93025; }
+    .status-badge.cancelled .status-dot { background: #d93025; }
+
+    .pagination-enterprise {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: #fafbfc;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .filter-bar {
+            flex-direction: column;
+        }
+        .filter-bar input {
+            width: 100%;
+            min-width: unset;
+        }
+        .pagination-enterprise {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4">
+
+    <div class="page-header">
+        <div>
+            <h4><i class="fas fa-arrow-down me-2" style="color: var(--primary);"></i>Goods Receipts</h4>
+            <div class="subtitle">Track all goods received from suppliers</div>
+        </div>
+        <div>
+            <a href="{% url 'create_goods_receipt' %}" class="btn-primary-modern">
+                <i class="fas fa-plus-circle"></i> New Receipt
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value">{{ total_receipts|default:0 }}</div>
+            <div class="kpi-label">Total Receipts</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ today_receipts|default:0 }}</div>
+            <div class="kpi-label">Today</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">{{ pending_receipts|default:0 }}</div>
+            <div class="kpi-label">Pending</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value">GHS {{ total_value|default:"0"|floatformat:0 }}</div>
+            <div class="kpi-label">Total Value</div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+        <input type="text" placeholder="Search GRN or PO number..." value="{{ search }}" id="searchInput" onkeyup="filterTable()">
+        <button class="btn-outline-modern" style="padding: 6px 16px;" onclick="clearFilters()">
+            <i class="fas fa-times"></i> Clear
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <span style="font-weight: 600;">Goods Receipts</span>
+            <span style="font-size: 13px; color: var(--secondary);">{{ page_obj.paginator.count }} receipt(s)</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="table-enterprise">
+                <thead>
+                    <tr>
+                        <th>GRN Number</th>
+                        <th>PO Reference</th>
+                        <th>Supplier</th>
+                        <th style="text-align: right;">Items</th>
+                        <th>Received By</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for grn in page_obj %}
+                    <tr>
+                        <td>
+                            <strong style="color: var(--primary);">{{ grn.receipt_number }}</strong>
+                            <div style="font-size: 11px; color: var(--secondary);">
+                                {{ grn.received_at|date:"d M Y H:i" }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if grn.purchase_order %}
+                                <a href="{% url 'view_purchase_order' grn.purchase_order.id %}" style="color: var(--primary); text-decoration: none;">
+                                    {{ grn.purchase_order.reference_number }}
+                                </a>
+                            {% else %}
+                                <span style="color: var(--secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if grn.purchase %}
+                                {{ grn.purchase.supplier.name }}
+                            {% else %}
+                                <span style="color: var(--secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; font-weight: 500;">
+                            {{ grn.items.count }}
+                        </td>
+                        <td>{{ grn.received_by.username|default:"System" }}</td>
+                        <td>
+                            <span class="status-badge {{ grn.status }}">
+                                <span class="status-dot"></span>
+                                {{ grn.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="{% url 'view_goods_receipt' grn.id %}" class="btn-icon" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+                                <div style="font-size: 18px; font-weight: 600; color: #1a1a2e;">No Goods Receipts</div>
+                                <p style="color: var(--secondary); margin-top: 8px;">Start receiving goods from suppliers.</p>
+                                <a href="{% url 'create_goods_receipt' %}" class="btn-primary-modern">
+                                    <i class="fas fa-plus-circle"></i> New Receipt
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-enterprise">
+            <div>
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+            </div>
+            <div>
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if search %}&search={{ search }}{% endif %}" class="page-btn">«</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="page-btn">‹</a>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="page-btn active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}" class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="page-btn">›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}" class="page-btn">»</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('searchInput').value;
+    let url = new URL(window.location.href);
+    if (search) url.searchParams.set('search', search);
+    else url.searchParams.delete('search');
+    window.location.href = url.toString();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    filterTable();
+}
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') filterTable();
+});
+</script>
+{% endblock %}

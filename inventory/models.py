@@ -1051,3 +1051,126 @@ class InventoryMovement(models.Model):
 
     def __str__(self):
         return f"{self.product} - {self.movement_type}"
+
+
+# Enterprise procurement models - append these to inventory/models.py
+# from django.db import models, transaction
+# from django.utils import timezone
+# from decimal import Decimal
+# import uuid
+
+# Assumes Business, Supplier, Inventory, Purchase, PurchaseItem, ProductBatch,
+# InventoryStockHistory are defined earlier in inventory/models.py
+
+PO_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("issued", "Issued"),
+    ("partially_received", "Partially Received"),
+    ("received", "Received"),
+    ("cancelled", "Cancelled"),
+]
+
+GRN_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("received", "Received"),
+    ("cancelled", "Cancelled"),
+]
+
+
+def _generate_po_reference():
+    ts = timezone.now().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:4].upper()
+    return f"PO-{ts}-{suffix}"
+
+
+def _generate_grn_reference():
+    ts = timezone.now().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:4].upper()
+    return f"GRN-{ts}-{suffix}"
+
+
+class PurchaseOrder(models.Model):
+    """Purchase Order (procurement request/authority)."""
+    business = models.ForeignKey('business.Business', on_delete=models.CASCADE)
+    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
+    reference_number = models.CharField(max_length=60, unique=True, default=_generate_po_reference)
+    expected_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=30, choices=PO_STATUS_CHOICES, default="draft")
+    created_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def total_cost(self):
+        return sum((i.total_cost or Decimal("0.00")) for i in self.items.all())
+
+    def __str__(self):
+        return self.reference_number
+
+
+class PurchaseOrderItem(models.Model):
+    po = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey('Inventory', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    tax_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    total_cost = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
+    expected_delivery_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        qty = Decimal(str(self.quantity))
+        unit_cost = Decimal(str(self.unit_cost))
+        discount = Decimal(str(self.discount or 0))
+        tax_percent = Decimal(str(self.tax_percent or 0))
+
+        subtotal = qty * unit_cost
+        if discount > subtotal:
+            discount = subtotal
+        after_discount = subtotal - discount
+        tax_amount = (after_discount * (tax_percent / Decimal("100")))
+        self.total_cost = after_discount + tax_amount
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.product_name} x{self.quantity} ({self.po.reference_number})"
+
+
+class GoodsReceipt(models.Model):
+    """Goods receiving document (GRN). Optionally links back to a PO and creates a Purchase (invoice)."""
+    business = models.ForeignKey('business.Business', on_delete=models.CASCADE)
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.SET_NULL, null=True, blank=True, related_name="receipts")
+    purchase = models.ForeignKey('Purchase', on_delete=models.SET_NULL, null=True, blank=True, related_name="goods_receipts")
+    receipt_number = models.CharField(max_length=60, unique=True, default=_generate_grn_reference)
+    received_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True)
+    received_at = models.DateTimeField(default=timezone.now)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=30, choices=GRN_STATUS_CHOICES, default="draft")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.receipt_number
+
+
+class GoodsReceiptItem(models.Model):
+    grn = models.ForeignKey(GoodsReceipt, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey('Inventory', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    total_cost = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
+    expiry_date = models.DateField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.total_cost = Decimal(str(self.quantity)) * Decimal(str(self.unit_cost))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.product_name} x{self.quantity} ({self.grn.receipt_number})"

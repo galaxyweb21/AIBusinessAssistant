@@ -38,6 +38,21 @@ urlpatterns = [
 
     path("purchases/", views.purchase_list, name="purchase_list"),
 
+    path("purchase-orders/", views.purchase_order_list, name="purchase_order_list"),
+    path("purchase-orders/create/", views.create_purchase_order, name="create_purchase_order"),
+    path("purchase-orders/<int:pk>/", views.view_purchase_order, name="view_purchase_order"),
+
+    # Goods Receipts (GRN)
+    path("goods-receipts/", views.goods_receipt_list, name="goods_receipt_list"),
+    path("goods-receipts/create/", views.create_goods_receipt, name="create_goods_receipt"),
+    # create GRN from PO
+    path("purchase-orders/<int:po_pk>/receive/", views.create_goods_receipt, name="receive_purchase_order"),
+    path("goods-receipts/<int:pk>/", views.view_goods_receipt, name="view_goods_receipt"),
+
+# Add these URL patterns
+    path('procurement/pending-count/', views.pending_po_count_api, name='pending_po_count_api'),
+    path('inventory/low-stock-count/', views.low_stock_count_api, name='low_stock_count_api'),
+
 
     path("generate-sku/", views.generate_sku, name="generate_sku"),
     path("generate-barcode/", views.generate_barcode, name="generate_barcode"),

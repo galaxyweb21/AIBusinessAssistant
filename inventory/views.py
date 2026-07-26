@@ -1418,6 +1418,235 @@ def purchase_list(request):
     return render(request, "purchases/purchase_list.html", context)
 
 
+# New
+
+def pending_po_count_api(request):
+    business = get_business(request)
+    count = PurchaseOrder.objects.filter(
+        business=business,
+        status__in=['draft', 'issued', 'partially_received']
+    ).count()
+    return JsonResponse({'count': count})
+
+
+def low_stock_count_api(request):
+    business = get_business(request)
+    count = Inventory.objects.filter(
+        business=business,
+        stock_quantity__lte=5,
+        stock_quantity__gt=0
+    ).count()
+    return JsonResponse({'count': count})
+
+
+@login_required
+def purchase_order_list(request):
+    business = get_business(request)
+    search = request.GET.get("search", "").strip()
+    status = request.GET.get("status", "").strip()
+
+    qs = PurchaseOrder.objects.filter(business=business).select_related("supplier", "created_by").order_by("-created_at")
+    if search:
+        qs = qs.filter(
+            Q(reference_number__icontains=search) |
+            Q(supplier__name__icontains=search)
+        )
+    if status:
+        qs = qs.filter(status=status)
+
+    paginator = Paginator(qs, 20)
+    page = paginator.get_page(request.GET.get("page"))
+
+    context = {"page_obj": page, "search": search, "status": status, "business": business, "title": "Purchase Orders"}
+    return render(request, "purchases/purchase_order_list.html", context)
+
+
+@login_required
+@transaction.atomic
+def create_purchase_order(request):
+    business = get_business(request)
+    suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
+    products = Inventory.objects.filter(business=business).order_by("product_name")
+
+    if request.method == "POST":
+        supplier_id = request.POST.get("supplier")
+        supplier = Supplier.objects.filter(id=supplier_id, business=business).first()
+        if not supplier:
+            messages.error(request, "Select a valid supplier.")
+            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+
+        try:
+            items = json.loads(request.POST.get("items_json", "[]"))
+        except (json.JSONDecodeError, TypeError):
+            messages.error(request, "Invalid items JSON.")
+            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+
+        if not items:
+            messages.error(request, "Add at least one item.")
+            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+
+        po = PurchaseOrder.objects.create(
+            business=business,
+            supplier=supplier,
+            reference_number=_generate_po_reference(),
+            created_by=request.user,
+            status="issued",
+            expected_date=request.POST.get("expected_date") or None,
+            notes=request.POST.get("notes", "").strip(),
+        )
+
+        for it in items:
+            product = Inventory.objects.filter(pk=it.get("product_id"), business=business).first()
+            if not product:
+                continue
+            qty = int(it.get("qty", 0))
+            unit_cost = Decimal(str(it.get("cost", "0") or "0"))
+            discount = Decimal(str(it.get("discount", 0) or 0))
+            tax = Decimal(str(it.get("tax", 0) or 0))
+            expiry = it.get("expiry") or None
+            poi = PurchaseOrderItem.objects.create(
+                po=po,
+                product=product,
+                quantity=qty,
+                unit_cost=unit_cost,
+                discount=discount,
+                tax_percent=tax,
+                expiry_date=expiry or None,
+            )
+
+        messages.success(request, f"Purchase order {po.reference_number} created.")
+        return redirect("view_purchase_order", po.id)
+
+    return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+
+
+@login_required
+def view_purchase_order(request, pk):
+    business = get_business(request)
+    po = get_object_or_404(PurchaseOrder.objects.select_related("supplier", "created_by"), id=pk, business=business)
+    items = po.items.select_related("product")
+    context = {"po": po, "items": items, "business": business}
+    return render(request, "purchases/view_purchase_order.html", context)
+
+
+@login_required
+@transaction.atomic
+def create_goods_receipt(request, po_pk=None):
+    """Create a GRN either against a PO or standalone. When created against a PO we
+    automatically generate a Purchase (vendor invoice) and post inventory using purchase.post_purchase()."""
+    business = get_business(request)
+    suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
+    products = Inventory.objects.filter(business=business).order_by("product_name")
+    po = None
+    if po_pk:
+        po = get_object_or_404(PurchaseOrder, pk=po_pk, business=business)
+
+    if request.method == "POST":
+        supplier_id = request.POST.get("supplier") or (po.supplier.id if po else None)
+        supplier = Supplier.objects.filter(id=supplier_id, business=business).first()
+        if not supplier:
+            messages.error(request, "Select a valid supplier.")
+            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+
+        try:
+            items = json.loads(request.POST.get("items_json", "[]"))
+        except (json.JSONDecodeError, TypeError):
+            messages.error(request, "Invalid items JSON.")
+            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+
+        if not items:
+            messages.error(request, "Add at least one item.")
+            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+
+        # Build a Purchase (invoice) mirror of the GRN so existing post_purchase can be used.
+        purchase = Purchase.objects.create(
+            business=business,
+            supplier=supplier,
+            reference_number=_generate_purchase_reference(),
+            created_by=request.user,
+            status="received",
+            total_cost=Decimal("0.00"),
+        )
+
+        grn = GoodsReceipt.objects.create(
+            business=business,
+            purchase_order=po,
+            purchase=purchase,
+            receipt_number=_generate_grn_reference(),
+            received_by=request.user,
+            received_at=timezone.now(),
+            notes=request.POST.get("notes", ""),
+            status="received",
+        )
+
+        for it in items:
+            product = Inventory.objects.filter(pk=it.get("product_id"), business=business).first()
+            if not product:
+                continue
+            qty = int(it.get("qty", 0))
+            unit_cost = Decimal(str(it.get("cost", "0") or "0"))
+            expiry = it.get("expiry") or None
+
+            # create PurchaseItem (so calculating totals and post_purchase still works)
+            PurchaseItem.objects.create(
+                purchase=purchase,
+                product=product,
+                quantity=qty,
+                unit_cost=unit_cost,
+                discount=Decimal("0.00"),
+                tax_percent=Decimal("0.00"),
+                expiry_date=expiry or None,
+            )
+
+            GoodsReceiptItem.objects.create(
+                grn=grn,
+                product=product,
+                quantity=qty,
+                unit_cost=unit_cost,
+                expiry_date=expiry or None,
+            )
+
+        # Calculate totals and post (this will update stock, create InventoryStockHistory and ProductBatch)
+        purchase.calculate_totals()
+        purchase.post_purchase(user=request.user)
+
+        # Update PO status if applicable
+        if po:
+            # mark PO received (basic — for partial receipts you'd need more logic)
+            po.status = "received"
+            po.save(update_fields=["status"])
+
+        messages.success(request, f"Goods received and posted (GRN: {grn.receipt_number}).")
+        return redirect("view_goods_receipt", grn.id)
+
+    context = {"suppliers": suppliers, "products": products, "business": business, "po": po}
+    return render(request, "purchases/create_goods_receipt.html", context)
+
+
+@login_required
+def goods_receipt_list(request):
+    business = get_business(request)
+    search = request.GET.get("search", "").strip()
+
+    qs = GoodsReceipt.objects.filter(business=business).select_related("purchase_order", "purchase", "received_by").order_by("-created_at")
+    if search:
+        qs = qs.filter(Q(receipt_number__icontains=search) | Q(purchase__reference_number__icontains=search) | Q(purchase_order__reference_number__icontains=search))
+
+    paginator = Paginator(qs, 20)
+    page = paginator.get_page(request.GET.get("page"))
+    context = {"page_obj": page, "business": business, "search": search, "title": "Goods Receipts"}
+    return render(request, "purchases/goods_receipt_list.html", context)
+
+
+@login_required
+def view_goods_receipt(request, pk):
+    business = get_business(request)
+    grn = get_object_or_404(GoodsReceipt.objects.select_related("purchase_order", "purchase", "received_by"), id=pk, business=business)
+    items = grn.items.select_related("product")
+    context = {"grn": grn, "items": items, "business": business}
+    return render(request, "purchases/view_goods_receipt.html", context)
+
+
 @login_required
 def supplier_detail(request, pk):
     business = get_business(request)

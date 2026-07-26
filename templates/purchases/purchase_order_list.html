@@ -1,0 +1,787 @@
+<!-- purchases/purchase_order_list.html -->
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* ============================================
+       ENTERPRISE PROCUREMENT - MODERN UI
+       Inspired by SAP Fiori / MS Dynamics 365
+    ============================================ */
+
+    :root {
+        --primary: #0a5c8c;
+        --primary-light: #e6f0f8;
+        --primary-dark: #064269;
+        --secondary: #64748b;
+        --success: #0f9d58;
+        --warning: #f4b400;
+        --danger: #d93025;
+        --info: #1a73e8;
+        --bg-page: #f8f9fc;
+        --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        --card-radius: 12px;
+        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0 16px 0;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header .header-title h4 {
+        font-weight: 600;
+        color: #1a1a2e;
+        margin: 0;
+        font-size: 22px;
+    }
+
+    .page-header .header-title .subtitle {
+        color: var(--secondary);
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    /* Action Buttons */
+    .action-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-modern {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary-modern:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(10,92,140,0.3);
+        color: #fff;
+    }
+
+    .btn-outline-modern {
+        background: transparent;
+        color: var(--secondary);
+        border: 1px solid #d1d5db;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-outline-modern:hover {
+        background: #f1f5f9;
+        border-color: var(--secondary);
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .kpi-card-modern {
+        background: #fff;
+        border-radius: var(--card-radius);
+        padding: 18px 20px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .kpi-card-modern .kpi-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .kpi-card-modern .kpi-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
+    .kpi-card-modern .kpi-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 28px;
+        opacity: 0.12;
+    }
+
+    .kpi-card-modern .kpi-trend {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 6px;
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+    }
+
+    .kpi-trend.up { background: #e6f4ea; color: #0f9d58; }
+    .kpi-trend.down { background: #fce8e6; color: #d93025; }
+    .kpi-trend.neutral { background: #f1f3f4; color: var(--secondary); }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: #fff;
+        border-radius: var(--card-radius);
+        padding: 16px 20px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .filter-bar .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-bar .filter-group .form-control,
+    .filter-bar .filter-group .form-select {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 8px 14px;
+        font-size: 14px;
+        background: #f8fafc;
+        transition: var(--transition);
+        height: 40px;
+    }
+
+    .filter-bar .filter-group .form-control:focus,
+    .filter-bar .filter-group .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(10,92,140,0.1);
+        background: #fff;
+    }
+
+    .filter-bar .filter-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* Table - Enterprise Style */
+    .table-container {
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: var(--card-shadow);
+        border: 1px solid #f1f5f9;
+        overflow: hidden;
+    }
+
+    .table-container .table-header {
+        padding: 16px 20px;
+        background: #fafbfc;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .table-container .table-header .table-title {
+        font-weight: 600;
+        font-size: 15px;
+        color: #1a1a2e;
+        margin: 0;
+    }
+
+    .table-container .table-header .table-count {
+        font-size: 13px;
+        color: var(--secondary);
+    }
+
+    .table-enterprise {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .table-enterprise thead {
+        background: #f8fafc;
+    }
+
+    .table-enterprise thead th {
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--secondary);
+        border-bottom: 1px solid #e2e8f0;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        background: #f8fafc;
+        z-index: 2;
+    }
+
+    .table-enterprise tbody td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .table-enterprise tbody tr {
+        transition: var(--transition);
+    }
+
+    .table-enterprise tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .table-enterprise tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Status Badges - Enterprise Style */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-badge .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .status-badge.draft { background: #f1f3f4; color: #5f6368; }
+    .status-badge.draft .status-dot { background: #5f6368; }
+
+    .status-badge.issued { background: #e6f0f8; color: #0a5c8c; }
+    .status-badge.issued .status-dot { background: #0a5c8c; }
+
+    .status-badge.partially_received { background: #fef7e0; color: #e37400; }
+    .status-badge.partially_received .status-dot { background: #e37400; }
+
+    .status-badge.received { background: #e6f4ea; color: #0f9d58; }
+    .status-badge.received .status-dot { background: #0f9d58; }
+
+    .status-badge.cancelled { background: #fce8e6; color: #d93025; }
+    .status-badge.cancelled .status-dot { background: #d93025; }
+
+    /* Row Actions */
+    .row-actions {
+        display: flex;
+        gap: 6px;
+    }
+
+    .row-actions .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: var(--secondary);
+        transition: var(--transition);
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .row-actions .btn-icon:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+
+    .row-actions .btn-icon.danger:hover {
+        background: #fce8e6;
+        color: #d93025;
+    }
+
+    /* Pagination - Enterprise */
+    .pagination-enterprise {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: #fafbfc;
+        border-radius: 0 0 var(--card-radius) var(--card-radius);
+    }
+
+    .pagination-enterprise .pagination-info {
+        font-size: 14px;
+        color: var(--secondary);
+    }
+
+    .pagination-enterprise .pagination-buttons {
+        display: flex;
+        gap: 4px;
+    }
+
+    .pagination-enterprise .pagination-buttons .page-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: var(--secondary);
+        font-size: 14px;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .pagination-enterprise .pagination-buttons .page-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .pagination-enterprise .pagination-buttons .page-btn.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+    }
+
+    .pagination-enterprise .pagination-buttons .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state .empty-icon {
+        font-size: 56px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+
+    .empty-state .empty-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 8px;
+    }
+
+    .empty-state .empty-description {
+        color: var(--secondary);
+        max-width: 400px;
+        margin: 0 auto 20px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-bar .filter-group {
+            min-width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .action-bar {
+            width: 100%;
+        }
+
+        .action-bar .btn-primary-modern,
+        .action-bar .btn-outline-modern {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .kpi-card-modern .kpi-value {
+            font-size: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .pagination-enterprise {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header .header-title h4 {
+            font-size: 18px;
+        }
+
+        .table-enterprise {
+            font-size: 13px;
+        }
+
+        .table-enterprise thead th,
+        .table-enterprise tbody td {
+            padding: 10px 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid px-4">
+
+    <!-- ==========================================
+         PAGE HEADER
+    ========================================== -->
+    <div class="page-header">
+        <div class="header-title">
+            <h4>
+                <i class="fas fa-file-purchase me-2" style="color: var(--primary);"></i>
+                Purchase Orders
+            </h4>
+            <div class="subtitle">
+                Manage procurement orders and track supplier deliveries
+            </div>
+        </div>
+        <div class="action-bar">
+            <a href="{% url 'create_purchase_order' %}" class="btn-primary-modern">
+                <i class="fas fa-plus-circle"></i> New Purchase Order
+            </a>
+            <button class="btn-outline-modern" onclick="window.print()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         KPI CARDS
+    ========================================== -->
+    <div class="kpi-grid">
+        <div class="kpi-card-modern">
+            <div class="kpi-value">{{ total_orders|default:0 }}</div>
+            <div class="kpi-label">Total Orders</div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up me-1"></i> 12%</span>
+            <i class="kpi-icon fas fa-file-invoice"></i>
+        </div>
+        <div class="kpi-card-modern">
+            <div class="kpi-value">{{ pending_orders|default:0 }}</div>
+            <div class="kpi-label">Pending</div>
+            <span class="kpi-trend neutral"><i class="fas fa-clock me-1"></i> Awaiting</span>
+            <i class="kpi-icon fas fa-hourglass-half"></i>
+        </div>
+        <div class="kpi-card-modern">
+            <div class="kpi-value">{{ received_orders|default:0 }}</div>
+            <div class="kpi-label">Received</div>
+            <span class="kpi-trend up"><i class="fas fa-check-circle me-1"></i> Completed</span>
+            <i class="kpi-icon fas fa-check-circle"></i>
+        </div>
+        <div class="kpi-card-modern">
+            <div class="kpi-value">GHS {{ total_value|default:"0"|floatformat:0 }}</div>
+            <div class="kpi-label">Total Value</div>
+            <span class="kpi-trend up"><i class="fas fa-arrow-up me-1"></i> 8%</span>
+            <i class="kpi-icon fas fa-money-bill-wave"></i>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         FILTER BAR
+    ========================================== -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <i class="fas fa-search" style="color: var(--secondary);"></i>
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search PO number or supplier..."
+                   value="{{ search }}"
+                   id="searchInput"
+                   onkeyup="filterTable()">
+        </div>
+        <div class="filter-group" style="flex: 0 1 200px;">
+            <select class="form-select" id="statusFilter" onchange="filterTable()">
+                <option value="">All Status</option>
+                <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="issued" {% if status == 'issued' %}selected{% endif %}>Issued</option>
+                <option value="partially_received" {% if status == 'partially_received' %}selected{% endif %}>Partially Received</option>
+                <option value="received" {% if status == 'received' %}selected{% endif %}>Received</option>
+                <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="btn-outline-modern" style="padding: 6px 16px;" onclick="clearFilters()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TABLE
+    ========================================== -->
+    <div class="table-container">
+        <div class="table-header">
+            <span class="table-title">
+                <i class="fas fa-list-ul me-2"></i> Purchase Orders
+            </span>
+            <span class="table-count">{{ page_obj.paginator.count }} order(s)</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="table-enterprise" id="poTable">
+                <thead>
+                    <tr>
+                        <th>PO Number</th>
+                        <th>Supplier</th>
+                        <th>Expected Date</th>
+                        <th style="text-align: right;">Total Cost</th>
+                        <th>Status</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for po in page_obj %}
+                    <tr>
+                        <td>
+                            <strong style="color: var(--primary);">{{ po.reference_number }}</strong>
+                            <div style="font-size: 11px; color: var(--secondary);">
+                                Created: {{ po.created_at|date:"d M Y" }}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">{{ po.supplier.name }}</div>
+                            <div style="font-size: 12px; color: var(--secondary);">
+                                {{ po.items.count }} item(s)
+                            </div>
+                        </td>
+                        <td>
+                            {% if po.expected_date %}
+                                {{ po.expected_date|date:"d M Y" }}
+                            {% else %}
+                                <span style="color: var(--secondary);">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; font-weight: 600;">
+                            GHS {{ po.total_cost|floatformat:2 }}
+                        </td>
+                        <td>
+                            <span class="status-badge {{ po.status }}">
+                                <span class="status-dot"></span>
+                                {{ po.get_status_display }}
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <div class="row-actions" style="justify-content: center;">
+                                <a href="{% url 'view_purchase_order' po.id %}"
+                                   class="btn-icon"
+                                   title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'create_goods_receipt' po.id %}"
+                                   class="btn-icon"
+                                   title="Receive Goods">
+                                    <i class="fas fa-arrow-down"></i>
+                                </a>
+                                <button class="btn-icon danger"
+                                        onclick="confirmDelete('{{ po.id }}', '{{ po.reference_number }}')"
+                                        title="Cancel">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="empty-title">No Purchase Orders Found</div>
+                                <div class="empty-description">
+                                    Create your first purchase order to start tracking procurement.
+                                </div>
+                                <a href="{% url 'create_purchase_order' %}" class="btn-primary-modern">
+                                    <i class="fas fa-plus-circle"></i> Create Purchase Order
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination-enterprise">
+            <div class="pagination-info">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} orders
+            </div>
+            <div class="pagination-buttons">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
+                   class="page-btn">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
+                   class="page-btn">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="page-btn active">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
+                           class="page-btn">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
+                   class="page-btn">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}"
+                   class="page-btn">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ==========================================
+     DELETE CONFIRMATION MODAL
+========================================== -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Purchase Order</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel <strong id="deletePoNumber"></strong>?</p>
+                <p class="text-muted" style="font-size: 14px;">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Keep</button>
+                <form id="deleteForm" method="POST" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Cancel Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// FILTER FUNCTIONS
+// ============================================
+function filterTable() {
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+
+    let url = new URL(window.location.href);
+    if (search) url.searchParams.set('search', search);
+    else url.searchParams.delete('search');
+    if (status) url.searchParams.set('status', status);
+    else url.searchParams.delete('status');
+
+    window.location.href = url.toString();
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    filterTable();
+}
+
+// ============================================
+// DELETE CONFIRMATION
+// ============================================
+function confirmDelete(poId, poNumber) {
+    document.getElementById('deletePoNumber').textContent = poNumber;
+    document.getElementById('deleteForm').action = `/purchases/po/${poId}/cancel/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// ============================================
+// ENTER KEY FOR SEARCH
+// ============================================
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        filterTable();
+    }
+});
+</script>
+{% endblock %}
