@@ -530,6 +530,137 @@ transform:none;
 
 }
 
+/* ===================================================
+   AI CHAT - THINKING & FORMATTING IMPROVEMENTS
+=================================================== */
+
+/* Thinking / Loading indicator */
+.thinking-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,.05);
+    border-radius: 18px;
+    border-bottom-left-radius: 6px;
+    align-self: flex-start;
+    color: #64748b;
+    font-size: 14px;
+    animation: fadeIn .25s ease;
+}
+
+.dark-mode .thinking-indicator {
+    background: #1e293b;
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+.thinking-indicator .dots {
+    display: flex;
+    gap: 4px;
+}
+
+.thinking-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: dotBounce 1.4s infinite ease-in-out;
+}
+
+.thinking-indicator .dot:nth-child(1) { animation-delay: -0.32s; }
+.thinking-indicator .dot:nth-child(2) { animation-delay: -0.16s; }
+.thinking-indicator .dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes dotBounce {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* AI Response Formatting Improvements */
+.chat-ai {
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.chat-ai h1, .chat-ai h2, .chat-ai h3, .chat-ai h4 {
+    font-size: 1em;
+    font-weight: 700;
+    margin: 10px 0 6px 0;
+    color: #0f172a;
+}
+
+.chat-ai h4 {
+    font-size: 0.95em;
+    color: #3b82f6;
+}
+
+.chat-ai ul, .chat-ai ol {
+    margin: 6px 0 8px 20px;
+    padding: 0;
+}
+
+.chat-ai li {
+    margin-bottom: 3px;
+    line-height: 1.6;
+}
+
+.chat-ai p {
+    margin: 4px 0;
+}
+
+.chat-ai strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.chat-ai hr {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 10px 0;
+}
+
+.chat-ai code {
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+    color: #ef4444;
+}
+
+.chat-ai blockquote {
+    border-left: 3px solid #3b82f6;
+    padding-left: 12px;
+    margin: 8px 0;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Dark mode chat formatting */
+.dark-mode .chat-ai h1,
+.dark-mode .chat-ai h2,
+.dark-mode .chat-ai h3,
+.dark-mode .chat-ai h4,
+.dark-mode .chat-ai strong {
+    color: #f1f5f9;
+}
+
+.dark-mode .chat-ai code {
+    background: #0f172a;
+    color: #f87171;
+}
+
+.dark-mode .chat-ai blockquote {
+    color: #94a3b8;
+}
+
+.dark-mode .chat-ai hr {
+    border-color: #334155;
+}
+
 /* ==========================================
    MOBILE
 ========================================== */
@@ -1034,60 +1165,77 @@ class="list-group list-group-flush">
 
 
             <!-- =========================
-                 AI CHAT (MODERN FIXED UI)
-            ========================== -->
-            <div class="row g-3">
+     AI CHAT - ENTERPRISE (IMPROVED)
+========================= -->
+<div class="row g-3">
 
-                <div class="col-12">
+    <div class="col-12">
 
-                    <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0">
 
-                        <div class="card-header d-flex justify-content-between align-items-center bg-transparent py-2">
-                            <strong>AI Business Command Center</strong>
-                            <span class="badge bg-success">Online</span>
-                        </div>
+            <div class="card-header d-flex justify-content-between align-items-center bg-transparent py-2">
+                <strong><i class="fas fa-robot me-2 text-primary"></i>AI Business Assistant</strong>
+                <span class="badge bg-success">
+                    <i class="fas fa-circle fa-fw" style="font-size:6px;"></i> Online
+                </span>
+            </div>
 
-                        <div class="card-body p-0">
+            <div class="card-body p-0">
 
-    <div id="chatBox" class="chat-box"></div>
-
-    <input type="hidden"
-           name="csrfmiddlewaretoken"
-           value="{{ csrf_token }}">
-
-    <div class="chat-input-wrapper">
-
-        <input
-            id="chatInput"
-            class="form-control chat-input-field"
-            placeholder="Ask AI anything about your business..."
-            autocomplete="off">
-
-        <button
-            onclick="sendMessage()"
-            class="btn btn-primary chat-send-btn">
-
-            <i class="fas fa-paper-plane"></i>
-
-        </button>
-
-        <button
-            onclick="clearChat()"
-            class="btn btn-outline-danger chat-clear-btn">
-
-            <i class="fas fa-trash"></i>
-
-        </button>
-
-    </div>
-
-</div>
-
+                <div id="chatBox" class="chat-box">
+                    <!-- Initial greeting -->
+                    <div class="chat-msg chat-ai">
+                        <i class="fas fa-robot me-2 text-primary"></i>
+                        <strong>Hello! I'm your AI business assistant.</strong><br>
+                        Ask me about sales, inventory, profits, or any business insight. I can help you with:
+                        <ul style="margin:6px 0 0 20px;">
+                            <li>📊 Sales performance & trends</li>
+                            <li>📦 Inventory & stock management</li>
+                            <li>💰 Profit & revenue analysis</li>
+                            <li>💡 Business recommendations</li>
+                            <li>📈 Forecasting & risk assessment</li>
+                        </ul>
                     </div>
+                </div>
+
+                <input type="hidden"
+                       name="csrfmiddlewaretoken"
+                       value="{{ csrf_token }}">
+
+                <div class="chat-input-wrapper">
+
+                    <input
+                        id="chatInput"
+                        class="form-control chat-input-field"
+                        placeholder="Ask AI anything about your business..."
+                        autocomplete="off">
+
+                    <button
+                        onclick="sendMessage()"
+                        class="btn btn-primary chat-send-btn"
+                        id="sendBtn">
+
+                        <i class="fas fa-paper-plane"></i>
+
+                    </button>
+
+                    <button
+                        onclick="clearChat()"
+                        class="btn btn-outline-danger chat-clear-btn">
+
+                        <i class="fas fa-trash"></i>
+
+                    </button>
 
                 </div>
 
             </div>
+
+        </div>
+
+    </div>
+
+</div>
 
         </div>
     </section>
@@ -1703,216 +1851,238 @@ ${item.stock_quantity}
 
 
 /* =========================
-CHAT
+   CHAT - IMPROVED WITH THINKING STATE
 ========================= */
 
-function getCSRFToken(){
+// Track if AI is currently thinking
+let isThinking = false;
+let thinkingElement = null;
 
-const el=
-document.querySelector(
-'[name=csrfmiddlewaretoken]'
-);
-
-return el ? el.value : '';
-
+function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
 }
 
+// Format AI response with markdown-like styling
+function formatAIResponse(text) {
+    if (!text) return 'No response received.';
 
-function sendMessage(){
+    // Escape HTML to prevent XSS
+    let formatted = text
+        // Headers (### Heading)
+        .replace(/^### (.*?)$/gm, '<h4>$1</h4>')
+        // Bold (**text**)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        // Italic (*text*)
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        // Code blocks (inline)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        // Blockquotes (> text)
+        .replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>')
+        // Unordered list items (- item)
+        .replace(/^- (.*?)$/gm, '<li>$1</li>')
+        // Ordered list items (1. item)
+        .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+        // Line breaks
+        .replace(/\n/g, '<br>');
 
-const input=
-document.getElementById(
-"chatInput"
-);
+    // Wrap consecutive list items
+    formatted = formatted.replace(/(<li>.*?<\/li>)/g, (match) => {
+        return '<ul style="margin:6px 0 6px 20px;padding:0;">' + match + '</ul>';
+    });
 
-const chatBox=
-document.getElementById(
-"chatBox"
-);
+    // Fix double wrapping
+    formatted = formatted.replace(/<\/ul>\s*<ul>/g, '');
 
-const message=
-input.value.trim();
-
-if(!message) return;
-
-const userBubble=
-document.createElement(
-"div"
-);
-
-userBubble.className=
-"chat-msg chat-user";
-
-userBubble.textContent=
-message;
-
-chatBox.appendChild(
-userBubble
-);
-
-chatBox.scrollTo({
-top:chatBox.scrollHeight,
-behavior:"smooth"
-});
-
-saveToHistory(
-"user",
-message
-);
-
-input.value="";
-
-
-fetch('/api/ai-chat/',{
-
-method:'POST',
-credentials:'same-origin',
-
-headers:{
-'Content-Type':'application/json',
-'X-CSRFToken':
-getCSRFToken()
-},
-
-body:JSON.stringify({
-message
-})
-
-})
-.then(res=>res.json())
-.then(data=>{
-
-const aiBubble=
-document.createElement(
-"div"
-);
-
-aiBubble.className=
-"chat-msg chat-ai";
-
-aiBubble.textContent=
-data.reply ||
-"No response";
-
-chatBox.appendChild(
-aiBubble
-);
-
-saveToHistory(
-'ai',
-data.reply
-);
-
-chatBox.scrollTo({
-    top: chatBox.scrollHeight,
-    behavior: "smooth"
-});
-
-});
-
+    return formatted;
 }
 
+// Show thinking indicator
+function showThinking() {
+    const chatBox = document.getElementById('chatBox');
+
+    if (isThinking) return;
+
+    isThinking = true;
+
+    // Disable input and send button
+    document.getElementById('chatInput').disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+    document.getElementById('sendBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    // Create thinking indicator
+    thinkingElement = document.createElement('div');
+    thinkingElement.className = 'thinking-indicator';
+    thinkingElement.innerHTML = `
+        <span>🤔 Thinking</span>
+        <span class="dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </span>
+    `;
+
+    chatBox.appendChild(thinkingElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Hide thinking indicator
+function hideThinking() {
+    isThinking = false;
+
+    if (thinkingElement) {
+        thinkingElement.remove();
+        thinkingElement = null;
+    }
+
+    // Re-enable input
+    document.getElementById('chatInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('sendBtn').innerHTML = '<i class="fas fa-paper-plane"></i>';
+}
+
+// Add message to chat with proper formatting
+function addChatMessage(type, text) {
+    const chatBox = document.getElementById('chatBox');
+
+    // Remove initial greeting if this is first user message
+    if (type === 'user' && chatBox.children.length === 1) {
+        const firstChild = chatBox.children[0];
+        if (firstChild.classList.contains('chat-ai') && firstChild.innerText.includes('Hello!')) {
+            chatBox.innerHTML = '';
+        }
+    }
+
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + (type === 'user' ? 'chat-user' : 'chat-ai');
+
+    if (type === 'ai') {
+        div.innerHTML = formatAIResponse(text);
+    } else {
+        div.textContent = text;
+    }
+
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Save to history
+    saveToHistory(type, text);
+}
+
+// Send message with thinking state
+function sendMessage() {
+    if (isThinking) return;
+
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    // Add user message
+    addChatMessage('user', message);
+    input.value = '';
+
+    // Show thinking indicator
+    showThinking();
+
+    // Send to API
+    fetch('/api/ai-chat/', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ message })
+    })
+    .then(res => res.json())
+    .then(data => {
+        hideThinking();
+        const reply = data.reply || 'No response received.';
+        addChatMessage('ai', reply);
+    })
+    .catch(err => {
+        console.error('Chat Error:', err);
+        hideThinking();
+        addChatMessage('ai', '⚠️ Sorry, I encountered an error. Please try again.');
+    });
+}
 
 /* =========================
 CHAT STORAGE
 ========================= */
 
-function saveToHistory(type,text){
-
-let history=JSON.parse(
-localStorage.getItem(
-'ai_chat_history'
-) || "[]"
-);
-
-history.push({
-type,
-text
-});
-
-history=history.slice(-50);
-
-localStorage.setItem(
-'ai_chat_history',
-JSON.stringify(history)
-);
-
+function saveToHistory(type, text) {
+    let history = JSON.parse(localStorage.getItem('ai_chat_history') || '[]');
+    history.push({ type, text });
+    history = history.slice(-50); // Keep last 50 messages
+    localStorage.setItem('ai_chat_history', JSON.stringify(history));
 }
 
+function loadChatHistory() {
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
 
-function loadChatHistory(){
+    const history = JSON.parse(localStorage.getItem('ai_chat_history') || '[]');
 
-const chatBox=
-document.getElementById(
-'chatBox'
-);
+    // Keep initial greeting if no history
+    if (history.length === 0) {
+        return;
+    }
 
-if(!chatBox) return;
+    // Clear and load history
+    chatBox.innerHTML = '';
 
-const history=
-JSON.parse(
-localStorage.getItem(
-'ai_chat_history'
-)||"[]"
-);
+    history.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'chat-msg ' + (msg.type === 'user' ? 'chat-user' : 'chat-ai');
 
-chatBox.innerHTML='';
+        if (msg.type === 'ai') {
+            div.innerHTML = formatAIResponse(msg.text);
+        } else {
+            div.textContent = msg.text;
+        }
 
-history.forEach(msg=>{
+        chatBox.appendChild(div);
+    });
 
-const bubble=
-document.createElement(
-'div'
-);
-
-bubble.className=
-'chat-msg '+
-(msg.type==='user'
-?'chat-user'
-:'chat-ai');
-
-bubble.textContent=
-msg.text;
-
-chatBox.appendChild(
-bubble
-);
-
-});
-
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+function clearChat() {
+    if (isThinking) {
+        hideThinking();
+    }
 
-function clearChat(){
+    localStorage.removeItem('ai_chat_history');
 
-localStorage.removeItem(
-'ai_chat_history'
-);
-
-loadChatHistory();
-
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = `
+        <div class="chat-msg chat-ai">
+            <i class="fas fa-robot me-2 text-primary"></i>
+            <strong>Chat cleared.</strong> How can I help you today?
+        </div>
+    `;
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
+/* =========================
+CHAT EVENT LISTENERS
+========================= */
 
-const input=document.getElementById("chatInput");
+document.addEventListener("DOMContentLoaded", function() {
+    const input = document.getElementById("chatInput");
 
-if(input){
+    if (input) {
+        input.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
 
-input.addEventListener("keydown",function(e){
-
-if(e.key==="Enter"){
-
-e.preventDefault();
-
-sendMessage();
-
-}
-
-});
-
-}
-
+    // Load chat history on page load
+    loadChatHistory();
 });
 </script>
 

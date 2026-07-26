@@ -9,6 +9,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 import uuid
 from django.utils.text import slugify
+from decimal import Decimal
 
 
 MOVEMENT_TYPES = (
@@ -336,6 +337,12 @@ class InventoryStockHistory(models.Model):
 
 
 class Purchase(models.Model):
+    STATUS_CHOICES = (
+
+        ("draft", "Draft"), ("submitted", "Submitted"), ("approved", "Approved"), ("ordered", "Ordered"),
+        ("partial", "Partially Received"), ("received", "Fully Received"), ("closed", "Closed"), ("cancelled", "Cancelled"),
+
+    )
 
     business = models.ForeignKey('business.Business', on_delete=models.CASCADE)
     supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE)
@@ -362,16 +369,84 @@ class Purchase(models.Model):
     # PURCHASE WORKFLOW
     # =========================
 
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ("draft", "Draft"),
-            ("pending", "Pending"),
-            ("received", "Received"),
-            ("cancelled", "Cancelled")
-        ],
-        default="draft"
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    # =====================================================
+    # ENTERPRISE PROCUREMENT
+    # =====================================================
+
+    purchase_order_number = models.CharField(
+        max_length=40,
+        unique=True,
+        blank=True
     )
+
+    supplier_reference = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    buyer = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_buyer"
+    )
+
+    requested_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_requester"
+    )
+
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="purchase_approver"
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    ordered_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    expected_delivery = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    warehouse = models.CharField(
+        max_length=120,
+        blank=True
+    )
+
+    delivery_address = models.TextField(
+        blank=True
+    )
+    priority = models.CharField(max_length=20,
+        choices=[
+            ("Low", "Low"),
+            ("Normal", "Normal"),
+            ("High", "High"),
+            ("Urgent", "Urgent"),
+        ],
+        default="Normal"
+    )
+
+    is_approved = models.BooleanField(default=False)
+
+    approval_notes = models.TextField(blank=True)
+
+    internal_notes = models.TextField(blank=True)
 
     created_by = models.ForeignKey(
         'auth.User',
@@ -418,9 +493,23 @@ class Purchase(models.Model):
             2
         )
 
-    from decimal import Decimal
+    @property
+    def total_items(self):
+        return self.items.count()
 
-    from decimal import Decimal
+    @property
+    def total_quantity(self):
+        return sum(
+            item.quantity
+            for item in self.items.all()
+        )
+
+    @property
+    def total_received(self):
+        return sum(
+            item.received_quantity
+            for item in self.items.all()
+        )
 
     def calculate_totals(
             self,
@@ -518,6 +607,12 @@ class Purchase(models.Model):
 
                 # NEW — auto-create an expiry-tracked batch if this line
                 # had an expiry date captured at purchase time.
+                if not self.purchase_order_number:
+                    self.purchase_order_number = (
+                            "PO-" +
+                            uuid.uuid4().hex[:8].upper()
+                    )
+
                 if item.expiry_date:
                     ProductBatch.objects.create(
                         business=self.business,

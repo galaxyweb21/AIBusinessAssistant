@@ -120,7 +120,10 @@ def generate_sales_forecast(business):
 # INVENTORY FORECAST
 # ======================================
 
+# dashboard/services/forecasting.py
+
 def generate_inventory_forecast(business):
+    from sales.models import SaleItem  # Fix: Import SaleItem, not Sale
 
     products = Inventory.objects.filter(
         business=business
@@ -129,10 +132,11 @@ def generate_inventory_forecast(business):
     risky_products = []
 
     for item in products:
-
-        recent_sales = Sale.objects.filter(
-            business=business,
-            product_name=item.product_name
+        # Fix: Query SaleItem, not Sale with product_name
+        recent_sales = SaleItem.objects.filter(
+            product=item,  # Use the product foreign key
+            sale__business=business,
+            sale__status='Completed'
         )
 
         total_sold = sum(s.quantity for s in recent_sales)
@@ -156,8 +160,6 @@ def generate_inventory_forecast(business):
             })
 
     return risky_products
-
-
 # ======================================
 # BUSINESS RISK ENGINE
 # ======================================
