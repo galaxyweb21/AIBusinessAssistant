@@ -1174,3 +1174,312 @@ class GoodsReceiptItem(models.Model):
 
     def __str__(self):
         return f"{self.product.product_name} x{self.quantity} ({self.grn.receipt_number})"
+
+
+LABEL_CODE_TYPES = (
+    ("barcode", "Barcode (CODE128)"),
+    ("qrcode", "QR Code"),
+)
+
+
+class LabelTemplate(models.Model):
+    """A reusable label layout/size preset for barcode & price-tag printing."""
+
+    business = models.ForeignKey(
+        Business, on_delete=models.CASCADE, related_name="label_templates"
+    )
+    name = models.CharField(max_length=80)
+    code_type = models.CharField(max_length=10, choices=LABEL_CODE_TYPES, default="barcode")
+
+    # Physical label size, in millimetres — drives the print CSS directly,
+    # since mm is a valid CSS unit and prints accurately across browsers.
+    width_mm = models.PositiveIntegerField(default=40)
+    height_mm = models.PositiveIntegerField(default=30)
+    columns = models.PositiveIntegerField(default=3, help_text="Labels per row on the print sheet")
+    gap_mm = models.PositiveIntegerField(default=2, help_text="Gap between labels, in mm")
+
+    # Which fields to print on each label
+    show_business_name = models.BooleanField(default=False)
+    show_product_name = models.BooleanField(default=True)
+    show_price = models.BooleanField(default=True)
+    show_sku = models.BooleanField(default=True)
+
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-is_default", "name"]
+        unique_together = ("business", "name")
+
+    def __str__(self):
+        return f"{self.name} ({self.width_mm}\u00d7{self.height_mm}mm)"
+
+    def save(self, *args, **kwargs):
+        # Only one default template per business at a time
+        if self.is_default:
+            LabelTemplate.objects.filter(
+                business=self.business, is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+class LabelPrintLog(models.Model):
+    """Audit trail of label print runs — who printed what, and how many."""
+
+    business = models.ForeignKey(
+        Business, on_delete=models.CASCADE, related_name="label_print_logs"
+    )
+    product = models.ForeignKey(
+        Inventory, on_delete=models.CASCADE, related_name="label_print_logs"
+    )
+    template = models.ForeignKey(
+        LabelTemplate, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    printed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    printed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-printed_at"]
+
+    def __str__(self):
+        return f"{self.product.product_name} x{self.quantity} ({self.printed_at:%Y-%m-%d})"
+
+
+class Warehouse(models.Model):
+    business = models.ForeignKey(
+        Business,
+        on_delete=models.CASCADE,
+        related_name="warehouses"
+    )
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    phone = models.CharField(max_length=30, blank=True)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-is_default", "name"]
+        unique_together = ("business", "name")
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = f"WH-{uuid.uuid4().hex[:6].upper()}"
+        # Only one default warehouse per business at a time
+        if self.is_default:
+            Warehouse.objects.filter(
+                business=self.business, is_default=True
+            ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class WarehouseStock(models.Model):
+    """Per-warehouse stock level for a product. See the design note above —
+    the sum of a product's rows here should always equal its
+    Inventory.stock_quantity."""
+
+    business = models.ForeignKey(
+        Business,
+        on_delete=models.CASCADE,
+        related_name="warehouse_stocks"
+    )
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="stock_levels")
+    product = models.ForeignKey(
+        Inventory,
+        on_delete=models.CASCADE,
+        related_name="warehouse_stocks"
+    )
+    quantity = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("warehouse", "product")
+        ordering = ["warehouse__name"]
+
+    def __str__(self):
+        return f"{self.product.product_name} @ {self.warehouse.name}: {self.quantity}"
+
+
+TRANSFER_STATUS_CHOICES = [
+    ("draft", "Draft"),
+    ("in_transit", "In Transit"),
+    ("completed", "Completed"),
+    ("cancelled", "Cancelled"),
+]
+
+
+def _generate_transfer_reference():
+    ts = timezone.now().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:4].upper()
+    return f"TRF-{ts}-{suffix}"
+
+
+class StockTransfer(models.Model):
+    """A transfer of stock between two warehouses of the same business.
+    Two-step workflow, mirroring the existing PurchaseOrder -> GoodsReceipt
+    pattern already used elsewhere in this app:
+
+      draft -> dispatch() -> in_transit -> receive() -> completed
+                                         \\-> cancel() -> cancelled
+
+    dispatch() deducts stock from the source warehouse; receive() adds it
+    to the destination warehouse. A draft can be cancelled with no stock
+    impact; an in_transit transfer can be cancelled too, and doing so
+    restocks the source (since the goods never left, so to speak).
+    """
+
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, related_name="stock_transfers")
+    reference_number = models.CharField(max_length=60, unique=True, default=_generate_transfer_reference)
+
+    source_warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.CASCADE, related_name="outgoing_transfers"
+    )
+    destination_warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.CASCADE, related_name="incoming_transfers"
+    )
+
+    status = models.CharField(max_length=20, choices=TRANSFER_STATUS_CHOICES, default="draft")
+    notes = models.TextField(blank=True)
+
+    requested_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="transfers_requested"
+    )
+    dispatched_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="transfers_dispatched"
+    )
+    received_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="transfers_received"
+    )
+
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.reference_number
+
+    def clean(self):
+        if (
+            self.source_warehouse_id
+            and self.destination_warehouse_id
+            and self.source_warehouse_id == self.destination_warehouse_id
+        ):
+            raise ValidationError("Source and destination warehouse must be different.")
+
+    @property
+    def total_quantity(self):
+        return sum(i.quantity for i in self.items.all())
+
+    @property
+    def total_items(self):
+        return self.items.count()
+
+    def dispatch(self, user=None):
+        """draft -> in_transit: deduct stock from the source warehouse."""
+        if self.status != "draft":
+            raise ValueError("Only draft transfers can be dispatched.")
+
+        with transaction.atomic():
+            for item in self.items.select_related("product"):
+                source_stock, _ = WarehouseStock.objects.get_or_create(
+                    business=self.business, warehouse=self.source_warehouse, product=item.product,
+                    defaults={"quantity": 0},
+                )
+                if source_stock.quantity < item.quantity:
+                    raise ValueError(
+                        f"Not enough stock of {item.product.product_name} at "
+                        f"{self.source_warehouse.name} (have {source_stock.quantity}, "
+                        f"need {item.quantity})."
+                    )
+                before = source_stock.quantity
+                source_stock.quantity -= item.quantity
+                source_stock.save(update_fields=["quantity", "updated_at"])
+
+                InventoryMovement.objects.create(
+                    business=self.business, product=item.product, movement_type="transfer_out",
+                    quantity=item.quantity, before_quantity=before, after_quantity=source_stock.quantity,
+                    reference=self.reference_number,
+                    notes=f"Transfer to {self.destination_warehouse.name}",
+                    created_by=user,
+                )
+
+            self.status = "in_transit"
+            self.dispatched_by = user
+            self.dispatched_at = timezone.now()
+            self.save(update_fields=["status", "dispatched_by", "dispatched_at"])
+
+    def receive(self, user=None):
+        """in_transit -> completed: add stock to the destination warehouse."""
+        if self.status != "in_transit":
+            raise ValueError("Only in-transit transfers can be received.")
+
+        with transaction.atomic():
+            for item in self.items.select_related("product"):
+                dest_stock, _ = WarehouseStock.objects.get_or_create(
+                    business=self.business, warehouse=self.destination_warehouse, product=item.product,
+                    defaults={"quantity": 0},
+                )
+                before = dest_stock.quantity
+                dest_stock.quantity += item.quantity
+                dest_stock.save(update_fields=["quantity", "updated_at"])
+
+                InventoryMovement.objects.create(
+                    business=self.business, product=item.product, movement_type="transfer_in",
+                    quantity=item.quantity, before_quantity=before, after_quantity=dest_stock.quantity,
+                    reference=self.reference_number,
+                    notes=f"Transfer from {self.source_warehouse.name}",
+                    created_by=user,
+                )
+
+            self.status = "completed"
+            self.received_by = user
+            self.completed_at = timezone.now()
+            self.save(update_fields=["status", "received_by", "completed_at"])
+
+    def cancel(self, user=None):
+        """Cancel a draft or in-transit transfer. If it was already
+        dispatched, restock the source warehouse."""
+        if self.status not in ("draft", "in_transit"):
+            raise ValueError("Only draft or in-transit transfers can be cancelled.")
+
+        with transaction.atomic():
+            if self.status == "in_transit":
+                for item in self.items.select_related("product"):
+                    source_stock, _ = WarehouseStock.objects.get_or_create(
+                        business=self.business, warehouse=self.source_warehouse, product=item.product,
+                        defaults={"quantity": 0},
+                    )
+                    before = source_stock.quantity
+                    source_stock.quantity += item.quantity
+                    source_stock.save(update_fields=["quantity", "updated_at"])
+
+                    InventoryMovement.objects.create(
+                        business=self.business, product=item.product, movement_type="adjustment",
+                        quantity=item.quantity, before_quantity=before, after_quantity=source_stock.quantity,
+                        reference=self.reference_number,
+                        notes=f"Transfer {self.reference_number} cancelled \u2014 restocked at "
+                              f"{self.source_warehouse.name}",
+                        created_by=user,
+                    )
+
+            self.status = "cancelled"
+            self.save(update_fields=["status"])
+
+
+class StockTransferItem(models.Model):
+    transfer = models.ForeignKey(StockTransfer, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Inventory, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    notes = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.product.product_name} x{self.quantity} ({self.transfer.reference_number})"
+

@@ -51,6 +51,7 @@ def get_user_business(user):
 # API DASHBOARD
 # =========================================
 
+
 class DashboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -113,6 +114,7 @@ class InventoryModalAPIView(APIView):
 # =========================================
 # DASHBOARD VIEW
 # =========================================
+
 
 @login_required
 def index(request):

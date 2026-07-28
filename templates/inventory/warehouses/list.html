@@ -1,0 +1,118 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+    --success:#10b981;
+    --danger:#ef4444;
+}
+
+.page-wrapper{ max-width:1100px; margin:auto; padding:28px; }
+
+.page-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:20px; }
+.page-title h2{ margin:0; font-size:30px; font-weight:800; }
+.page-title p{ margin-top:8px; color:var(--text-muted); }
+
+.form-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:26px; overflow:hidden; box-shadow:0 20px 45px rgba(15,23,42,.05); }
+
+.data-table{ width:100%; border-collapse:collapse; }
+.data-table th, .data-table td{ padding:16px 24px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; color:var(--text-main); }
+.data-table thead th{ font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); background:var(--bg-main); }
+.data-table tbody tr:last-child td{ border-bottom:none; }
+.data-table tbody tr:hover{ background:rgba(99,102,241,.04); }
+
+.badge{ display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+.badge.default{ background:rgba(99,102,241,.12); color:var(--primary); }
+.badge.active{ background:rgba(16,185,129,.12); color:var(--success); }
+.badge.inactive{ background:rgba(148,163,184,.15); color:var(--text-muted); }
+
+.row-actions{ display:flex; gap:14px; align-items:center; }
+.row-actions form{ display:inline; }
+.row-actions button{ background:none; border:none; color:var(--danger); cursor:pointer; font-weight:700; padding:0; font-size:13px; }
+.row-actions a{ color:var(--primary); font-weight:700; font-size:13px; text-decoration:none; }
+
+.btn-save{
+    border:none; height:54px; padding:0 28px; border-radius:16px; color:#fff; font-weight:700;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark)); transition:.25s; cursor:pointer;
+    display:inline-flex; align-items:center; text-decoration:none;
+}
+.btn-save:hover{ transform:translateY(-2px); box-shadow:0 16px 30px rgba(99,102,241,.25); color:#fff; text-decoration:none; }
+
+.empty-state{ text-align:center; padding:50px 20px; color:var(--text-muted); }
+</style>
+
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="page-title">
+      <h2>Warehouses</h2>
+      <p>Manage your business's storage locations for multi-warehouse stock.</p>
+    </div>
+    <a href="{% url 'warehouse_create' %}" class="btn-save">
+      <i class="fas fa-plus me-2"></i> New Warehouse
+    </a>
+  </div>
+
+  <div class="form-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Location</th>
+          <th>Total Stock</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for wh in warehouses %}
+        <tr>
+          <td>
+            {{ wh.name }}
+            {% if wh.is_default %}<span class="badge default" style="margin-left:8px;">Default</span>{% endif %}
+          </td>
+          <td>{{ wh.code }}</td>
+          <td>{{ wh.location|default:"\u2014" }}</td>
+          <td>{{ wh.total_stock|default:0 }}</td>
+          <td>
+            {% if wh.is_active %}
+              <span class="badge active">Active</span>
+            {% else %}
+              <span class="badge inactive">Inactive</span>
+            {% endif %}
+          </td>
+          <td class="row-actions">
+            <a href="{% url 'warehouse_edit' wh.id %}">Edit</a>
+            <form method="post" action="{% url 'warehouse_delete' wh.id %}" onsubmit="return confirm('Delete this warehouse?');">
+              {% csrf_token %}
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="fas fa-warehouse" style="font-size:26px; margin-bottom:10px; display:block;"></i>
+              No warehouses yet. Create your first one to start splitting stock by location.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:16px;">
+    <a href="{% url 'transfer_list' %}" style="color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:600;">
+      <i class="fas fa-arrow-right me-1"></i> Go to Stock Transfers
+    </a>
+  </p>
+
+</div>
+{% endblock %}

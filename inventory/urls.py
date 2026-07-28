@@ -65,4 +65,28 @@ urlpatterns = [
 
     path("inventory/<int:pk>/intelligence/", views.product_intelligence, name="product_intelligence"),
 
+    path("select/", views.label_select, name="select"),
+    path("print/", views.label_print, name="print"),
+    path("templates/", views.template_list, name="template_list"),
+    path("templates/add/", views.template_create, name="template_create"),
+    path("templates/<int:pk>/edit/", views.template_edit, name="template_edit"),
+    path("templates/<int:pk>/delete/", views.template_delete, name="template_delete"),
+
+    # Warehouses
+    path("warehouses/", views.warehouse_list, name="warehouse_list"),
+    path("warehouses/add/", views.warehouse_create, name="warehouse_create"),
+    path("warehouses/<int:pk>/edit/", views.warehouse_edit, name="warehouse_edit"),
+    path("warehouses/<int:pk>/delete/", views.warehouse_delete, name="warehouse_delete"),
+
+    # Per-product warehouse stock breakdown
+    path("products/<int:product_id>/warehouse-stock/", views.product_warehouse_stock, name="product_warehouse_stock",),
+
+    # Stock transfers
+    path("transfers/", views.transfer_list, name="transfer_list"),
+    path("transfers/new/", views.transfer_create, name="transfer_create"),
+    path("transfers/<int:pk>/", views.transfer_detail, name="transfer_detail"),
+    path("transfers/<int:pk>/dispatch/", views.transfer_dispatch, name="transfer_dispatch"),
+    path("transfers/<int:pk>/receive/", views.transfer_receive, name="transfer_receive"),
+    path("transfers/<int:pk>/cancel/", views.transfer_cancel, name="transfer_cancel"),
+
 ]

@@ -27,6 +27,7 @@ from xhtml2pdf import pisa
 from django.template.loader import get_template
 import json
 from django.db.models import Sum
+from accounts.get_business import get_business
 
 from django.core.exceptions import ValidationError  # keep if you use it elsewhere; not required below
 
@@ -459,14 +460,8 @@ class InsufficientStockError(Exception):
 @login_required
 @transaction.atomic
 def sales(request):
-    user = request.user
 
-    staff = get_object_or_404(
-        StaffProfile.objects.select_related("business"),
-        staff=request.user
-    )
-
-    business = staff.business
+    business = get_business(request)
 
     # =====================================
     # TODAY'S KPIs + RECENT SALES
@@ -743,7 +738,7 @@ def sales(request):
 
     context = {
         "form": form,
-        "user": user,
+        # "user": user,
         "business": business,
         "products": products_page,
         "search": search,

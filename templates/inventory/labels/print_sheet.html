@@ -1,0 +1,108 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; background:#f1f5f9; }
+
+  .toolbar {
+      padding:14px 20px; background:#111827; color:#fff;
+      display:flex; justify-content:space-between; align-items:center;
+      position:sticky; top:0; z-index:10;
+  }
+  .toolbar button {
+      background:#6366f1; color:#fff; border:none; padding:10px 18px;
+      border-radius:8px; font-weight:700; cursor:pointer; font-size:14px;
+  }
+
+  .sheet {
+      display:grid;
+      grid-template-columns: repeat({{ template.columns }}, {{ template.width_mm }}mm);
+      gap: {{ template.gap_mm }}mm;
+      padding: 6mm;
+      justify-content: center;
+  }
+
+  .label {
+      width: {{ template.width_mm }}mm;
+      height: {{ template.height_mm }}mm;
+      border: 1px dashed #cbd5e1;
+      padding: 1.5mm;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      text-align:center;
+      background:#fff;
+  }
+  .label .biz{ font-size:6.5px; font-weight:700; color:#111; text-transform:uppercase; letter-spacing:.3px; }
+  .label .name{ font-size:8px; font-weight:700; color:#111; margin-top:1mm; line-height:1.15; }
+  .label .price{ font-size:9.5px; font-weight:800; color:#111; margin-top:0.5mm; }
+  .label .sku{ font-size:6px; color:#555; margin-top:0.5mm; }
+  .label svg, .label canvas, .label img{ max-width:100%; }
+
+  @media print {
+      .toolbar{ display:none; }
+      body{ background:#fff; }
+      .sheet{ padding:0; }
+      .label{ border-color: transparent; }
+      @page{ margin: 6mm; }
+  }
+</style>
+
+<body>
+
+<div class="toolbar">
+  <div>{{ labels|length }} label(s) &mdash; {{ template.name }}</div>
+  <button onclick="window.print()">Print</button>
+</div>
+
+<div class="sheet">
+  {% for product in labels %}
+  <div class="label">
+      {% if template.show_business_name %}<div class="biz">{{ business.name }}</div>{% endif %}
+
+      {% if template.code_type == "qrcode" %}
+        <div id="qr-{{ forloop.counter }}"></div>
+      {% else %}
+        <svg id="bc-{{ forloop.counter }}"></svg>
+      {% endif %}
+
+      {% if template.show_product_name %}<div class="name">{{ product.product_name|truncatechars:24 }}</div>{% endif %}
+      {% if template.show_price %}<div class="price">GH&cent;{{ product.selling_price }}</div>{% endif %}
+      {% if template.show_sku %}<div class="sku">{{ product.sku }}</div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    {% for product in labels %}
+    {% if template.code_type == "qrcode" %}
+    new QRCode(document.getElementById("qr-{{ forloop.counter }}"), {
+        text: "{{ product.qr_code|default:product.barcode }}",
+        width: 70,
+        height: 70,
+        correctLevel: QRCode.CorrectLevel.M
+    });
+    {% else %}
+    JsBarcode("#bc-{{ forloop.counter }}", "{{ product.barcode }}", {
+        format: "CODE128",
+        displayValue: true,
+        fontSize: 10,
+        height: 30,
+        margin: 0
+    });
+    {% endif %}
+    {% endfor %}
+
+    // Give barcodes/QR codes a moment to render, then open the print dialog
+    setTimeout(function () { window.print(); }, 400);
+});
+</script>
+
+
+{% endblock %}

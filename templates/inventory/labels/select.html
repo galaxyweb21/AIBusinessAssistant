@@ -1,0 +1,648 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+    --success:#10b981;
+    --danger:#ef4444;
+}
+
+/* =========================================
+PAGE
+========================================= */
+
+.label-wrapper{
+    max-width:1100px;
+    margin:auto;
+    padding:28px;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+    gap:20px;
+}
+
+.page-title h2{
+    margin:0;
+    font-size:30px;
+    font-weight:800;
+}
+
+.page-title p{
+    margin-top:8px;
+    color:var(--text-muted);
+}
+
+/* =========================================
+CARD
+========================================= */
+
+.form-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:26px;
+    overflow:hidden;
+    box-shadow:0 20px 45px rgba(15,23,42,.05);
+}
+
+.card-header{
+    padding:24px 30px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(
+            135deg,
+            rgba(99,102,241,.05),
+            rgba(79,70,229,.02)
+    );
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+}
+
+.card-header h5{
+    margin:0;
+    font-size:20px;
+    font-weight:800;
+}
+
+.card-header .card-sub{
+    margin-top:4px;
+    font-size:13px;
+    color:var(--text-muted);
+    font-weight:500;
+}
+
+.card-body{
+    padding:30px;
+}
+
+/* =========================================
+SEARCH (live, client-side)
+========================================= */
+
+.label-search{
+    position:relative;
+    width:100%;
+    max-width:340px;
+}
+
+.label-search .search-icon{
+    position:absolute;
+    top:50%;
+    left:18px;
+    transform:translateY(-50%);
+    color:var(--text-muted);
+    font-size:14px;
+    pointer-events:none;
+}
+
+.label-search input{
+    width:100%;
+    height:48px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    padding:0 42px 0 42px;
+    color:var(--text-main);
+    transition:.25s;
+}
+
+.label-search input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(99,102,241,.10);
+}
+
+.label-search .clear-btn{
+    position:absolute;
+    top:50%;
+    right:8px;
+    transform:translateY(-50%);
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    border:none;
+    background:rgba(148,163,184,.15);
+    color:var(--text-muted);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:12px;
+    transition:.2s;
+}
+
+.label-search .clear-btn:hover{
+    background:rgba(239,68,68,.15);
+    color:var(--danger);
+}
+
+/* =========================================
+TABLE
+========================================= */
+
+.label-table-wrap{
+    border:1px solid var(--border);
+    border-radius:18px;
+    overflow:hidden;
+    margin-top:24px;
+}
+
+.label-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.label-table th,
+.label-table td{
+    padding:14px 18px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+    color:var(--text-main);
+}
+
+.label-table thead th{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    color:var(--text-muted);
+    background:var(--bg-main);
+}
+
+.label-table tbody tr{
+    transition:background .15s;
+}
+
+.label-table tbody tr:nth-child(even){
+    background:rgba(148,163,184,.03);
+}
+
+.label-table tbody tr:hover{
+    background:rgba(99,102,241,.06);
+}
+
+.label-table tbody tr:last-child td{
+    border-bottom:none;
+}
+
+.product-cell{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    font-weight:700;
+}
+
+.product-avatar{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    background:rgba(99,102,241,.10);
+    color:var(--primary);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    flex-shrink:0;
+    overflow:hidden;
+}
+
+.product-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.sku-cell,
+.barcode-cell{
+    color:var(--text-muted);
+    font-family:monospace;
+    font-size:13px;
+}
+
+.stock-pill{
+    display:inline-flex;
+    align-items:center;
+    padding:3px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    background:rgba(16,185,129,.12);
+    color:var(--success);
+}
+
+.stock-pill.low{
+    background:rgba(239,68,68,.12);
+    color:var(--danger);
+}
+
+.row-check,
+.select-all{
+    width:18px;
+    height:18px;
+    accent-color:var(--primary);
+    cursor:pointer;
+}
+
+.qty-input{
+    width:76px;
+    height:38px;
+    padding:0 10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    color:var(--text-main);
+    text-align:center;
+    transition:.25s;
+}
+
+.qty-input:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(99,102,241,.10);
+}
+
+.empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--text-muted);
+}
+
+/* =========================================
+FOOTER
+========================================= */
+
+.card-footer{
+    padding:24px 30px;
+    border-top:1px solid var(--border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+}
+
+.footer-left{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.template-picker{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.template-picker label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--text-main);
+    white-space:nowrap;
+}
+
+.template-picker select{
+    height:54px;
+    min-width:260px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--bg-main);
+    padding:0 18px;
+    color:var(--text-main);
+    transition:.25s;
+}
+
+.template-picker select:focus{
+    outline:none;
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(99,102,241,.10);
+}
+
+.selection-summary{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-muted);
+}
+
+.selection-summary strong{
+    color:var(--text-main);
+}
+
+.btn-save{
+    border:none;
+    height:54px;
+    padding:0 28px;
+    border-radius:16px;
+    color:#fff;
+    font-weight:700;
+    background:linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+    );
+    transition:.25s;
+    cursor:pointer;
+}
+
+.btn-save:hover{
+    transform:translateY(-2px);
+    box-shadow:0 16px 30px rgba(99,102,241,.25);
+}
+
+.btn-cancel{
+    height:54px;
+    padding:0 24px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    font-weight:700;
+    color:var(--text-main);
+}
+
+.btn-cancel:hover{
+    text-decoration:none;
+}
+
+@media(max-width:768px){
+    .card-header{
+        align-items:stretch;
+    }
+    .label-search{
+        max-width:none;
+    }
+    .card-footer{
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .footer-left{
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .template-picker{
+        flex-direction:column;
+        align-items:stretch;
+    }
+    .template-picker select{
+        min-width:0;
+        width:100%;
+    }
+    .btn-save{
+        width:100%;
+        justify-content:center;
+    }
+}
+
+</style>
+
+<div class="content-wrapper">
+<section class="content label-wrapper">
+
+  <div class="page-header">
+    <div class="page-title">
+      <h2>Barcode &amp; Label Printing</h2>
+      <p>Select products, set how many labels each needs, then generate a printable sheet.</p>
+    </div>
+    <a href="{% url 'template_list' %}" class="btn-cancel">
+      <i class="fas fa-sliders-h me-2"></i>
+      Manage Templates
+    </a>
+  </div>
+
+  <form method="post" action="{% url 'print' %}" target="_blank" id="labelForm">
+    {% csrf_token %}
+
+    <div class="form-card">
+
+      <div class="card-header">
+        <div>
+          <h5>Select Products</h5>
+          <div class="card-sub" id="resultCount">{{ products|length }} product{{ products|length|pluralize }} found</div>
+        </div>
+
+        <div class="label-search" >
+<!--          <i class="fas fa-search search-icon"></i>-->
+          <input type="text" id="searchInput" value="{{ query }}"
+                 placeholder="Search by product, SKU or barcode..."
+                 autocomplete="off">
+          <button type="button" id="clearSearch" class="clear-btn" title="Clear search">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="label-table-wrap">
+          <table class="label-table">
+            <thead>
+              <tr>
+                <th style="width:44px;"><input type="checkbox" id="selectAll" class="select-all"></th>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Barcode</th>
+                <th>Stock</th>
+                <th style="width:110px;">Qty to print</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in products %}
+              <tr data-search="{{ product.product_name|lower }} {{ product.sku|lower }} {{ product.barcode|lower }}">
+                <td>
+                  <input type="checkbox" class="row-check" name="product_id"
+                         value="{{ product.id }}" data-id="{{ product.id }}">
+                </td>
+                <td>
+                  <div class="product-cell">
+                    <span class="product-avatar">
+                      {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}" alt="">
+                      {% else %}
+                        <i class="fas fa-box"></i>
+                      {% endif %}
+                    </span>
+                    {{ product.product_name }}
+                  </div>
+                </td>
+                <td class="sku-cell">{{ product.sku }}</td>
+                <td class="barcode-cell">{{ product.barcode }}</td>
+                <td>
+                  <span class="stock-pill {% if product.is_low_stock %}low{% endif %}">
+                    {{ product.stock_quantity }}
+                  </span>
+                </td>
+                <td>
+                  <input type="number" min="0" value="1" step="1"
+                         name="qty_{{ product.id }}" class="qty-input">
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">
+                    <i class="fas fa-box-open" style="font-size:24px; margin-bottom:8px; display:block;"></i>
+                    No products found.
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+              <tr id="noMatchRow" style="display:none;">
+                <td colspan="6">
+                  <div class="empty-state">
+                    <i class="fas fa-search" style="font-size:24px; margin-bottom:8px; display:block;"></i>
+                    No products match "<span id="noMatchTerm"></span>".
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="footer-left">
+          <div class="template-picker">
+            <label for="template_id">Label template</label>
+            <select name="template_id" id="template_id" required>
+              {% for t in templates %}
+              <option value="{{ t.id }}" {% if t.is_default %}selected{% endif %}>
+                {{ t.name }} &mdash; {{ t.width_mm }}&times;{{ t.height_mm }}mm
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="selection-summary" id="selectionSummary">
+            <strong>0</strong> products selected &middot; <strong>0</strong> labels total
+          </div>
+        </div>
+
+        <button type="submit" class="btn-save">
+          <i class="fas fa-barcode me-2"></i>
+          Generate &amp; Print Labels
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</section>
+</div>
+
+<script>
+(function () {
+    var searchInput = document.getElementById('searchInput');
+    var clearBtn = document.getElementById('clearSearch');
+    var noMatchRow = document.getElementById('noMatchRow');
+    var noMatchTerm = document.getElementById('noMatchTerm');
+    var resultCount = document.getElementById('resultCount');
+    var rows = Array.prototype.slice.call(
+        document.querySelectorAll('.label-table tbody tr[data-search]')
+    );
+    var totalCount = rows.length;
+    var debounceTimer = null;
+
+    // NOTE: this filters rows already present in the DOM. The server still
+    // honours ?q= on initial page load (so a bookmarked/shared search link
+    // still works), but once the page has loaded, typing filters instantly
+    // client-side with no reload -- it won't reach back to the server for
+    // products outside whatever was rendered on load.
+    function applyFilter() {
+        var q = searchInput.value.trim().toLowerCase();
+        clearBtn.style.display = q ? 'flex' : 'none';
+
+        var visible = 0;
+        rows.forEach(function (row) {
+            var match = !q || row.dataset.search.indexOf(q) !== -1;
+            row.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        if (noMatchRow) {
+            noMatchRow.style.display = (totalCount > 0 && visible === 0) ? '' : 'none';
+            if (noMatchTerm) noMatchTerm.textContent = searchInput.value.trim();
+        }
+
+        if (resultCount) {
+            resultCount.textContent = q
+                ? visible + ' of ' + totalCount + ' product' + (totalCount === 1 ? '' : 's')
+                : totalCount + ' product' + (totalCount === 1 ? '' : 's') + ' found';
+        }
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(applyFilter, 120);
+    });
+
+    clearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        applyFilter();
+        searchInput.focus();
+    });
+
+    applyFilter();
+})();
+
+function updateSelectionSummary() {
+    var summary = document.getElementById('selectionSummary');
+    if (!summary) return;
+
+    var checked = document.querySelectorAll('.row-check:checked');
+    var totalLabels = 0;
+    checked.forEach(function (cb) {
+        var qtyInput = document.querySelector('input[name="qty_' + cb.value + '"]');
+        var qty = qtyInput ? parseInt(qtyInput.value, 10) || 0 : 0;
+        totalLabels += qty;
+    });
+
+    var strongs = summary.querySelectorAll('strong');
+    strongs[0].textContent = checked.length;
+    strongs[1].textContent = totalLabels;
+}
+
+document.getElementById('selectAll').addEventListener('change', function () {
+    var checkAll = this.checked;
+    document.querySelectorAll('.label-table tbody tr').forEach(function (row) {
+        if (row.style.display === 'none') return; // leave filtered-out rows alone
+        var cb = row.querySelector('.row-check');
+        if (cb) cb.checked = checkAll;
+    });
+    updateSelectionSummary();
+});
+
+document.querySelectorAll('.row-check, .qty-input').forEach(function (el) {
+    el.addEventListener('change', updateSelectionSummary);
+    el.addEventListener('input', updateSelectionSummary);
+});
+
+document.getElementById('labelForm').addEventListener('submit', function (e) {
+    var anyChecked = document.querySelectorAll('.row-check:checked').length > 0;
+    if (!anyChecked) {
+        e.preventDefault();
+        alert('Select at least one product to print labels for.');
+    }
+});
+
+// Pre-check a product when arriving via ?product=<id> (e.g. a "Print Label"
+// quick-link from the main inventory list)
+var preselectId = "{{ preselect_id|default:'' }}";
+if (preselectId) {
+    var box = document.querySelector('.row-check[data-id="' + preselectId + '"]');
+    if (box) {
+        box.checked = true;
+        updateSelectionSummary();
+    }
+}
+</script>
+{% endblock %}

@@ -183,18 +183,11 @@ def category_list(request):
 
     }
 
-    return render(
-        request,
-        "catalog/categories/category_list.html",
-        context
-    )
+    return render(request, "catalog/categories/category_list.html", context)
 
 
 @login_required
 def category_create(request):
-    """
-    Create a new category
-    """
 
     business = get_business(request)
 
@@ -367,21 +360,9 @@ def edit_category(request, pk):
 
         return render(request, "catalog/categories/category_form.html", context)
 
-
-
-
-
     # Normal browser access
 
-    return render(
-
-        request,
-
-        "catalog/categories/category.html",
-
-        context
-
-    )
+    return render(request, "catalog/categories/category.html", context)
 
 
 @login_required

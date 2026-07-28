@@ -846,6 +846,14 @@
     animation:checkoutIn .25s ease;
 }
 
+.checkout-panel > form{
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    max-height:100%;
+    width:100%;
+}
+
 @keyframes checkoutIn{
     from{ opacity:0; transform:translateY(24px) scale(.98); }
     to{ opacity:1; transform:translateY(0) scale(1); }
@@ -857,6 +865,7 @@
     align-items:center;
     padding:20px 26px;
     border-bottom:1px solid var(--border);
+    flex-shrink:0;
 }
 
 .checkout-header h4{
@@ -881,6 +890,8 @@
     grid-template-columns:1fr 1fr;
     gap:0;
     overflow-y:auto;
+    flex:1 1 auto;
+    min-height:0;
 }
 
 .checkout-col{
@@ -1096,6 +1107,7 @@
     border-top:1px solid var(--border);
     display:flex;
     gap:12px;
+    flex-shrink:0;
 }
 
 .checkout-confirm-btn{

@@ -1,0 +1,125 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+    --success:#10b981;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+}
+
+.page-wrapper{ max-width:1200px; margin:auto; padding:28px; }
+
+.page-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:20px; }
+.page-title h2{ margin:0; font-size:30px; font-weight:800; }
+.page-title p{ margin-top:8px; color:var(--text-muted); }
+
+.tabs{ display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.tabs a{
+    padding:9px 18px; border-radius:999px; font-size:13px; font-weight:700; text-decoration:none;
+    color:var(--text-muted); border:1px solid var(--border); background:var(--bg-card);
+}
+.tabs a.active{ background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; border-color:transparent; }
+
+.form-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:26px; overflow:hidden; box-shadow:0 20px 45px rgba(15,23,42,.05); }
+
+.data-table{ width:100%; border-collapse:collapse; }
+.data-table th, .data-table td{ padding:16px 24px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; color:var(--text-main); }
+.data-table thead th{ font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); background:var(--bg-main); }
+.data-table tbody tr:last-child td{ border-bottom:none; }
+.data-table tbody tr:hover{ background:rgba(99,102,241,.04); cursor:pointer; }
+
+.ref-cell{ font-weight:700; }
+.route-cell{ display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:13px; }
+.route-cell strong{ color:var(--text-main); font-weight:700; }
+
+.status-pill{ display:inline-flex; align-items:center; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; }
+.status-pill.draft{ background:rgba(148,163,184,.15); color:var(--text-muted); }
+.status-pill.in_transit{ background:rgba(245,158,11,.12); color:var(--warning); }
+.status-pill.completed{ background:rgba(16,185,129,.12); color:var(--success); }
+.status-pill.cancelled{ background:rgba(239,68,68,.12); color:var(--danger); }
+
+.btn-save{
+    border:none; height:54px; padding:0 28px; border-radius:16px; color:#fff; font-weight:700;
+    background:linear-gradient(135deg,var(--primary),var(--primary-dark)); transition:.25s; cursor:pointer;
+    display:inline-flex; align-items:center; text-decoration:none;
+}
+.btn-save:hover{ transform:translateY(-2px); box-shadow:0 16px 30px rgba(99,102,241,.25); color:#fff; text-decoration:none; }
+
+.empty-state{ text-align:center; padding:50px 20px; color:var(--text-muted); }
+</style>
+
+<div class="page-wrapper">
+
+  <div class="page-header">
+    <div class="page-title">
+      <h2>Stock Transfers</h2>
+      <p>Move stock between warehouses with a clear dispatch &amp; receive trail.</p>
+    </div>
+    <a href="{% url 'transfer_create' %}" class="btn-save">
+      <i class="fas fa-exchange-alt me-2"></i> New Transfer
+    </a>
+  </div>
+
+  <div class="tabs">
+    <a href="{% url 'transfer_list' %}" class="{% if not status %}active{% endif %}">All</a>
+    <a href="{% url 'transfer_list' %}?status=draft" class="{% if status == 'draft' %}active{% endif %}">Draft</a>
+    <a href="{% url 'transfer_list' %}?status=in_transit" class="{% if status == 'in_transit' %}active{% endif %}">In Transit</a>
+    <a href="{% url 'transfer_list' %}?status=completed" class="{% if status == 'completed' %}active{% endif %}">Completed</a>
+    <a href="{% url 'transfer_list' %}?status=cancelled" class="{% if status == 'cancelled' %}active{% endif %}">Cancelled</a>
+  </div>
+
+  <div class="form-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Route</th>
+          <th>Items</th>
+          <th>Qty</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transfers %}
+        <tr onclick="window.location='{% url 'transfer_detail' t.id %}'">
+          <td class="ref-cell">{{ t.reference_number }}</td>
+          <td>
+            <div class="route-cell">
+              <strong>{{ t.source_warehouse.name }}</strong>
+              <i class="fas fa-arrow-right"></i>
+              <strong>{{ t.destination_warehouse.name }}</strong>
+            </div>
+          </td>
+          <td>{{ t.total_items }}</td>
+          <td>{{ t.total_quantity }}</td>
+          <td><span class="status-pill {{ t.status }}">{{ t.get_status_display }}</span></td>
+          <td>{{ t.created_at|date:"d M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="fas fa-exchange-alt" style="font-size:26px; margin-bottom:10px; display:block;"></i>
+              No transfers {% if status %}with this status{% endif %} yet.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <p style="margin-top:16px;">
+    <a href="{% url 'warehouse_list' %}" style="color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:600;">
+      <i class="fas fa-warehouse me-1"></i> Manage Warehouses
+    </a>
+  </p>
+
+</div>
+{% endblock %}

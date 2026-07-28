@@ -1008,6 +1008,7 @@ body.sidebar-collapse .menu-badge {
                         </ul>
                     </li>
 
+
                     <!-- PURCHASES -->
                     <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'create_purchase' or request.resolver_match.url_name == 'purchase_list' or request.resolver_match.url_name == 'view_purchase' %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if request.resolver_match.url_name == 'create_purchase' or request.resolver_match.url_name == 'purchase_list' or request.resolver_match.url_name == 'view_purchase' %}active{% endif %}">
@@ -1030,8 +1031,8 @@ body.sidebar-collapse .menu-badge {
                     </li>
 
                     <!-- INVENTORY -->
-                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}menu-open{% endif %}">
-                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}active{% endif %}">
+                    <li class="nav-item has-treeview {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' or request.resolver_match.namespace == 'labels' or request.resolver_match.url_name == 'warehouse_list' or request.resolver_match.url_name == 'warehouse_create' or request.resolver_match.url_name == 'warehouse_edit' or request.resolver_match.url_name == 'product_warehouse_stock' or request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}menu-open{% endif %}">
+                        <a href="#" class="nav-link {% if request.resolver_match.url_name == 'category_list' or request.resolver_match.url_name == 'inventory' or request.resolver_match.url_name == 'view_inventory' or request.resolver_match.url_name == 'inventory_history' or request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' or request.resolver_match.namespace == 'labels' or request.resolver_match.url_name == 'warehouse_list' or request.resolver_match.url_name == 'warehouse_create' or request.resolver_match.url_name == 'warehouse_edit' or request.resolver_match.url_name == 'product_warehouse_stock' or request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}active{% endif %}">
                             <span class="menu-icon"><i class="fas fa-boxes"></i></span>
                             <span class="menu-text">
                                 Inventory
@@ -1062,6 +1063,25 @@ body.sidebar-collapse .menu-badge {
                                     <i class="far fa-circle nav-icon"></i> History
                                 </a>
                             </li>
+                             <li class="nav-item" style="margin-top: 4px;">
+                                <div style="margin: 4px 12px; border-top: 1px solid rgba(255,255,255,.08);"></div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse_list' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_list' or request.resolver_match.url_name == 'warehouse_create' or request.resolver_match.url_name == 'warehouse_edit' or request.resolver_match.url_name == 'product_warehouse_stock' %}active{% endif %}" data-title="Warehouses">
+                                    <i class="far fa-circle nav-icon"></i> Warehouses
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'transfer_list' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}active{% endif %}" data-title="Stock Transfers">
+                                    <i class="far fa-circle nav-icon"></i> Stock Transfers
+                                </a>
+                            </li>
+
+
+                            <li class="nav-item" style="margin-top: 4px;">
+                                <div style="margin: 4px 12px; border-top: 1px solid rgba(255,255,255,.08);"></div>
+                            </li>
+
                             <li class="nav-item">
                                 <a href="{% url 'expiry_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}active{% endif %}" data-title="Expiry Management">
                                     <i class="far fa-circle nav-icon"></i> Expiry Management
@@ -1070,6 +1090,18 @@ body.sidebar-collapse .menu-badge {
                                     {% endif %}
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{% url 'select' %}" class="nav-link {% if request.resolver_match.view_name == 'select' or request.resolver_match.view_name == 'labels:print' %}active{% endif %}" data-title="Print Labels">
+                                    <i class="far fa-circle nav-icon"></i> Print Labels
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'template_list' %}" class="nav-link {% if request.resolver_match.view_name == 'template_list' or request.resolver_match.view_name == 'labels:template_create' or request.resolver_match.view_name == 'labels:template_edit' %}active{% endif %}" data-title="Label Templates">
+                                    <i class="far fa-circle nav-icon"></i> Label Templates
+                                </a>
+                            </li>
+
+
                         </ul>
                     </li>
 

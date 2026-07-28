@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.forms import UserChangeForm
+from .models import LabelTemplate
 
 
 class DateInput(forms.DateInput):
@@ -442,3 +443,35 @@ class DisposeBatchForm(forms.Form):
                 f"Only {self.batch.quantity} unit(s) remain in this batch."
             )
         return qty
+
+
+
+class LabelTemplateForm(forms.ModelForm):
+    class Meta:
+        model = LabelTemplate
+        fields = [
+            "name", "code_type", "width_mm", "height_mm", "columns", "gap_mm",
+            "show_business_name", "show_product_name", "show_price", "show_sku",
+            "is_default",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "form-control", "placeholder": "e.g. Shelf Tag 40x30"
+            }),
+            "code_type": forms.Select(attrs={"class": "form-control"}),
+            "width_mm": forms.NumberInput(attrs={"class": "form-control"}),
+            "height_mm": forms.NumberInput(attrs={"class": "form-control"}),
+            "columns": forms.NumberInput(attrs={"class": "form-control"}),
+            "gap_mm": forms.NumberInput(attrs={"class": "form-control"}),
+        }
+
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ["name", "location", "phone", "is_default", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Accra Main Warehouse"}),
+            "location": forms.TextInput(attrs={"placeholder": "e.g. Spintex Road, Accra"}),
+            "phone": forms.TextInput(attrs={"placeholder": "e.g. 024 123 4567"}),
+        }

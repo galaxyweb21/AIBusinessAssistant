@@ -1,0 +1,100 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block main_content %}
+
+<style>
+:root{
+    --primary:#6366f1;
+    --primary-dark:#4f46e5;
+    --danger:#ef4444;
+}
+
+.form-wrapper{ max-width:640px; margin:auto; padding:28px; }
+
+.page-header{ margin-bottom:28px; }
+.page-title h2{ margin:0; font-size:30px; font-weight:800; }
+.page-title p{ margin-top:8px; color:var(--text-muted); }
+
+.form-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:26px; overflow:hidden; box-shadow:0 20px 45px rgba(15,23,42,.05); }
+.card-header{ padding:24px 30px; border-bottom:1px solid var(--border); background:linear-gradient(135deg, rgba(99,102,241,.05), rgba(79,70,229,.02)); }
+.card-header h5{ margin:0; font-size:20px; font-weight:800; }
+.card-body{ padding:30px; }
+
+.form-field{ margin-bottom:18px; }
+.form-field label{ display:block; font-size:13px; font-weight:700; margin-bottom:8px; color:var(--text-main); }
+.form-field input[type=text], .form-field input[type=tel]{
+    width:100%; height:54px; border-radius:16px; border:1px solid var(--border); background:var(--bg-main); padding:0 18px; color:var(--text-main);
+}
+.form-field input:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 4px rgba(99,102,241,.10); }
+
+.check-row{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.check-row input{ width:18px; height:18px; accent-color:var(--primary); }
+.check-row label{ font-size:14px; font-weight:600; color:var(--text-main); margin:0; }
+
+.card-footer{ padding:24px 30px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:14px; flex-wrap:wrap; }
+
+.btn-save{ border:none; height:54px; padding:0 28px; border-radius:16px; color:#fff; font-weight:700; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); transition:.25s; cursor:pointer; }
+.btn-save:hover{ transform:translateY(-2px); box-shadow:0 16px 30px rgba(99,102,241,.25); }
+.btn-cancel{ height:54px; padding:0 24px; border-radius:16px; border:1px solid var(--border); text-decoration:none; display:flex; align-items:center; font-weight:700; color:var(--text-main); }
+</style>
+
+<div class="form-wrapper">
+
+  <div class="page-header">
+    <div class="page-title">
+      <h2>{% if is_edit %}Edit{% else %}New{% endif %} Warehouse</h2>
+      <p>{% if is_edit %}Update this location's details.{% else %}Add a new storage location for this business.{% endif %}</p>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-card">
+
+      <div class="card-header">
+        <h5>Warehouse Details</h5>
+      </div>
+
+      <div class="card-body">
+        <div class="form-field">
+          <label for="{{ form.name.id_for_label }}">Name</label>
+          {{ form.name }}
+          {% for error in form.name.errors %}<div style="color:var(--danger); font-size:12px; margin-top:6px;">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-field">
+          <label for="{{ form.location.id_for_label }}">Location</label>
+          {{ form.location }}
+        </div>
+
+        <div class="form-field">
+          <label for="{{ form.phone.id_for_label }}">Phone</label>
+          {{ form.phone }}
+        </div>
+
+        <div class="check-row">
+          {{ form.is_default }}
+          <label for="{{ form.is_default.id_for_label }}">Set as default warehouse</label>
+        </div>
+
+        <div class="check-row">
+          {{ form.is_active }}
+          <label for="{{ form.is_active.id_for_label }}">Active</label>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <a href="{% url 'warehouse_list' %}" class="btn-cancel">
+          <i class="fas fa-arrow-left me-2"></i> Cancel
+        </a>
+        <button type="submit" class="btn-save">
+          <i class="fas fa-save me-2"></i> Save Warehouse
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}

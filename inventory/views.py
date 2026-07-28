@@ -34,6 +34,7 @@ import io
 from django.template.loader import render_to_string
 from xhtml2pdf import pisa
 from datetime import datetime, timedelta
+from .forms import LabelTemplateForm
 
 
 @login_required
@@ -2320,3 +2321,415 @@ def product_intelligence(request, pk):
 
     return render(request, "inventory/product_intelligence.html", context)
 
+
+
+
+@login_required
+def label_select(request):
+    """Step 1: pick which products to print labels for."""
+    business = get_business(request)
+
+    query = request.GET.get("q", "").strip()
+    preselect_id = request.GET.get("product", "")
+
+    products = Inventory.objects.filter(business=business, status="active")
+
+    if query:
+        products = products.filter(
+            Q(product_name__icontains=query)
+            | Q(sku__icontains=query)
+            | Q(barcode__icontains=query)
+        )
+
+    products = products.order_by("product_name")
+
+    templates = LabelTemplate.objects.filter(business=business)
+    if not templates.exists():
+        # Seed one sensible default so the page isn't empty on first use
+        LabelTemplate.objects.create(
+            business=business,
+            name="Standard Shelf Tag (40x30mm)",
+            is_default=True,
+        )
+        templates = LabelTemplate.objects.filter(business=business)
+
+    context = {
+        "products": products,
+        "templates": templates,
+        "query": query,
+        "preselect_id": preselect_id,
+    }
+    return render(request, "inventory/labels/select.html", context)
+
+
+@login_required
+@require_POST
+def label_print(request):
+    """Step 2: receive the selected products + quantities, render the printable sheet."""
+    business = get_business(request)
+
+    product_ids = request.POST.getlist("product_id")
+    template_id = request.POST.get("template_id")
+    template = get_object_or_404(LabelTemplate, id=template_id, business=business)
+
+    labels = []  # flattened list: one entry per physical label to print
+    for pid in product_ids:
+        qty_raw = request.POST.get(f"qty_{pid}", "0")
+        try:
+            qty = int(qty_raw)
+        except ValueError:
+            qty = 0
+        if qty <= 0:
+            continue
+
+        product = get_object_or_404(Inventory, id=pid, business=business)
+        labels.extend([product] * qty)
+
+        LabelPrintLog.objects.create(
+            business=business,
+            product=product,
+            template=template,
+            quantity=qty,
+            printed_by=request.user,
+        )
+
+    if not labels:
+        messages.warning(request, "Select at least one product and a quantity greater than zero.")
+        return redirect("select")
+
+    context = {
+        "business": business,
+        "template": template,
+        "labels": labels,
+    }
+    return render(request, "inventory/labels/print_sheet.html", context)
+
+
+@login_required
+def template_list(request):
+    business = get_business(request)
+    templates = LabelTemplate.objects.filter(business=business)
+    return render(request, "inventory/labels/template_list.html", {"templates": templates})
+
+
+@login_required
+def template_create(request):
+    business = get_business(request)
+    if request.method == "POST":
+        form = LabelTemplateForm(request.POST)
+        if form.is_valid():
+            tmpl = form.save(commit=False)
+            tmpl.business = business
+            tmpl.save()
+            messages.success(request, "Label template saved.")
+            return redirect("template_list")
+    else:
+        form = LabelTemplateForm()
+    return render(request, "inventory/labels/template_form.html", {"form": form, "is_edit": False})
+
+
+@login_required
+def template_edit(request, pk):
+    business = get_business(request)
+    template = get_object_or_404(LabelTemplate, pk=pk, business=business)
+    if request.method == "POST":
+        form = LabelTemplateForm(request.POST, instance=template)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Label template updated.")
+            return redirect("template_list")
+    else:
+        form = LabelTemplateForm(instance=template)
+    return render(
+        request, "inventory/labels/template_form.html",
+        {"form": form, "is_edit": True, "template": template}
+    )
+
+
+@login_required
+@require_POST
+def template_delete(request, pk):
+    business = get_business(request)
+    template = get_object_or_404(LabelTemplate, pk=pk, business=business)
+    template.delete()
+    messages.success(request, "Label template deleted.")
+    return redirect("template_list")
+
+
+def get_or_create_default_warehouse(business):
+    warehouse = Warehouse.objects.filter(business=business, is_default=True).first()
+    if warehouse:
+        return warehouse
+    return Warehouse.objects.create(business=business, name="Main Warehouse", is_default=True)
+
+
+def _seed_warehouse_stock(product):
+    """
+    The first time a product's warehouse breakdown is opened, make sure it
+    has at least one WarehouseStock row so the per-warehouse total always
+    equals Inventory.stock_quantity. Everything starts out sitting in the
+    business's default warehouse.
+    """
+    if WarehouseStock.objects.filter(product=product).exists():
+        return
+    default_wh = get_or_create_default_warehouse(product.business)
+    WarehouseStock.objects.create(
+        business=product.business,
+        warehouse=default_wh,
+        product=product,
+        quantity=product.stock_quantity,
+    )
+
+
+# ==========================================================
+# WAREHOUSES
+# ==========================================================
+
+@login_required
+def warehouse_list(request):
+    business = get_business(request)
+    warehouses = Warehouse.objects.filter(business=business).annotate(
+        total_stock=Sum("stock_levels__quantity")
+    )
+    return render(request, "inventory/warehouses/list.html", {"warehouses": warehouses})
+
+
+@login_required
+def warehouse_create(request):
+    business = get_business(request)
+    if request.method == "POST":
+        form = WarehouseForm(request.POST)
+        if form.is_valid():
+            wh = form.save(commit=False)
+            wh.business = business
+            wh.save()
+            messages.success(request, "Warehouse created.")
+            return redirect("warehouse_list")
+    else:
+        form = WarehouseForm()
+    return render(request, "inventory/warehouses/form.html", {"form": form, "is_edit": False})
+
+
+@login_required
+def warehouse_edit(request, pk):
+    business = get_business(request)
+    warehouse = get_object_or_404(Warehouse, pk=pk, business=business)
+    if request.method == "POST":
+        form = WarehouseForm(request.POST, instance=warehouse)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Warehouse updated.")
+            return redirect("warehouse_list")
+    else:
+        form = WarehouseForm(instance=warehouse)
+    return render(
+        request, "inventory/warehouses/form.html",
+        {"form": form, "is_edit": True, "warehouse": warehouse}
+    )
+
+
+@login_required
+@require_POST
+def warehouse_delete(request, pk):
+    business = get_business(request)
+    warehouse = get_object_or_404(Warehouse, pk=pk, business=business)
+
+    if warehouse.stock_levels.filter(quantity__gt=0).exists():
+        messages.error(request, "Can't delete a warehouse that still holds stock. Transfer it out first.")
+        return redirect("warehouse_list")
+
+    warehouse.delete()
+    messages.success(request, "Warehouse deleted.")
+    return redirect("warehouse_list")
+
+
+# ==========================================================
+# PER-PRODUCT WAREHOUSE STOCK
+# ==========================================================
+
+@login_required
+def product_warehouse_stock(request, product_id):
+    business = get_business(request)
+    product = get_object_or_404(Inventory, id=product_id, business=business)
+
+    _seed_warehouse_stock(product)
+
+    warehouses = Warehouse.objects.filter(business=business, is_active=True)
+
+    if request.method == "POST":
+        new_quantities = {}
+        total = 0
+        for wh in warehouses:
+            raw = request.POST.get(f"qty_{wh.id}", "0")
+            try:
+                qty = int(raw)
+            except ValueError:
+                qty = 0
+            qty = max(qty, 0)
+            new_quantities[wh.id] = qty
+            total += qty
+
+        if total != product.stock_quantity:
+            messages.error(
+                request,
+                f"Warehouse quantities must add up to the product's total stock "
+                f"({product.stock_quantity}). You entered {total}."
+            )
+        else:
+            with transaction.atomic():
+                for wh in warehouses:
+                    stock, _ = WarehouseStock.objects.get_or_create(
+                        business=business, warehouse=wh, product=product,
+                        defaults={"quantity": 0},
+                    )
+                    stock.quantity = new_quantities[wh.id]
+                    stock.save(update_fields=["quantity", "updated_at"])
+            messages.success(request, "Warehouse stock updated.")
+            return redirect("product_warehouse_stock", product_id=product.id)
+
+    stock_levels = WarehouseStock.objects.filter(
+        product=product, warehouse__in=warehouses
+    ).select_related("warehouse")
+    stock_by_wh = {s.warehouse_id: s.quantity for s in stock_levels}
+
+    rows = [
+        {"warehouse": wh, "quantity": stock_by_wh.get(wh.id, 0)}
+        for wh in warehouses
+    ]
+
+    return render(request, "inventory/warehouses/product_detail.html", {
+        "product": product,
+        "rows": rows,
+    })
+
+
+# ==========================================================
+# STOCK TRANSFERS
+# ==========================================================
+
+@login_required
+def transfer_list(request):
+    business = get_business(request)
+    status = request.GET.get("status", "")
+
+    transfers = StockTransfer.objects.filter(business=business).select_related(
+        "source_warehouse", "destination_warehouse"
+    )
+    if status:
+        transfers = transfers.filter(status=status)
+
+    return render(request, "inventory/transfers/list.html", {
+        "transfers": transfers,
+        "status": status,
+    })
+
+
+@login_required
+def transfer_create(request):
+    business = get_business(request)
+    warehouses = Warehouse.objects.filter(business=business, is_active=True)
+    products = Inventory.objects.filter(business=business, status="active").order_by("product_name")
+
+    if request.method == "POST":
+        source_id = request.POST.get("source_warehouse")
+        destination_id = request.POST.get("destination_warehouse")
+        notes = request.POST.get("notes", "")
+        product_ids = request.POST.getlist("product_id")
+
+        if not source_id or not destination_id:
+            messages.error(request, "Choose both a source and a destination warehouse.")
+            return redirect("transfer_create")
+
+        if source_id == destination_id:
+            messages.error(request, "Source and destination warehouse must be different.")
+            return redirect("transfer_create")
+
+        source = get_object_or_404(Warehouse, id=source_id, business=business)
+        destination = get_object_or_404(Warehouse, id=destination_id, business=business)
+
+        items = []
+        for pid in product_ids:
+            raw = request.POST.get(f"qty_{pid}", "0")
+            try:
+                qty = int(raw)
+            except ValueError:
+                qty = 0
+            if qty > 0:
+                items.append((pid, qty))
+
+        if not items:
+            messages.error(request, "Add at least one product with a quantity greater than zero.")
+            return redirect("transfer_create")
+
+        with transaction.atomic():
+            transfer = StockTransfer.objects.create(
+                business=business,
+                source_warehouse=source,
+                destination_warehouse=destination,
+                notes=notes,
+                requested_by=request.user,
+            )
+            for pid, qty in items:
+                product = get_object_or_404(Inventory, id=pid, business=business)
+                StockTransferItem.objects.create(transfer=transfer, product=product, quantity=qty)
+
+        messages.success(request, f"Transfer {transfer.reference_number} created as a draft.")
+        return redirect("transfer_detail", pk=transfer.id)
+
+    return render(request, "inventory/transfers/create.html", {
+        "warehouses": warehouses,
+        "products": products,
+    })
+
+
+@login_required
+def transfer_detail(request, pk):
+    business = get_business(request)
+    transfer = get_object_or_404(
+        StockTransfer.objects.select_related("source_warehouse", "destination_warehouse"),
+        pk=pk, business=business,
+    )
+    items = transfer.items.select_related("product")
+    return render(request, "inventory/transfers/detail.html", {
+        "transfer": transfer,
+        "items": items,
+    })
+
+
+@login_required
+@require_POST
+def transfer_dispatch(request, pk):
+    business = get_business(request)
+    transfer = get_object_or_404(StockTransfer, pk=pk, business=business)
+    try:
+        transfer.dispatch(user=request.user)
+        messages.success(request, f"Transfer {transfer.reference_number} dispatched.")
+    except ValueError as e:
+        messages.error(request, str(e))
+    return redirect("transfer_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def transfer_receive(request, pk):
+    business = get_business(request)
+    transfer = get_object_or_404(StockTransfer, pk=pk, business=business)
+    try:
+        transfer.receive(user=request.user)
+        messages.success(request, f"Transfer {transfer.reference_number} received.")
+    except ValueError as e:
+        messages.error(request, str(e))
+    return redirect("transfer_detail", pk=pk)
+
+
+@login_required
+@require_POST
+def transfer_cancel(request, pk):
+    business = get_business(request)
+    transfer = get_object_or_404(StockTransfer, pk=pk, business=business)
+    try:
+        transfer.cancel(user=request.user)
+        messages.success(request, f"Transfer {transfer.reference_number} cancelled.")
+    except ValueError as e:
+        messages.error(request, str(e))
+    return redirect("transfer_detail", pk=pk)
