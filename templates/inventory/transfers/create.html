@@ -59,7 +59,9 @@
 .selection-summary strong{ color:var(--text-main); }
 </style>
 
-<div class="page-wrapper">
+<div class="content-wrapper">
+
+    <section class="content inventory-wrapper">
 
   <div class="page-header">
     <div class="page-title">
@@ -114,7 +116,9 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th style="width:36px;"></th>
+                <th style="width:36px;">
+                  <input type="checkbox" id="selectAll" title="Select all visible products">
+                </th>
                 <th>Product</th>
                 <th>SKU</th>
                 <th>Current Stock</th>
@@ -158,10 +162,11 @@
     </div>
   </form>
 
+
+    </section>
 </div>
 
 <script>
-// Live search filter
 (function () {
     var searchInput = document.getElementById('searchInput');
     var rows = Array.prototype.slice.call(document.querySelectorAll('.data-table tbody tr[data-search]'));
@@ -172,6 +177,7 @@
         rows.forEach(function (row) {
             row.style.display = (!q || row.dataset.search.indexOf(q) !== -1) ? '' : 'none';
         });
+        syncSelectAllState();
     }
 
     searchInput.addEventListener('input', function () {
@@ -186,8 +192,60 @@ function updateSelectionSummary() {
     summary.querySelector('strong').textContent = count;
 }
 
+function syncSelectAllState() {
+    var selectAll = document.getElementById('selectAll');
+    if (!selectAll) return;
+
+    // Get visible row checkboxes (respecting search filter)
+    var visibleCheckboxes = Array.prototype.slice.call(document.querySelectorAll('.data-table tbody tr'))
+        .filter(function(tr) { return tr.style.display !== 'none'; })
+        .map(function(tr) { return tr.querySelector('.row-check'); })
+        .filter(Boolean);
+
+    if (visibleCheckboxes.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    var checkedCount = visibleCheckboxes.filter(function(cb) { return cb.checked; }).length;
+
+    if (checkedCount === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    } else if (checkedCount === visibleCheckboxes.length) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+    }
+}
+
+// "Select All" header checkbox toggle handler
+var selectAllCheckbox = document.getElementById('selectAll');
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function () {
+        var isChecked = this.checked;
+
+        // Select/Deselect visible rows only
+        document.querySelectorAll('.data-table tbody tr').forEach(function (tr) {
+            if (tr.style.display !== 'none') {
+                var cb = tr.querySelector('.row-check');
+                if (cb) cb.checked = isChecked;
+            }
+        });
+
+        updateSelectionSummary();
+    });
+}
+
+// Individual row checkbox click handler
 document.querySelectorAll('.row-check').forEach(function (cb) {
-    cb.addEventListener('change', updateSelectionSummary);
+    cb.addEventListener('change', function() {
+        updateSelectionSummary();
+        syncSelectAllState();
+    });
 });
 
 document.getElementById('transferForm').addEventListener('submit', function (e) {

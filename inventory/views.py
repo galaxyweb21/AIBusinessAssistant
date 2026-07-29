@@ -2323,7 +2323,6 @@ def product_intelligence(request, pk):
 
 
 
-
 @login_required
 def label_select(request):
     """Step 1: pick which products to print labels for."""

@@ -2,7 +2,19 @@ from django.shortcuts import render, redirect
 from .models import Business
 from .forms import BusinessForm
 
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+from .context_processors import sidebar_counts as _sidebar_counts_context
+
 # Create your views here.
+
+from .context_processors import sidebar_counts as _sidebar_counts_context
+
+
+@login_required
+def sidebar_counts_api(request):
+    return JsonResponse(_sidebar_counts_context(request))
 
 
 def business(request):
@@ -28,3 +40,4 @@ def business(request):
         }
 
     return render(request, "business/business.html", context)
+

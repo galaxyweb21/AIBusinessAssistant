@@ -989,7 +989,6 @@ class ProductBatch(models.Model):
         return self.supplier.name if self.supplier else "-"
 
 
-
 class InventoryMovement(models.Model):
 
     business = models.ForeignKey(

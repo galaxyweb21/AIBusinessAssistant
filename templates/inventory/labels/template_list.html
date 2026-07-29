@@ -283,19 +283,20 @@ Create Template
 
 <div class="kpi-card">
 <div class="kpi-title">Templates</div>
-<div class="kpi-value">{{ templates|length }}</div>
+<div class="kpi-value">{{ tcount }}</div>
 </div>
 
 <div class="kpi-card">
 <div class="kpi-title">Default Template</div>
 <div class="kpi-value">
-{% for t in templates %}
-{% if t.is_default %}
-1
-{% endif %}
-{% empty %}
-0
-{% endfor %}
+    {{is_default}}
+<!--{% for t in templates %}-->
+<!--{% if t.is_default %}-->
+<!--1-->
+<!--{% endif %}-->
+<!--{% empty %}-->
+<!--0-->
+<!--{% endfor %}-->
 </div>
 </div>
 

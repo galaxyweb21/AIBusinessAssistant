@@ -1,4 +1,4 @@
-from .models import *
+from accounts.models import StaffProfile
 from business.models import *
 from inventory.models import *
 from sales.models import *

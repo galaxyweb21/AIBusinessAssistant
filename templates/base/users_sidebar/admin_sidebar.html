@@ -752,6 +752,10 @@ BADGES
     background: #10b981;
 }
 
+.menu-badge.warning {
+    background: #f59e0b;
+}
+
 .menu-badge.info {
     background: #3b82f6;
 }
@@ -883,30 +887,28 @@ body.sidebar-collapse .menu-badge {
                 <div class="profile-cover"></div>
                 <div class="profile-body">
                     <div class="profile-avatar">
-
-    {% if business.logo %}
-
-        <img
-            src="{{ business.logo.url }}"
-            alt="{{ business.name }}"
-        >
-
-    {% else %}
-
-        {{ business.name|default:"AI"|slice:":2"|upper }}
-
-    {% endif %}
-
-    <span class="status-dot"></span>
-
-</div>
+                        {% if business and business.logo %}
+                            <img src="{{ business.logo.url }}" alt="{{ business.name }}">
+                        {% else %}
+                            {{ business.name|default:"AI"|slice:":2"|upper }}
+                        {% endif %}
+                        <span class="status-dot"></span>
+                    </div>
 
                     <div class="profile-info">
                         <div class="profile-name">
-                            {{ business.name }}
+                            {% if business %}
+                                {{ business.name }}
+                            {% else %}
+                                {{ request.user.get_full_name|default:request.user.username }}
+                            {% endif %}
                         </div>
                         <div class="profile-role">
-                            {{ staff.role_type }}
+                            {% if staff %}
+                                {{ staff.get_role_type_display|default:staff.role_type }}
+                            {% else %}
+                                {{ request.user.groups.first.name|default:"Staff" }}
+                            {% endif %}
                         </div>
                         <div class="profile-date">
                             <i class="far fa-calendar"></i>
@@ -1036,9 +1038,11 @@ body.sidebar-collapse .menu-badge {
                             <span class="menu-icon"><i class="fas fa-boxes"></i></span>
                             <span class="menu-text">
                                 Inventory
+                                {% if low_stock_count %}
                                 <span class="menu-badge">
                                     {{ low_stock_count|default:"0" }}
                                 </span>
+                                {% endif %}
                             </span>
                             <i class="right fas fa-chevron-right"></i>
                         </a>
@@ -1063,25 +1067,6 @@ body.sidebar-collapse .menu-badge {
                                     <i class="far fa-circle nav-icon"></i> History
                                 </a>
                             </li>
-                             <li class="nav-item" style="margin-top: 4px;">
-                                <div style="margin: 4px 12px; border-top: 1px solid rgba(255,255,255,.08);"></div>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'warehouse_list' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_list' or request.resolver_match.url_name == 'warehouse_create' or request.resolver_match.url_name == 'warehouse_edit' or request.resolver_match.url_name == 'product_warehouse_stock' %}active{% endif %}" data-title="Warehouses">
-                                    <i class="far fa-circle nav-icon"></i> Warehouses
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'transfer_list' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}active{% endif %}" data-title="Stock Transfers">
-                                    <i class="far fa-circle nav-icon"></i> Stock Transfers
-                                </a>
-                            </li>
-
-
-                            <li class="nav-item" style="margin-top: 4px;">
-                                <div style="margin: 4px 12px; border-top: 1px solid rgba(255,255,255,.08);"></div>
-                            </li>
-
                             <li class="nav-item">
                                 <a href="{% url 'expiry_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'expiry_dashboard' or request.resolver_match.url_name == 'add_batch' %}active{% endif %}" data-title="Expiry Management">
                                     <i class="far fa-circle nav-icon"></i> Expiry Management
@@ -1100,8 +1085,16 @@ body.sidebar-collapse .menu-badge {
                                     <i class="far fa-circle nav-icon"></i> Label Templates
                                 </a>
                             </li>
-
-
+                            <li class="nav-item">
+                                <a href="{% url 'warehouse_list' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_list' or request.resolver_match.url_name == 'warehouse_create' or request.resolver_match.url_name == 'warehouse_edit' or request.resolver_match.url_name == 'product_warehouse_stock' %}active{% endif %}" data-title="Warehouses">
+                                    <i class="far fa-circle nav-icon"></i> Warehouses
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{% url 'transfer_list' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer_list' or request.resolver_match.url_name == 'transfer_create' or request.resolver_match.url_name == 'transfer_detail' %}active{% endif %}" data-title="Stock Transfers">
+                                    <i class="far fa-circle nav-icon"></i> Stock Transfers
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
@@ -1111,9 +1104,11 @@ body.sidebar-collapse .menu-badge {
                             <span class="menu-icon"><i class="fas fa-cash-register"></i></span>
                             <span class="menu-text">
                                 Sales
-                                <span class="menu-badge success">
+                                {% if pending_sales %}
+                                <span class="menu-badge warning">
                                     {{ pending_sales|default:"0" }}
                                 </span>
+                                {% endif %}
                             </span>
                             <i class="right fas fa-chevron-right"></i>
                         </a>
@@ -1147,9 +1142,11 @@ body.sidebar-collapse .menu-badge {
                             <span class="menu-icon"><i class="fas fa-user-friends"></i></span>
                             <span class="menu-text">
                                 Customers
+                                {% if customer_count %}
                                 <span class="menu-badge info">
                                     {{ customer_count|default:"0" }}
                                 </span>
+                                {% endif %}
                             </span>
                         </a>
                     </li>
@@ -1159,7 +1156,7 @@ body.sidebar-collapse .menu-badge {
 
                     <!-- DYNAMIC PROFILE ROUTE -->
                     <li class="nav-item">
-                        {% if staff.role_type == 'Admin' %}
+                        {% if staff and staff.role_type == 'Admin' %}
                         <a href="{% url 'business_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'business_profile' %}active{% endif %}" data-title="Profile">
                             <span class="menu-icon"><i class="fas fa-building"></i></span>
                             <span class="menu-text">Business Profile</span>
@@ -1299,6 +1296,33 @@ if(date){
 
     pinHeight();
 
+})();
+</script>
+
+
+<script>
+(function () {
+    var COUNTS_URL = "{% url 'sidebar_counts_api' %}";
+    var POLL_INTERVAL_MS = 45000; // 45s -- adjust to taste
+
+    function refreshSidebarCounts() {
+        fetch(COUNTS_URL, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (data) {
+                if (!data) return;
+                Object.keys(data).forEach(function (key) {
+                    document.querySelectorAll('[data-badge="' + key + '"]').forEach(function (el) {
+                        el.textContent = data[key];
+                    });
+                });
+            })
+            .catch(function () {
+                // Fail silently -- badges just keep showing their last
+                // known value until the next successful poll.
+            });
+    }
+
+    setInterval(refreshSidebarCounts, POLL_INTERVAL_MS);
 })();
 </script>
 

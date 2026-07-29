@@ -25,27 +25,31 @@
 .data-table tbody tr:last-child td{ border-bottom:none; }
 .data-table tbody tr:hover{ background:rgba(99,102,241,.04); }
 
-.badge{ display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+.badge{ display:inline-flex; align-items:center; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; }
 .badge.default{ background:rgba(99,102,241,.12); color:var(--primary); }
 .badge.active{ background:rgba(16,185,129,.12); color:var(--success); }
 .badge.inactive{ background:rgba(148,163,184,.15); color:var(--text-muted); }
 
-.row-actions{ display:flex; gap:14px; align-items:center; }
+.row-actions{ display:flex; gap:8px; align-items:center; justify-content:flex-end; }
 .row-actions form{ display:inline; }
-.row-actions button{ background:none; border:none; color:var(--danger); cursor:pointer; font-weight:700; padding:0; font-size:13px; }
-.row-actions a{ color:var(--primary); font-weight:700; font-size:13px; text-decoration:none; }
+
+.btn-icon{ width:38px; height:38px; border-radius:12px; border:1px solid var(--border); background:var(--bg-main); display:inline-flex; align-items:center; justify-content:center; color:var(--text-muted); text-decoration:none; cursor:pointer; transition:.2s; }
+.btn-icon:hover{ color:var(--primary); border-color:var(--primary); }
+.btn-icon.btn-delete:hover{ color:var(--danger); border-color:var(--danger); background:rgba(239,68,68,.05); }
 
 .btn-save{
-    border:none; height:54px; padding:0 28px; border-radius:16px; color:#fff; font-weight:700;
+    border:none; height:48px; padding:0 24px; border-radius:16px; color:#fff; font-weight:700;
     background:linear-gradient(135deg,var(--primary),var(--primary-dark)); transition:.25s; cursor:pointer;
-    display:inline-flex; align-items:center; text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px; text-decoration:none;
 }
-.btn-save:hover{ transform:translateY(-2px); box-shadow:0 16px 30px rgba(99,102,241,.25); color:#fff; text-decoration:none; }
+.btn-save:hover{ transform:translateY(-2px); box-shadow:0 12px 24px rgba(99,102,241,.25); color:#fff; text-decoration:none; }
 
-.empty-state{ text-align:center; padding:50px 20px; color:var(--text-muted); }
+.empty-state{ text-align:center; padding:48px 20px; color:var(--text-muted); }
 </style>
 
-<div class="page-wrapper">
+<div class="content-wrapper">
+
+    <section class="content inventory-wrapper">
 
   <div class="page-header">
     <div class="page-title">
@@ -53,7 +57,7 @@
       <p>Manage your business's storage locations for multi-warehouse stock.</p>
     </div>
     <a href="{% url 'warehouse_create' %}" class="btn-save">
-      <i class="fas fa-plus me-2"></i> New Warehouse
+      <i class="fas fa-plus"></i> New Warehouse
     </a>
   </div>
 
@@ -66,19 +70,19 @@
           <th>Location</th>
           <th>Total Stock</th>
           <th>Status</th>
-          <th></th>
+          <th style="text-align:right;">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for wh in warehouses %}
         <tr>
-          <td>
+          <td style="font-weight:700;">
             {{ wh.name }}
             {% if wh.is_default %}<span class="badge default" style="margin-left:8px;">Default</span>{% endif %}
           </td>
-          <td>{{ wh.code }}</td>
-          <td>{{ wh.location|default:"\u2014" }}</td>
-          <td>{{ wh.total_stock|default:0 }}</td>
+          <td><code>{{ wh.code }}</code></td>
+          <td>{{ wh.location|default:"&mdash;" }}</td>
+          <td><strong>{{ wh.total_stock|default:0 }}</strong></td>
           <td>
             {% if wh.is_active %}
               <span class="badge active">Active</span>
@@ -86,19 +90,25 @@
               <span class="badge inactive">Inactive</span>
             {% endif %}
           </td>
-          <td class="row-actions">
-            <a href="{% url 'warehouse_edit' wh.id %}">Edit</a>
-            <form method="post" action="{% url 'warehouse_delete' wh.id %}" onsubmit="return confirm('Delete this warehouse?');">
-              {% csrf_token %}
-              <button type="submit">Delete</button>
-            </form>
+          <td>
+            <div class="row-actions">
+              <a href="{% url 'warehouse_edit' wh.id %}" class="btn-icon" title="Edit Warehouse">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="post" action="{% url 'warehouse_delete' wh.id %}" onsubmit="return confirm('Delete this warehouse?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon btn-delete" title="Delete Warehouse">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </form>
+            </div>
           </td>
         </tr>
         {% empty %}
         <tr>
           <td colspan="6">
             <div class="empty-state">
-              <i class="fas fa-warehouse" style="font-size:26px; margin-bottom:10px; display:block;"></i>
+              <i class="fas fa-warehouse fa-2x mb-3" style="display:block; opacity:.5;"></i>
               No warehouses yet. Create your first one to start splitting stock by location.
             </div>
           </td>
@@ -108,11 +118,13 @@
     </table>
   </div>
 
-  <p style="margin-top:16px;">
-    <a href="{% url 'transfer_list' %}" style="color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:600;">
-      <i class="fas fa-arrow-right me-1"></i> Go to Stock Transfers
+  <p style="margin-top:20px;">
+    <a href="{% url 'transfer_list' %}" style="color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+      <i class="fas fa-arrow-right"></i> Go to Stock Transfers
     </a>
   </p>
 
+
+    </section>
 </div>
 {% endblock %}

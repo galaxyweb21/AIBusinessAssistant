@@ -585,6 +585,19 @@
                                     Mark Damaged
                                 </a>
 
+
+                                <a class="dropdown-item"
+                                   href="{% url 'select' %}?product={{ item.id }}">
+                                    <i class="fas fa-barcode"></i>
+                                    Print Label
+                                </a>
+
+                                <a class="dropdown-item"
+                                   href="{% url 'product_warehouse_stock' item.id %}">
+                                    <i class="fas fa-warehouse"></i>
+                                    Warehouse Stock
+                                </a>
+
                                 <div class="dropdown-divider"></div>
 
                                 <a class="dropdown-item text-danger"

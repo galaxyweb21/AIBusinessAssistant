@@ -1,0 +1,45 @@
+<!--
+Drop this near the bottom of admin_sidebar.html (or base.html, if the
+sidebar is included there), and tag each badge span with a matching
+data-badge attribute. Works alongside the {{ ...|default:"0" }} values
+already in the template -- those still render correctly on first load
+(and with JS disabled); this script just keeps them fresh afterwards.
+
+Change your three badge spans from:
+
+    <span class="menu-badge">{{ low_stock_count|default:"0" }}</span>
+
+to:
+
+    <span class="menu-badge" data-badge="low_stock_count">{{ low_stock_count|default:"0" }}</span>
+
+...and the same pattern for data-badge="pending_sales" and
+data-badge="customer_count" wherever those two badges live in the
+Sales and Customers menu sections.
+-->
+
+<script>
+(function () {
+    var COUNTS_URL = "{% url 'sidebar_counts_api' %}";
+    var POLL_INTERVAL_MS = 45000; // 45s -- adjust to taste
+
+    function refreshSidebarCounts() {
+        fetch(COUNTS_URL, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (data) {
+                if (!data) return;
+                Object.keys(data).forEach(function (key) {
+                    document.querySelectorAll('[data-badge="' + key + '"]').forEach(function (el) {
+                        el.textContent = data[key];
+                    });
+                });
+            })
+            .catch(function () {
+                // Fail silently -- badges just keep showing their last
+                // known value until the next successful poll.
+            });
+    }
+
+    setInterval(refreshSidebarCounts, POLL_INTERVAL_MS);
+})();
+</script>
