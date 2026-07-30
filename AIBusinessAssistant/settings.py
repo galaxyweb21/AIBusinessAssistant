@@ -70,11 +70,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'rest_framework',
-<<<<<<< HEAD
     'business.apps.BusinessConfig',
-=======
-    'business',    
->>>>>>> 4363a2a408414e54f83592224b7f1131cc69841c
     'inventory',
     'sales',
     'dashboard',
