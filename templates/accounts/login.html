@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Login | Business ERP</title>
+<title>Login | Business Assistant</title>
 
 <!-- FONT AWESOME -->
 <link rel="stylesheet"
@@ -87,8 +87,45 @@ body{
     justify-content:center;
 }
 
+.brand-mark-hero{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:34px;
+}
+
+.brand-icon-hero{
+    width:52px;
+    height:52px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.16);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    flex-shrink:0;
+}
+
+.brand-text-hero{
+    display:flex;
+    flex-direction:column;
+    line-height:1.25;
+}
+
+.brand-name-hero{
+    font-weight:800;
+    font-size:19px;
+}
+
+.brand-tagline-hero{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:rgba(255,255,255,0.75);
+}
+
 .auth-left h1{
-    font-size:40px;
+    font-size:36px;
     font-weight:800;
     margin-bottom:18px;
 }
@@ -128,6 +165,30 @@ body{
     flex-direction:column;
 }
 
+.field-label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+}
+
+.field-label-row label{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text-main);
+}
+
+.forgot-link{
+    font-size:13px;
+    font-weight:600;
+    color:#818cf8;
+    text-decoration:none;
+}
+
+.forgot-link:hover{
+    text-decoration:underline;
+}
+
 .form-control{
     height:52px;
     border-radius:16px;
@@ -159,6 +220,7 @@ body{
     cursor:pointer;
     transition:all .25s ease;
     box-shadow:0 12px 30px rgba(99,102,241,0.25);
+    margin-top:8px;
 }
 
 .auth-btn:hover{
@@ -200,7 +262,16 @@ body{
 
     <!-- LEFT -->
     <div class="auth-left">
-        <h1>Business ERP</h1>
+
+        <div class="brand-mark-hero">
+            <div class="brand-icon-hero"><i class="fas fa-gem"></i></div>
+            <div class="brand-text-hero">
+                <span class="brand-name-hero">Business Assistant</span>
+                <span class="brand-tagline-hero">Smart ERP Platform</span>
+            </div>
+        </div>
+
+        <h1>Run your business with confidence</h1>
         <p>
             Enterprise business management system
             for hotels, pharmacies, schools,
@@ -222,7 +293,11 @@ body{
             {% csrf_token %}
 
             <div class="form-group">
+                <div class="field-label-row">
+                    <label for="username">Username</label>
+                </div>
                 <input type="text"
+                       id="username"
                        name="username"
                        class="form-control"
                        placeholder="Username"
@@ -230,7 +305,12 @@ body{
             </div>
 
             <div class="form-group">
+                <div class="field-label-row">
+                    <label for="password">Password</label>
+                    <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+                </div>
                 <input type="password"
+                       id="password"
                        name="password"
                        class="form-control"
                        placeholder="Password"

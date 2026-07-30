@@ -37,6 +37,19 @@ from datetime import datetime, timedelta
 from .forms import LabelTemplateForm
 
 
+# =============================================
+# HELPER FUNCTIONS
+# =============================================
+
+def get_client_ip(request):
+    """Get client IP address from request."""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    return request.META.get('REMOTE_ADDR')
+
+
+
 @login_required
 def generate_sku(request):
 
@@ -1154,115 +1167,110 @@ def delete_supplier(request, pk):
     return redirect("supplier_list")
 
 
-# purchases
+# inventory/views.py - Purchase Module
 
 def _generate_purchase_reference():
+    """Generate a unique purchase reference."""
     timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
     suffix = uuid.uuid4().hex[:4].upper()
     return f"PUR-{timestamp}-{suffix}"
 
 
+def _generate_po_reference():
+    """Generate a unique purchase order reference."""
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:4].upper()
+    return f"PO-{timestamp}-{suffix}"
+
+
+def _generate_grn_reference():
+    """Generate a unique goods receipt reference."""
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:4].upper()
+    return f"GRN-{timestamp}-{suffix}"
+
+
+# =============================================
+# PURCHASE VIEWS
+# =============================================
+
 @login_required
 @transaction.atomic
 def create_purchase(request):
+    """Create a new purchase (vendor invoice)."""
     business = get_business(request)
 
     suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
-    products = Inventory.objects.filter(business=business).order_by("product_name")
+    products = Inventory.objects.filter(business=business, status="active").order_by("product_name")
 
     if request.method == "POST":
-
         supplier_id = request.POST.get("supplier")
-        supplier = None
-
-        if supplier_id:
-            supplier = Supplier.objects.filter(
-                id=supplier_id, business=business
-            ).first()
-
-        if not supplier:
-            messages.error(request, "Please select a valid supplier.")
-            return render(request, "purchases/create_purchase.html", {
-                "business": business, "suppliers": suppliers, "products": products,
-            })
+        supplier = get_object_or_404(Supplier, id=supplier_id, business=business)
 
         try:
-            items = json.loads(request.POST.get("items_json", "[]"))
+            items_data = json.loads(request.POST.get("items_json", "[]"))
         except (json.JSONDecodeError, TypeError):
-            messages.error(request, "Could not read the purchase items — please try again.")
+            messages.error(request, "Invalid item data. Please try again.")
             return render(request, "purchases/create_purchase.html", {
-                "business": business, "suppliers": suppliers, "products": products,
+                "business": business,
+                "suppliers": suppliers,
+                "products": products,
             })
 
-        if not items:
+        if not items_data:
             messages.error(request, "Add at least one item to the purchase.")
             return render(request, "purchases/create_purchase.html", {
-                "business": business, "suppliers": suppliers, "products": products,
+                "business": business,
+                "suppliers": suppliers,
+                "products": products,
             })
 
-        try:
-            purchase_discount = Decimal(str(request.POST.get("purchase_discount", "0") or "0"))
-            purchase_tax = Decimal(str(request.POST.get("purchase_tax", "0") or "0"))
-        except InvalidOperation:
-            messages.error(request, "Discount and tax must be valid numbers.")
-            return render(request, "purchases/create_purchase.html", {
-                "business": business, "suppliers": suppliers, "products": products,
-            })
-
-        # Validate every line item BEFORE creating anything, so a bad item
-        # never leaves a half-built purchase behind.
+        # Validate and build items
         validated_items = []
-
-        for index, item in enumerate(items, start=1):
+        for idx, item in enumerate(items_data, 1):
             try:
-                product_id = item["product_id"]
-                qty = int(item["qty"])
-                cost = Decimal(str(item["cost"]))
-                discount = Decimal(str(item.get("discount", 0) or 0))
-                tax_percent = Decimal(str(item.get("tax", 0) or 0))
-            except (KeyError, ValueError, TypeError, InvalidOperation):
-                messages.error(request, f"Item {index} has invalid or missing data.")
+                product_id = int(item.get("product_id"))
+                qty = int(item.get("qty", 0))
+                cost = Decimal(str(item.get("cost", 0)))
+                discount = Decimal(str(item.get("discount", 0)))
+                tax_percent = Decimal(str(item.get("tax", 0)))
+                expiry = item.get("expiry") or None
+            except (ValueError, InvalidOperation) as e:
+                messages.error(request, f"Item {idx}: Invalid data format.")
                 return render(request, "purchases/create_purchase.html", {
-                    "business": business, "suppliers": suppliers, "products": products,
+                    "business": business, "suppliers": suppliers, "products": products
                 })
 
             if qty <= 0:
-                messages.error(request, f"Item {index}: quantity must be greater than zero.")
+                messages.error(request, f"Item {idx}: Quantity must be greater than zero.")
                 return render(request, "purchases/create_purchase.html", {
-                    "business": business, "suppliers": suppliers, "products": products,
+                    "business": business, "suppliers": suppliers, "products": products
                 })
 
             if cost < 0 or discount < 0 or tax_percent < 0:
-                messages.error(request, f"Item {index}: cost, discount, and tax cannot be negative.")
+                messages.error(request, f"Item {idx}: Negative values not allowed.")
                 return render(request, "purchases/create_purchase.html", {
-                    "business": business, "suppliers": suppliers, "products": products,
+                    "business": business, "suppliers": suppliers, "products": products
                 })
 
-            # NEW — optional per-line expiry date
-            expiry_date = None
-            raw_expiry = (item.get("expiry") or "").strip()
+            product = get_object_or_404(Inventory, id=product_id, business=business)
 
-            if raw_expiry:
+            # Validate expiry date
+            if expiry:
                 try:
-                    expiry_date = datetime.strptime(raw_expiry, "%Y-%m-%d").date()
+                    expiry_date = timezone.datetime.strptime(expiry, "%Y-%m-%d").date()
+                    if expiry_date <= timezone.now().date():
+                        messages.error(request, f"Item {idx}: Expiry date must be in the future.")
+                        return render(request, "purchases/create_purchase.html", {
+                            "business": business, "suppliers": suppliers, "products": products
+                        })
                 except ValueError:
-                    messages.error(request, f"Item {index}: expiry date is not a valid date.")
+                    messages.error(request, f"Item {idx}: Invalid expiry date format.")
                     return render(request, "purchases/create_purchase.html", {
-                        "business": business, "suppliers": suppliers, "products": products,
+                        "business": business, "suppliers": suppliers, "products": products
                     })
-
-                if expiry_date <= timezone.now().date():
-                    messages.error(request, f"Item {index}: expiry date must be in the future.")
-                    return render(request, "purchases/create_purchase.html", {
-                        "business": business, "suppliers": suppliers, "products": products,
-                    })
-
-            product = Inventory.objects.filter(pk=product_id, business=business).first()
-            if not product:
-                messages.error(request, f"Item {index}: product not found in your inventory.")
-                return render(request, "purchases/create_purchase.html", {
-                    "business": business, "suppliers": suppliers, "products": products,
-                })
+            else:
+                expiry_date = None
 
             validated_items.append({
                 "product": product,
@@ -1270,114 +1278,73 @@ def create_purchase(request):
                 "cost": cost,
                 "discount": discount,
                 "tax_percent": tax_percent,
-                "expiry_date": expiry_date,  # NEW
+                "expiry_date": expiry_date,
             })
 
-    # Everything validated — now safe to create records.
+        # Get purchase-level discounts
+        purchase_discount = Decimal(str(request.POST.get("purchase_discount", "0") or "0"))
+        purchase_tax = Decimal(str(request.POST.get("purchase_tax", "0") or "0"))
+
+        # Create purchase
         purchase = Purchase.objects.create(
             business=business,
             supplier=supplier,
             reference_number=_generate_purchase_reference(),
             created_by=request.user,
+            purchase_discount=purchase_discount,
+            purchase_tax_percent=purchase_tax,
             status="pending",
-            total_cost=Decimal("0.00"),
         )
 
-        for validated in validated_items:
+        # Create purchase items
+        for item in validated_items:
             PurchaseItem.objects.create(
                 purchase=purchase,
-                product=validated["product"],
-                quantity=validated["qty"],
-                unit_cost=validated["cost"],
-                discount=validated["discount"],
-                tax_percent=validated["tax_percent"],
-                expiry_date=validated["expiry_date"],
+                product=item["product"],
+                quantity=item["qty"],
+                unit_cost=item["cost"],
+                discount=item["discount"],
+                tax_percent=item["tax_percent"],
+                expiry_date=item["expiry_date"],
             )
 
-        purchase.calculate_totals(
-            purchase_discount=purchase_discount,
-            purchase_tax=purchase_tax,
-        )
+        # Calculate totals
+        purchase.calculate_totals()
 
+        # Update supplier metrics
         supplier.total_purchases += purchase.total_cost
         supplier.last_supply_date = timezone.now()
         supplier.save(update_fields=["total_purchases", "last_supply_date"])
 
-        messages.success(
-            request,
-            f'Purchase "{purchase.reference_number}" created successfully.'
+        # Create audit log
+        AuditLog.objects.create(
+            user=request.user,
+            action="Purchase Created",
+            description=f"{request.user.username} created purchase {purchase.reference_number} from {supplier.name}.",
+            content_type=ContentType.objects.get_for_model(Purchase),
+            object_id=purchase.id,
+            ip_address=get_client_ip(request),
         )
+
+        messages.success(request, f'Purchase "{purchase.reference_number}" created successfully.')
         return redirect("view_purchase", purchase.id)
 
     context = {
         "business": business,
         "suppliers": suppliers,
         "products": products,
+        "title": "Create Purchase",
     }
     return render(request, "purchases/create_purchase.html", context)
 
 
 @login_required
-@require_POST
-@transaction.atomic
-def post_purchase(request, pk):
-    business = get_business(request)
-
-    purchase = get_object_or_404(
-        Purchase.objects.select_for_update(),
-        id=pk,
-        business=business,
-    )
-
-    if purchase.status == "received":
-        messages.warning(request, "Purchase already posted.")
-        return redirect("view_purchase", pk=purchase.id)
-
-    if purchase.status == "cancelled":
-        messages.error(request, "Cannot post a cancelled purchase.")
-        return redirect("view_purchase", pk=purchase.id)
-
-    if not purchase.items.exists():
-        messages.error(request, "Cannot post a purchase with no items.")
-        return redirect("view_purchase", pk=purchase.id)
-
-    purchase.post_purchase(user=request.user)
-
-    messages.success(request, "Purchase posted successfully.")
-    return redirect("view_purchase", pk=purchase.id)
-
-
-@login_required
-def view_purchase(request, pk):
-    business = get_business(request)
-
-    purchase = get_object_or_404(
-        Purchase.objects.select_related("supplier", "created_by"),
-        id=pk,
-        business=business,
-    )
-
-    items = purchase.items.select_related("product")
-
-    # NEW — batches auto-created when this purchase was received
-    batches = purchase.batches_created.select_related("product").order_by("expiry_date")
-
-    context = {
-        "purchase": purchase,
-        "items": items,
-        "batches": batches,   # NEW
-        "business": business,
-    }
-
-    return render(request, "purchases/view_purchase.html", context)
-
-
-@login_required
 def purchase_list(request):
+    """List all purchases with filtering."""
     business = get_business(request)
 
     search = request.GET.get("search", "").strip()
-    status = request.GET.get("status", "").strip()
+    status_filter = request.GET.get("status", "").strip()
 
     purchases = Purchase.objects.filter(
         business=business
@@ -1389,186 +1356,274 @@ def purchase_list(request):
             Q(supplier__name__icontains=search)
         )
 
-    if status in ["draft", "pending", "received", "cancelled"]:
-        purchases = purchases.filter(status=status)
+    if status_filter in ["draft", "pending", "received", "cancelled"]:
+        purchases = purchases.filter(status=status_filter)
 
+    # KPIs
     total_purchases = purchases.count()
-
-    total_value = purchases.aggregate(
-        total=Coalesce(Sum("total_cost"), Decimal("0.00"))
-    )["total"]
-
+    total_value = purchases.aggregate(total=Sum("total_cost"))["total"] or Decimal("0.00")
     total_outstanding = purchases.aggregate(
-        total=Coalesce(Sum(F("total_cost") - F("paid_amount")), Decimal("0.00"))
-    )["total"]
+        total=Sum(F("total_cost") - F("paid_amount"))
+    )["total"] or Decimal("0.00")
 
+    # Pagination
     paginator = Paginator(purchases, 15)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     context = {
         "purchases": page_obj,
         "search": search,
-        "status": status,
+        "status": status_filter,
         "total_purchases": total_purchases,
         "total_value": total_value,
         "total_outstanding": total_outstanding,
         "business": business,
         "title": "Purchases",
     }
-
     return render(request, "purchases/purchase_list.html", context)
 
 
-# New
-
-def pending_po_count_api(request):
+@login_required
+def view_purchase(request, pk):
+    """View purchase details."""
     business = get_business(request)
-    count = PurchaseOrder.objects.filter(
-        business=business,
-        status__in=['draft', 'issued', 'partially_received']
-    ).count()
-    return JsonResponse({'count': count})
 
-
-def low_stock_count_api(request):
-    business = get_business(request)
-    count = Inventory.objects.filter(
+    purchase = get_object_or_404(
+        Purchase.objects.select_related("supplier", "created_by"),
+        id=pk,
         business=business,
-        stock_quantity__lte=5,
-        stock_quantity__gt=0
-    ).count()
-    return JsonResponse({'count': count})
+    )
+
+    items = purchase.items.select_related("product")
+    batches = purchase.batches_created.select_related("product").order_by("expiry_date")
+    payments = purchase.payments.all().order_by("-created_at")
+
+    context = {
+        "purchase": purchase,
+        "items": items,
+        "batches": batches,
+        "payments": payments,
+        "business": business,
+        "title": f"Purchase {purchase.reference_number}",
+    }
+    return render(request, "purchases/view_purchase.html", context)
 
 
 @login_required
-def purchase_order_list(request):
+@require_POST
+@transaction.atomic
+def post_purchase(request, pk):
+    """Post/receive a purchase - updates inventory."""
     business = get_business(request)
-    search = request.GET.get("search", "").strip()
-    status = request.GET.get("status", "").strip()
 
-    qs = PurchaseOrder.objects.filter(business=business).select_related("supplier", "created_by").order_by("-created_at")
-    if search:
-        qs = qs.filter(
-            Q(reference_number__icontains=search) |
-            Q(supplier__name__icontains=search)
-        )
-    if status:
-        qs = qs.filter(status=status)
+    purchase = get_object_or_404(
+        Purchase.objects.select_for_update(),
+        id=pk,
+        business=business,
+    )
 
-    paginator = Paginator(qs, 20)
-    page = paginator.get_page(request.GET.get("page"))
+    try:
+        purchase.post_purchase(user=request.user)
+        messages.success(request, "Purchase received successfully. Inventory updated.")
+    except Exception as e:
+        messages.error(request, str(e))
 
-    context = {"page_obj": page, "search": search, "status": status, "business": business, "title": "Purchase Orders"}
-    return render(request, "purchases/purchase_order_list.html", context)
+    return redirect("view_purchase", pk=purchase.id)
 
+
+# =============================================
+# PURCHASE ORDER VIEWS
+# =============================================
 
 @login_required
 @transaction.atomic
 def create_purchase_order(request):
+    """Create a new purchase order."""
     business = get_business(request)
+
     suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
-    products = Inventory.objects.filter(business=business).order_by("product_name")
+    products = Inventory.objects.filter(business=business, status="active").order_by("product_name")
 
     if request.method == "POST":
         supplier_id = request.POST.get("supplier")
-        supplier = Supplier.objects.filter(id=supplier_id, business=business).first()
-        if not supplier:
-            messages.error(request, "Select a valid supplier.")
-            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+        supplier = get_object_or_404(Supplier, id=supplier_id, business=business)
 
         try:
-            items = json.loads(request.POST.get("items_json", "[]"))
+            items_data = json.loads(request.POST.get("items_json", "[]"))
         except (json.JSONDecodeError, TypeError):
-            messages.error(request, "Invalid items JSON.")
-            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+            messages.error(request, "Invalid item data.")
+            return render(request, "purchases/create_purchase_order.html", {
+                "business": business, "suppliers": suppliers, "products": products
+            })
 
-        if not items:
+        if not items_data:
             messages.error(request, "Add at least one item.")
-            return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+            return render(request, "purchases/create_purchase_order.html", {
+                "business": business, "suppliers": suppliers, "products": products
+            })
 
+        # Create PO
         po = PurchaseOrder.objects.create(
             business=business,
             supplier=supplier,
             reference_number=_generate_po_reference(),
             created_by=request.user,
-            status="issued",
             expected_date=request.POST.get("expected_date") or None,
             notes=request.POST.get("notes", "").strip(),
+            status="issued",
         )
 
-        for it in items:
-            product = Inventory.objects.filter(pk=it.get("product_id"), business=business).first()
-            if not product:
-                continue
-            qty = int(it.get("qty", 0))
-            unit_cost = Decimal(str(it.get("cost", "0") or "0"))
-            discount = Decimal(str(it.get("discount", 0) or 0))
-            tax = Decimal(str(it.get("tax", 0) or 0))
-            expiry = it.get("expiry") or None
-            poi = PurchaseOrderItem.objects.create(
+        # Create PO items
+        for item in items_data:
+            product = get_object_or_404(Inventory, id=item.get("product_id"), business=business)
+            expiry = item.get("expiry") or None
+
+            PurchaseOrderItem.objects.create(
                 po=po,
                 product=product,
-                quantity=qty,
-                unit_cost=unit_cost,
-                discount=discount,
-                tax_percent=tax,
-                expiry_date=expiry or None,
+                quantity=int(item.get("qty", 0)),
+                unit_cost=Decimal(str(item.get("cost", 0))),
+                discount=Decimal(str(item.get("discount", 0))),
+                tax_percent=Decimal(str(item.get("tax", 0))),
+                expiry_date=expiry,
             )
 
-        messages.success(request, f"Purchase order {po.reference_number} created.")
+        # Audit log
+        AuditLog.objects.create(
+            user=request.user,
+            action="Purchase Order Created",
+            description=f"{request.user.username} created PO {po.reference_number}.",
+            content_type=ContentType.objects.get_for_model(PurchaseOrder),
+            object_id=po.id,
+            ip_address=get_client_ip(request),
+        )
+
+        messages.success(request, f'Purchase Order "{po.reference_number}" created successfully.')
         return redirect("view_purchase_order", po.id)
 
-    return render(request, "purchases/create_purchase_order.html", {"suppliers": suppliers, "products": products, "business": business})
+    context = {
+        "business": business,
+        "suppliers": suppliers,
+        "products": products,
+        "title": "Create Purchase Order",
+    }
+    return render(request, "purchases/create_purchase_order.html", context)
+
+
+@login_required
+def purchase_order_list(request):
+    """List all purchase orders."""
+    business = get_business(request)
+
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+
+    orders = PurchaseOrder.objects.filter(
+        business=business
+    ).select_related("supplier", "created_by").order_by("-created_at")
+
+    if search:
+        orders = orders.filter(
+            Q(reference_number__icontains=search) |
+            Q(supplier__name__icontains=search)
+        )
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    # KPIs
+    total_orders = orders.count()
+    pending_orders = orders.filter(status__in=["draft", "issued", "partially_received"]).count()
+    received_orders = orders.filter(status="received").count()
+    total_value = orders.aggregate(total=Sum("items__total_cost"))["total"] or Decimal("0.00")
+
+    paginator = Paginator(orders, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "page_obj": page_obj,
+        "search": search,
+        "status": status_filter,
+        "total_orders": total_orders,
+        "pending_orders": pending_orders,
+        "received_orders": received_orders,
+        "total_value": total_value,
+        "business": business,
+        "title": "Purchase Orders",
+    }
+    return render(request, "purchases/purchase_order_list.html", context)
 
 
 @login_required
 def view_purchase_order(request, pk):
+    """View purchase order details."""
     business = get_business(request)
-    po = get_object_or_404(PurchaseOrder.objects.select_related("supplier", "created_by"), id=pk, business=business)
+
+    po = get_object_or_404(
+        PurchaseOrder.objects.select_related("supplier", "created_by"),
+        id=pk,
+        business=business,
+    )
+
     items = po.items.select_related("product")
-    context = {"po": po, "items": items, "business": business}
+
+    context = {
+        "po": po,
+        "items": items,
+        "business": business,
+        "title": f"PO {po.reference_number}",
+    }
     return render(request, "purchases/view_purchase_order.html", context)
 
+
+# =============================================
+# GOODS RECEIPT VIEWS
+# =============================================
 
 @login_required
 @transaction.atomic
 def create_goods_receipt(request, po_pk=None):
-    """Create a GRN either against a PO or standalone. When created against a PO we
-    automatically generate a Purchase (vendor invoice) and post inventory using purchase.post_purchase()."""
+    """Create a goods receipt from a purchase order or standalone."""
     business = get_business(request)
-    suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
-    products = Inventory.objects.filter(business=business).order_by("product_name")
+
     po = None
     if po_pk:
         po = get_object_or_404(PurchaseOrder, pk=po_pk, business=business)
 
+    suppliers = Supplier.objects.filter(business=business, is_active=True).order_by("name")
+    products = Inventory.objects.filter(business=business, status="active").order_by("product_name")
+
     if request.method == "POST":
-        supplier_id = request.POST.get("supplier") or (po.supplier.id if po else None)
-        supplier = Supplier.objects.filter(id=supplier_id, business=business).first()
-        if not supplier:
-            messages.error(request, "Select a valid supplier.")
-            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+        supplier_id = request.POST.get("supplier")
+        if po:
+            supplier = po.supplier
+        else:
+            supplier = get_object_or_404(Supplier, id=supplier_id, business=business)
 
         try:
-            items = json.loads(request.POST.get("items_json", "[]"))
+            items_data = json.loads(request.POST.get("items_json", "[]"))
         except (json.JSONDecodeError, TypeError):
-            messages.error(request, "Invalid items JSON.")
-            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+            messages.error(request, "Invalid item data.")
+            return render(request, "purchases/create_goods_receipt.html", {
+                "business": business, "suppliers": suppliers, "products": products, "po": po
+            })
 
-        if not items:
+        if not items_data:
             messages.error(request, "Add at least one item.")
-            return render(request, "purchases/create_goods_receipt.html", {"suppliers": suppliers, "products": products, "business": business, "po": po})
+            return render(request, "purchases/create_goods_receipt.html", {
+                "business": business, "suppliers": suppliers, "products": products, "po": po
+            })
 
-        # Build a Purchase (invoice) mirror of the GRN so existing post_purchase can be used.
+        # Create Purchase (for inventory posting)
         purchase = Purchase.objects.create(
             business=business,
             supplier=supplier,
             reference_number=_generate_purchase_reference(),
             created_by=request.user,
             status="received",
-            total_cost=Decimal("0.00"),
         )
 
+        # Create GRN
         grn = GoodsReceipt.objects.create(
             business=business,
             purchase_order=po,
@@ -1576,19 +1631,18 @@ def create_goods_receipt(request, po_pk=None):
             receipt_number=_generate_grn_reference(),
             received_by=request.user,
             received_at=timezone.now(),
-            notes=request.POST.get("notes", ""),
+            notes=request.POST.get("notes", "").strip(),
             status="received",
         )
 
-        for it in items:
-            product = Inventory.objects.filter(pk=it.get("product_id"), business=business).first()
-            if not product:
-                continue
-            qty = int(it.get("qty", 0))
-            unit_cost = Decimal(str(it.get("cost", "0") or "0"))
-            expiry = it.get("expiry") or None
+        # Create items
+        for item in items_data:
+            product = get_object_or_404(Inventory, id=item.get("product_id"), business=business)
+            qty = int(item.get("qty", 0))
+            unit_cost = Decimal(str(item.get("cost", 0)))
+            expiry = item.get("expiry") or None
 
-            # create PurchaseItem (so calculating totals and post_purchase still works)
+            # Purchase item
             PurchaseItem.objects.create(
                 purchase=purchase,
                 product=product,
@@ -1596,56 +1650,118 @@ def create_goods_receipt(request, po_pk=None):
                 unit_cost=unit_cost,
                 discount=Decimal("0.00"),
                 tax_percent=Decimal("0.00"),
-                expiry_date=expiry or None,
+                expiry_date=expiry,
             )
 
+            # GRN item
             GoodsReceiptItem.objects.create(
                 grn=grn,
                 product=product,
                 quantity=qty,
                 unit_cost=unit_cost,
-                expiry_date=expiry or None,
+                expiry_date=expiry,
             )
 
-        # Calculate totals and post (this will update stock, create InventoryStockHistory and ProductBatch)
+        # Calculate totals and post
         purchase.calculate_totals()
         purchase.post_purchase(user=request.user)
 
-        # Update PO status if applicable
+        # Update PO status
         if po:
-            # mark PO received (basic — for partial receipts you'd need more logic)
             po.status = "received"
             po.save(update_fields=["status"])
 
-        messages.success(request, f"Goods received and posted (GRN: {grn.receipt_number}).")
+        # Audit log
+        AuditLog.objects.create(
+            user=request.user,
+            action="Goods Receipt Created",
+            description=f"{request.user.username} received goods via {grn.receipt_number}.",
+            content_type=ContentType.objects.get_for_model(GoodsReceipt),
+            object_id=grn.id,
+            ip_address=get_client_ip(request),
+        )
+
+        messages.success(request, f'Goods receipt "{grn.receipt_number}" created successfully.')
         return redirect("view_goods_receipt", grn.id)
 
-    context = {"suppliers": suppliers, "products": products, "business": business, "po": po}
+    context = {
+        "business": business,
+        "suppliers": suppliers,
+        "products": products,
+        "po": po,
+        "title": "Create Goods Receipt",
+    }
     return render(request, "purchases/create_goods_receipt.html", context)
 
 
 @login_required
 def goods_receipt_list(request):
+    """List all goods receipts."""
     business = get_business(request)
+
     search = request.GET.get("search", "").strip()
 
-    qs = GoodsReceipt.objects.filter(business=business).select_related("purchase_order", "purchase", "received_by").order_by("-created_at")
-    if search:
-        qs = qs.filter(Q(receipt_number__icontains=search) | Q(purchase__reference_number__icontains=search) | Q(purchase_order__reference_number__icontains=search))
+    receipts = GoodsReceipt.objects.filter(
+        business=business
+    ).select_related("purchase_order", "purchase", "received_by").order_by("-created_at")
 
-    paginator = Paginator(qs, 20)
-    page = paginator.get_page(request.GET.get("page"))
-    context = {"page_obj": page, "business": business, "search": search, "title": "Goods Receipts"}
+    if search:
+        receipts = receipts.filter(
+            Q(receipt_number__icontains=search) |
+            Q(purchase__reference_number__icontains=search) |
+            Q(purchase_order__reference_number__icontains=search)
+        )
+
+    # KPIs
+    total_receipts = receipts.count()
+    today_receipts = receipts.filter(received_at__date=timezone.now().date()).count()
+    pending_receipts = receipts.filter(status="draft").count()
+    total_value = receipts.aggregate(
+        total=Sum("purchase__total_cost")
+    )["total"] or Decimal("0.00")
+
+    paginator = Paginator(receipts, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    context = {
+        "page_obj": page_obj,
+        "search": search,
+        "total_receipts": total_receipts,
+        "today_receipts": today_receipts,
+        "pending_receipts": pending_receipts,
+        "total_value": total_value,
+        "business": business,
+        "title": "Goods Receipts",
+    }
     return render(request, "purchases/goods_receipt_list.html", context)
 
 
 @login_required
 def view_goods_receipt(request, pk):
+    """View goods receipt details."""
     business = get_business(request)
-    grn = get_object_or_404(GoodsReceipt.objects.select_related("purchase_order", "purchase", "received_by"), id=pk, business=business)
+
+    grn = get_object_or_404(
+        GoodsReceipt.objects.select_related("purchase_order", "purchase", "received_by"),
+        id=pk,
+        business=business,
+    )
+
     items = grn.items.select_related("product")
-    context = {"grn": grn, "items": items, "business": business}
+
+    context = {
+        "grn": grn,
+        "items": items,
+        "business": business,
+        "title": f"GRN {grn.receipt_number}",
+    }
     return render(request, "purchases/view_goods_receipt.html", context)
+
+
+# =============================================
+# SUPPLIER PAYMENT VIEWS
+# =============================================
+
 
 
 @login_required
@@ -1684,10 +1800,9 @@ def supplier_detail(request, pk):
 @login_required
 @transaction.atomic
 def supplier_payment(request, purchase_id):
+    """Record a supplier payment."""
     business = get_business(request)
 
-    # FIX: was missing business=business — any user could previously pay
-    # against any business's purchase by ID alone.
     purchase = get_object_or_404(
         Purchase.objects.select_related("supplier"),
         id=purchase_id,
@@ -1695,17 +1810,13 @@ def supplier_payment(request, purchase_id):
     )
 
     if request.method == "POST":
-        # Lock the purchase row before validating against its balance, so
-        # two concurrent payments can't both pass validation against the
-        # same stale balance.
-        locked_purchase = Purchase.objects.select_for_update().get(pk=purchase.pk)
-
-        form = SupplierPaymentForm(request.POST, purchase=locked_purchase)
+        form = SupplierPaymentForm(request.POST, purchase=purchase)
 
         if form.is_valid():
-            SupplierPayment.objects.create(
-                supplier=locked_purchase.supplier,
-                purchase=locked_purchase,
+            # Create payment
+            payment = SupplierPayment.objects.create(
+                supplier=purchase.supplier,
+                purchase=purchase,
                 amount_paid=form.cleaned_data["amount_paid"],
                 payment_method=form.cleaned_data["payment_method"],
                 external_reference=form.cleaned_data["external_reference"],
@@ -1713,7 +1824,17 @@ def supplier_payment(request, purchase_id):
                 created_by=request.user,
             )
 
-            messages.success(request, "Supplier payment recorded successfully.")
+            # Audit log
+            AuditLog.objects.create(
+                user=request.user,
+                action="Supplier Payment",
+                description=f"{request.user.username} paid {payment.amount_paid} to {purchase.supplier.name}.",
+                content_type=ContentType.objects.get_for_model(SupplierPayment),
+                object_id=payment.id,
+                ip_address=get_client_ip(request),
+            )
+
+            messages.success(request, f"Payment of GHS {payment.amount_paid} recorded successfully.")
             return redirect("view_purchase", purchase.id)
     else:
         form = SupplierPaymentForm(purchase=purchase)
@@ -1722,71 +1843,71 @@ def supplier_payment(request, purchase_id):
         "purchase": purchase,
         "business": business,
         "form": form,
+        "title": "Supplier Payment",
     }
-
     return render(request, "suppliers/supplier_payment.html", context)
 
 
 @login_required
 def supplier_payment_history(request):
+    """View supplier payment history."""
     business = get_business(request)
 
-    # =========================
-    # GET FILTER VALUES
-    # =========================
     search = request.GET.get("search", "").strip()
-    status = request.GET.get("status", "").strip()
+    status_filter = request.GET.get("status", "").strip()
 
-    # =========================
-    # BASE QUERY (OPTIMIZED)
-    # =========================
     payments = SupplierPayment.objects.select_related(
-        "supplier",
-        "purchase",
-        "created_by"
+        "supplier", "purchase", "created_by"
     ).filter(
         purchase__business=business
-    ).order_by(
-        "-created_at"
-    )
+    ).order_by("-created_at")
 
-    # =========================
-    # SEARCH FILTER
-    # =========================
     if search:
         payments = payments.filter(
             Q(reference__icontains=search) |
-            Q(external_reference__icontains=search) |
             Q(supplier__name__icontains=search) |
             Q(purchase__reference_number__icontains=search)
         )
 
-    # =========================
-    # STATUS FILTER (TAB SYSTEM)
-    # =========================
-    if status in ["pending", "partial", "paid"]:
-        payments = payments.filter(
-            purchase__payment_status=status
-        )
+    if status_filter in ["pending", "partial", "paid"]:
+        payments = payments.filter(purchase__payment_status=status_filter)
 
-    # =========================
-    # PAGINATION
-    # =========================
     paginator = Paginator(payments, 15)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator.get_page(request.GET.get("page"))
 
-    # =========================
-    # CONTEXT
-    # =========================
     context = {
         "business": business,
         "page_obj": page_obj,
         "search": search,
-        "status": status,
+        "status": status_filter,
+        "title": "Payment History",
     }
-
     return render(request, "suppliers/supplier_payment_history.html", context)
+
+
+# =============================================
+# API VIEWS
+# =============================================
+
+def pending_po_count_api(request):
+    """API endpoint for pending PO count."""
+    business = get_business(request)
+    count = PurchaseOrder.objects.filter(
+        business=business,
+        status__in=["draft", "issued", "partially_received"]
+    ).count()
+    return JsonResponse({"count": count})
+
+
+def low_stock_count_api(request):
+    """API endpoint for low stock count."""
+    business = get_business(request)
+    count = Inventory.objects.filter(
+        business=business,
+        stock_quantity__lte=5,
+        stock_quantity__gt=0
+    ).count()
+    return JsonResponse({"count": count})
 
 
 

@@ -1,114 +1,247 @@
+
+{% if messages %}
+<div class="toast-stack" id="toastStack">
+    {% for message in messages %}
+    <div class="toast-item toast-{{ message.tags|default:'info' }}" data-autodismiss="6000">
+
+        <div class="toast-icon">
+            {% if 'success' in message.tags %}
+                <i class="fas fa-check-circle"></i>
+            {% elif 'error' in message.tags or 'danger' in message.tags %}
+                <i class="fas fa-times-circle"></i>
+            {% elif 'warning' in message.tags %}
+                <i class="fas fa-exclamation-triangle"></i>
+            {% elif 'debug' in message.tags %}
+                <i class="fas fa-bug"></i>
+            {% else %}
+                <i class="fas fa-info-circle"></i>
+            {% endif %}
+        </div>
+
+        <div class="toast-body">
+            <div class="toast-title">
+                {% if 'success' in message.tags %}Success
+                {% elif 'error' in message.tags or 'danger' in message.tags %}Error
+                {% elif 'warning' in message.tags %}Warning
+                {% elif 'debug' in message.tags %}Debug
+                {% else %}Notice
+                {% endif %}
+            </div>
+            <div class="toast-text">{{ message }}</div>
+        </div>
+
+        <button type="button" class="toast-close" aria-label="Dismiss">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="toast-progress"></div>
+
+    </div>
+    {% endfor %}
+</div>
+
 <style>
 
-.alert {
-  position: relative;
-  padding: 0.75rem 1.25rem;
-  margin-bottom: 1rem;
-  border: 1px solid transparent; }
+.toast-stack{
+    position:fixed;
+    top:20px;
+    right:20px;
+    z-index:99999;
 
-.alert-heading {
-  color: inherit; }
+    display:flex;
+    flex-direction:column;
+    gap:12px;
 
-.alert-link {
-  font-weight: 700; }
+    max-width:380px;
+    width:calc(100% - 40px);
 
-.alert-dismissible .close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 0.75rem 1.25rem;
-  color: inherit; }
+    pointer-events:none;
+}
 
-.alert-primary {
-  color: #115770;
-  background-color: #d2eef7;
-  border-color: #c1e7f4; }
-  .alert-primary hr {
-    border-top-color: #abdff0; }
-  .alert-primary .alert-link {
-    color: #0a3544; }
+.toast-item{
+    position:relative;
 
-.alert-secondary {
-  color: #555f64;
-  background-color: #edf1f3;
-  border-color: #e6ebee; }
-  .alert-secondary hr {
-    border-top-color: #d7dfe4; }
-  .alert-secondary .alert-link {
-    color: #3e4548; }
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
 
-.alert-success {
-  color: #28623c;
-  background-color: #dbf2e3;
-  border-color: #cdedd8; }
-  .alert-success hr {
-    border-top-color: #bae6c9; }
-  .alert-success .alert-link {
-    color: #193e26; }
+    padding:16px 42px 18px 16px;
 
-.alert-info {
-  color: #336573;
-  background-color: #e0f3f8;
-  border-color: #d3eef6; }
-  .alert-info hr {
-    border-top-color: #bee6f2; }
-  .alert-info .alert-link {
-    color: #234650; }
+    border-radius:16px;
 
-.alert-warning {
-  color: #856404;
-  background-color: #fff3cd;
-  border-color: #ffeeba; }
-  .alert-warning hr {
-    border-top-color: #ffe8a1; }
-  .alert-warning .alert-link {
-    color: #533f03; }
+    background:var(--bg-card, #0f172a);
+    border:1px solid var(--border, rgba(255,255,255,0.08));
 
-.alert-error {
-  color: #f8f8ff;
-  background-color: #ff6961;
-  border-color: #fdd6d6; }
-  .alert-danger hr {
-    border-top-color: #fcbebe; }
-  .alert-danger .alert-link {
-    color: #5d2929; }
+    box-shadow:0 20px 45px rgba(0,0,0,0.35);
 
-.alert-light {
-  color: #7d7e7f;
-  background-color: #fcfdfd;
-  border-color: #fbfcfc; }
-  .alert-light hr {
-    border-top-color: #ecf1f1; }
-  .alert-light .alert-link {
-    color: #646565; }
+    overflow:hidden;
 
-.alert-dark {
-  color: #151c20;
-  background-color: #d4d7d8;
-  border-color: #c3c7c9; }
-  .alert-dark hr {
-    border-top-color: #b6babd; }
-  .alert-dark .alert-link {
-    color: #010101; }
+    pointer-events:auto;
 
+    animation:toastIn .35s ease;
+}
+
+.toast-item.toast-out{
+    animation:toastOut .3s ease forwards;
+}
+
+.toast-icon{
+    width:34px;
+    height:34px;
+    flex-shrink:0;
+
+    border-radius:10px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:15px;
+    color:#fff;
+}
+
+.toast-success .toast-icon{ background:var(--success, #10b981); }
+.toast-error   .toast-icon,
+.toast-danger  .toast-icon{ background:var(--danger, #ef4444); }
+.toast-warning .toast-icon{ background:var(--warning, #f59e0b); }
+.toast-info    .toast-icon,
+.toast-debug   .toast-icon{ background:var(--info, #3b82f6); }
+
+.toast-body{
+    flex:1;
+    min-width:0;
+    font-family:'Inter', sans-serif;
+}
+
+.toast-title{
+    font-size:13px;
+    font-weight:800;
+    color:var(--text-main, #f8fafc);
+    margin-bottom:2px;
+}
+
+.toast-text{
+    font-size:13px;
+    line-height:1.5;
+    color:var(--text-muted, #94a3b8);
+    word-break:break-word;
+}
+
+.toast-close{
+    position:absolute;
+    top:12px;
+    right:12px;
+
+    width:24px;
+    height:24px;
+
+    border:none;
+    border-radius:8px;
+
+    background:rgba(255,255,255,0.06);
+    color:var(--text-muted, #94a3b8);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:11px;
+    cursor:pointer;
+
+    transition:.2s ease;
+}
+
+.toast-close:hover{
+    background:rgba(255,255,255,0.12);
+    color:#fff;
+}
+
+.toast-progress{
+    position:absolute;
+    left:0;
+    bottom:0;
+
+    height:3px;
+    width:100%;
+
+    background:rgba(255,255,255,0.35);
+
+    transform-origin:left;
+
+    animation:toastProgress 6s linear forwards;
+}
+
+.toast-success .toast-progress{ background:var(--success, #10b981); }
+.toast-error   .toast-progress,
+.toast-danger  .toast-progress{ background:var(--danger, #ef4444); }
+.toast-warning .toast-progress{ background:var(--warning, #f59e0b); }
+.toast-info    .toast-progress,
+.toast-debug   .toast-progress{ background:var(--info, #3b82f6); }
+
+@keyframes toastIn{
+    from{ opacity:0; transform:translateX(30px); }
+    to{ opacity:1; transform:translateX(0); }
+}
+
+@keyframes toastOut{
+    from{ opacity:1; transform:translateX(0); max-height:200px; margin-bottom:0; }
+    to{ opacity:0; transform:translateX(30px); max-height:0; margin-bottom:-12px; }
+}
+
+@keyframes toastProgress{
+    from{ transform:scaleX(1); }
+    to{ transform:scaleX(0); }
+}
+
+@media(max-width:480px){
+    .toast-stack{
+        left:12px;
+        right:12px;
+        top:12px;
+        max-width:none;
+        width:auto;
+    }
+}
 
 </style>
 
-{% if messages %}
-{% for message in messages%}
-<div id="message" class="container">
-    <div class="alert alert-{{ message.tags }} alert-dismissible text-center" role="alert">
-        <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></button>
-        <strong>
-            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-            Error:
-            {% else %}
-            {{ message.tags | title }}
-            {% endif %}
-        </strong>
-        {{ message }}
-    </div>
-</div>
-{% endfor %}
-{% endif %}
+<script>
+(function () {
+    function dismissToast(toast) {
+        if (!toast || toast.dataset.dismissed) return;
+        toast.dataset.dismissed = 'true';
+        toast.classList.add('toast-out');
+        setTimeout(function () {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+    }
 
+    document.querySelectorAll('#toastStack .toast-item').forEach(function (toast) {
+        var ms = parseInt(toast.dataset.autodismiss, 10) || 6000;
+
+        var progress = toast.querySelector('.toast-progress');
+        if (progress) progress.style.animationDuration = ms + 'ms';
+
+        var closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+                dismissToast(toast);
+            });
+        }
+
+        var timer = setTimeout(function () { dismissToast(toast); }, ms);
+
+        // Pause auto-dismiss while the user is reading it, resume on mouse-leave.
+        toast.addEventListener('mouseenter', function () {
+            clearTimeout(timer);
+            if (progress) progress.style.animationPlayState = 'paused';
+        });
+        toast.addEventListener('mouseleave', function () {
+            timer = setTimeout(function () { dismissToast(toast); }, ms);
+            if (progress) progress.style.animationPlayState = 'running';
+        });
+    });
+})();
+</script>
+
+{% endif %}
