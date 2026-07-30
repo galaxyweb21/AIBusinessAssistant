@@ -9,9 +9,6 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-"""
-Django settings for AIBusinessAssistant project.
-"""
 
 from pathlib import Path
 import os
@@ -196,6 +193,25 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ================= CACHE =================
+# Used by business.context_processors.sidebar_counts to avoid re-querying
+# low-stock/pending-sales/customer counts on every page load.
+# LocMemCache is Django's built-in default (no extra dependency) and is
+# what you'd get even without this block -- it's just made explicit here.
+# NOTE: LocMemCache is per-process. If this app ever runs with multiple
+# worker processes (gunicorn/uwsgi with >1 worker), each process keeps its
+# own cache, so a sidebar count invalidated by a signal in one worker can
+# still show stale for up to CACHE_TTL_SECONDS in another. Since
+# CELERY_BROKER_URL below already points at Redis, swapping this to
+# django-redis (or django.core.cache.backends.redis.RedisCache on
+# Django 4.0+) would fix that and is a one-block change here.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
 
 
 # ================= MEDIA FILES =================
