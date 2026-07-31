@@ -89,4 +89,7 @@ urlpatterns = [
     path("transfers/<int:pk>/receive/", views.transfer_receive, name="transfer_receive"),
     path("transfers/<int:pk>/cancel/", views.transfer_cancel, name="transfer_cancel"),
 
+
+    path("purchase-orders/<int:po_pk>/receive/", views.create_goods_receipt, name="receive_purchase_order"),
+
 ]

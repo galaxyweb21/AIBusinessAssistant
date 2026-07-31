@@ -316,54 +316,6 @@ class DamageForm(forms.Form):
         return quantity
 
 
-class SupplierPaymentForm(forms.Form):
-    amount_paid = forms.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        min_value=Decimal("0.01"),
-        label="Amount Paid",
-        widget=forms.NumberInput(attrs={
-            "class": "form-control",
-            "placeholder": "0.00",
-            "step": "0.01",
-        }),
-    )
-    payment_method = forms.ChoiceField(
-        choices=[
-            ("cash", "Cash"),
-            ("bank", "Bank Transfer"),
-            ("mobile_money", "Mobile Money"),
-        ],
-        widget=forms.Select(attrs={"class": "form-control"}),
-    )
-    external_reference = forms.CharField(
-        required=False,
-        max_length=50,
-        label="Bank / MoMo Reference (optional)",
-        widget=forms.TextInput(attrs={
-            "class": "form-control",
-            "placeholder": "e.g. transaction ID",
-        }),
-    )
-    note = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-    )
-
-    def __init__(self, *args, **kwargs):
-        self.purchase = kwargs.pop("purchase", None)
-        super().__init__(*args, **kwargs)
-
-    def clean_amount_paid(self):
-        amount = self.cleaned_data["amount_paid"]
-        if self.purchase and amount > self.purchase.balance:
-            raise forms.ValidationError(
-                f"Payment exceeds remaining balance of Gh¢{self.purchase.balance}."
-            )
-        return amount
-
-
-
 class ProductBatchForm(forms.ModelForm):
 
     also_add_to_stock = forms.BooleanField(
@@ -445,7 +397,6 @@ class DisposeBatchForm(forms.Form):
         return qty
 
 
-
 class LabelTemplateForm(forms.ModelForm):
     class Meta:
         model = LabelTemplate
@@ -475,3 +426,182 @@ class WarehouseForm(forms.ModelForm):
             "location": forms.TextInput(attrs={"placeholder": "e.g. Spintex Road, Accra"}),
             "phone": forms.TextInput(attrs={"placeholder": "e.g. 024 123 4567"}),
         }
+
+
+class PurchaseForm(forms.ModelForm):
+    """Form for creating and editing purchases."""
+
+    class Meta:
+        model = Purchase
+        fields = ["supplier", "purchase_discount", "purchase_tax_percent", "status"]
+        widgets = {
+            "purchase_discount": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "0.01",
+                "min": "0",
+                "placeholder": "0.00"
+            }),
+            "purchase_tax_percent": forms.NumberInput(attrs={
+                "class": "form-control",
+                "step": "0.01",
+                "min": "0",
+                "placeholder": "0.00"
+            }),
+        }
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if business:
+            self.fields["supplier"].queryset = Supplier.objects.filter(
+                business=business, is_active=True
+            ).order_by("name")
+
+        for field in self.fields.values():
+            if hasattr(field.widget, "attrs"):
+                field.widget.attrs.setdefault("class", "form-control")
+
+
+class PurchaseItemForm(forms.ModelForm):
+    """Form for purchase items (inline formset)."""
+
+    class Meta:
+        model = PurchaseItem
+        fields = ["product", "quantity", "unit_cost", "discount", "tax_percent", "expiry_date"]
+        widgets = {
+            "expiry_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        }
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if business:
+            self.fields["product"].queryset = Inventory.objects.filter(
+                business=business, status="active"
+            ).order_by("product_name")
+
+        for field in self.fields.values():
+            if hasattr(field.widget, "attrs"):
+                field.widget.attrs.setdefault("class", "form-control")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        quantity = cleaned_data.get("quantity")
+        unit_cost = cleaned_data.get("unit_cost")
+
+        if quantity and quantity <= 0:
+            self.add_error("quantity", "Quantity must be greater than zero.")
+
+        if unit_cost and unit_cost < 0:
+            self.add_error("unit_cost", "Unit cost cannot be negative.")
+
+        return cleaned_data
+
+
+class PurchaseOrderForm(forms.ModelForm):
+    """Form for creating and editing purchase orders."""
+
+    class Meta:
+        model = PurchaseOrder
+        fields = ["supplier", "expected_date", "notes", "status"]
+        widgets = {
+            "expected_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Additional notes..."}),
+        }
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if business:
+            self.fields["supplier"].queryset = Supplier.objects.filter(
+                business=business, is_active=True
+            ).order_by("name")
+
+        for field in self.fields.values():
+            if hasattr(field.widget, "attrs"):
+                field.widget.attrs.setdefault("class", "form-control")
+
+
+class PurchaseOrderItemForm(forms.ModelForm):
+    """Form for purchase order items."""
+
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ["product", "quantity", "unit_cost", "discount", "tax_percent", "expiry_date"]
+        widgets = {
+            "expiry_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        }
+
+    def __init__(self, *args, business=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if business:
+            self.fields["product"].queryset = Inventory.objects.filter(
+                business=business, status="active"
+            ).order_by("product_name")
+
+        for field in self.fields.values():
+            if hasattr(field.widget, "attrs"):
+                field.widget.attrs.setdefault("class", "form-control")
+
+
+class GoodsReceiptForm(forms.ModelForm):
+    """Form for creating goods receipts."""
+
+    class Meta:
+        model = GoodsReceipt
+        fields = ["notes", "status"]
+        widgets = {
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 3, "placeholder": "Receipt notes..."}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if hasattr(field.widget, "attrs"):
+                field.widget.attrs.setdefault("class", "form-control")
+
+
+class SupplierPaymentForm(forms.Form):
+    """Form for recording supplier payments."""
+
+    amount_paid = forms.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        label="Amount Paid",
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "placeholder": "0.00",
+            "step": "0.01",
+        }),
+    )
+    payment_method = forms.ChoiceField(
+        choices=[
+            ("cash", "Cash"),
+            ("bank", "Bank Transfer"),
+            ("mobile_money", "Mobile Money"),
+        ],
+        widget=forms.Select(attrs={"class": "form-control"}),
+    )
+    external_reference = forms.CharField(
+        required=False,
+        max_length=50,
+        label="Reference",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Transaction ID",
+        }),
+    )
+    note = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 2, "placeholder": "Payment note..."}),
+    )
+
+    def __init__(self, *args, purchase=None, **kwargs):
+        self.purchase = purchase
+        super().__init__(*args, **kwargs)
+
+    def clean_amount_paid(self):
+        amount = self.cleaned_data["amount_paid"]
+        if self.purchase and amount > self.purchase.balance:
+            raise ValidationError(
+                f"Payment exceeds remaining balance of GHS {self.purchase.balance}."
+            )
+        return amount

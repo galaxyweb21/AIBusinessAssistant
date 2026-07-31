@@ -23,6 +23,8 @@ from django.shortcuts import render, get_object_or_404
 from django.db.models import Prefetch
 from django.contrib.contenttypes.models import ContentType
 from .utils import get_client_ip
+from django.http import JsonResponse
+from dashboard.services.alerts import generate_business_alerts
 
 from datetime import timedelta
 from .get_business import get_business
@@ -490,20 +492,29 @@ def register_staff(request):
     )
 
 
+
 @login_required
 @transaction.atomic
 def update_staff(request, staff_id):
-
+    """
+    Update an existing staff member's details.
+    """
     user = request.user
-
     business = get_business(request)
 
-    form = UpdateUserForm(instance=user)
+    # Get the staff profile to update
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related('staff'),
+        id=staff_id,
+        business=business
+    )
+
+    # Initialize forms with existing data
+    form = UpdateUserForm(instance=staff.staff)
     pform = StaffProfileForm(instance=staff)
 
     if request.method == "POST":
-
-        form = UpdateUserForm(request.POST, instance=user)
+        form = UpdateUserForm(request.POST, instance=staff.staff)
         pform = StaffProfileForm(
             request.POST,
             request.FILES,
@@ -511,39 +522,26 @@ def update_staff(request, staff_id):
         )
 
         if form.is_valid() and pform.is_valid():
+            # Save user instance
+            user_instance = form.save()
 
-            instance = form.save()
+            # Save profile instance
             profile = pform.save(commit=False)
+            profile.business = business
             profile.save()
 
-            # =========================
-            # CREATE AUDIT LOG
-            # =========================
-
+            # Create audit log
             AuditLog.objects.create(
-
                 user=request.user,
-
-                action="Staff Registration",
-
+                action="Staff Updated",
                 description=(
-                    f"{request.user.username} "
-                    f"updated staff details "
-                    f"'{instance.username}' "
-                    f"with role "
+                    f"{request.user.username} updated staff details "
+                    f"'{user_instance.username}' with role "
                     f"'{profile.role_type}'"
                 ),
-
-                content_type=ContentType.objects.get_for_model(
-                    profile
-                ),
-
+                content_type=ContentType.objects.get_for_model(profile),
                 object_id=profile.id,
-
-                ip_address=get_client_ip(
-                    request
-                )
-
+                ip_address=get_client_ip(request)
             )
 
             messages.success(request, "Staff updated successfully.")
@@ -551,18 +549,11 @@ def update_staff(request, staff_id):
 
         messages.error(request, "Please correct the errors below.")
 
-    # =========================
-    # 🔥 ANALYTICS FIX HERE
-    # =========================
-
-    staff_qs = StaffProfile.objects.filter(business = get_business(request))
-
+    # Analytics data
+    staff_qs = StaffProfile.objects.filter(business=business)
     total_staff = staff_qs.count()
-
     admin_count = staff_qs.filter(role_type="Admin").count()
-
     cashier_count = staff_qs.filter(role_type="Cashier").count()
-
     today_staff = staff_qs.filter(
         staff__date_joined__date=timezone.now().date()
     ).count()
@@ -573,13 +564,11 @@ def update_staff(request, staff_id):
         "staff": staff,
         "user": user,
         "business": business,
-
-        # 🔥 FIXED ANALYTICS
         "total_staff": total_staff,
         "admin_count": admin_count,
         "cashier_count": cashier_count,
         "today_staff": today_staff,
-        "title": "Update staff " + str(user.first_name) + " details"
+        "title": f"Update staff {staff.staff.first_name} details"
     }
 
     return render(request, "accounts/update_staff.html", context)
@@ -588,145 +577,147 @@ def update_staff(request, staff_id):
 @login_required
 @transaction.atomic
 def deactivate_staff(request, staff_id):
-
-    user = User.objects.get(id=request.user.id)
-
+    """
+    Deactivate a staff member.
+    """
+    user = request.user
     business = get_business(request)
+
+    # Get the staff profile
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related('staff'),
+        id=staff_id,
+        business=business
+    )
 
     # Prevent repeated deactivation
     if not staff.is_active:
-
-        messages.warning(
-            request,
-            "Staff is already inactive."
-        )
-
+        messages.warning(request, "Staff is already inactive.")
         return redirect("staff_list")
 
-    # ==========================
-    # DEACTIVATE STAFF
-    # ==========================
-
+    # Deactivate staff
     staff.is_active = False
     staff.save()
 
-    # ==========================
-    # AUDIT LOG
-    # ==========================
-
+    # Create audit log
     AuditLog.objects.create(
-
-        # user performing action
         user=request.user,
-
         action="Staff Deactivation",
-
         description=(
             f"{request.user.first_name or request.user.username} "
             f"deactivated staff "
-            f"'{staff.staff.first_name} "
-            f"{staff.staff.last_name}' "
+            f"'{staff.staff.first_name} {staff.staff.last_name}' "
             f"with role '{staff.role_type}'"
         ),
-
-        content_type=ContentType.objects.get_for_model(
-            StaffProfile
-        ),
-
+        content_type=ContentType.objects.get_for_model(StaffProfile),
         object_id=staff.id,
-
-        ip_address=get_client_ip(
-            request
-        )
+        ip_address=get_client_ip(request)
     )
 
-    messages.success(
-        request,
-        "Staff deactivated successfully."
-    )
-
+    messages.success(request, "Staff deactivated successfully.")
     return redirect("staff_list")
 
 
 @login_required
 @transaction.atomic
 def reactivate_staff(request, staff_id):
+    """
+    Reactivate a deactivated staff member.
+    """
     business = get_business(request)
 
+    # Get the staff profile
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related('staff'),
+        id=staff_id,
+        business=business
+    )
+
+    # Prevent reactivation if already active
+    if staff.is_active:
+        messages.warning(request, "Staff is already active.")
+        return redirect("staff_list")
+
+    # Reactivate staff
     staff.is_active = True
     staff.save()
 
+    # Create audit log
     AuditLog.objects.create(
-
         user=request.user,
-
         action="Staff Reactivation",
-
         description=(
             f"{request.user.first_name or request.user.username} "
             f"reactivated "
-            f"'{staff.staff.first_name} "
-            f"{staff.staff.last_name}' "
+            f"'{staff.staff.first_name} {staff.staff.last_name}' "
             f"with role '{staff.role_type}'"
         ),
-
-        content_object=staff,
-
-        ip_address=request.META.get(
-            "REMOTE_ADDR"
-        )
+        content_type=ContentType.objects.get_for_model(StaffProfile),
+        object_id=staff.id,
+        ip_address=get_client_ip(request)
     )
 
-    messages.success(
-        request,
-        "Staff reactivated successfully."
-    )
-
-    return redirect(
-        "staff_list"
-    )
+    messages.success(request, "Staff reactivated successfully.")
+    return redirect("staff_list")
 
 
 @login_required
 @transaction.atomic
 def delete_staff(request, staff_id):
+    """
+    Permanently delete a staff member and their associated user account.
+    """
     business = get_business(request)
 
-    user = staff_profile.staff
+    # Get the staff profile with the related user
+    staff = get_object_or_404(
+        StaffProfile.objects.select_related('staff'),
+        id=staff_id,
+        business=business
+    )
+
+    # Store user information for audit log before deletion
+    user_to_delete = staff.staff
+    staff_username = user_to_delete.username
+    staff_full_name = f"{user_to_delete.first_name} {user_to_delete.last_name}"
+    staff_role = staff.role_type
 
     if request.method == "POST":
+        # Create audit log before deletion
         AuditLog.objects.create(
-
             user=request.user,
-
             action="Staff Deleted",
-
             description=(
                 f"{request.user.username} permanently deleted staff "
-                f"'{staff_profile.staff.first_name} "
-                f"{staff_profile.staff.last_name}' "
-                f"({staff_profile.staff.username}) "
-                f"from the system."
+                f"'{staff_full_name}' ({staff_username}) "
+                f"with role '{staff_role}' from the system."
             ),
-
             content_type=ContentType.objects.get_for_model(StaffProfile),
-
-            object_id=staff_profile.id,
-
-            ip_address=request.META.get("REMOTE_ADDR")
+            object_id=staff.id,
+            ip_address=get_client_ip(request)
         )
 
-        staff_profile.delete()
-        user.delete()
+        # Delete the staff profile (will cascade to related objects if set)
+        staff.delete()
+
+        # Delete the associated user account
+        user_to_delete.delete()
 
         messages.success(
             request,
-            "Staff deleted successfully."
+            f"Staff '{staff_full_name}' deleted successfully."
         )
 
         return redirect("staff_list")
 
+    # GET request - show confirmation page
+    context = {
+        "staff": staff,
+        "business": business,
+        "title": f"Delete Staff - {staff_full_name}"
+    }
 
+    return render(request, "accounts/delete_staff.html", context)
 @login_required
 def staff_list_view(request):
 

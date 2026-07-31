@@ -75,7 +75,7 @@ INSTALLED_APPS = [
     'sales',
     'dashboard',
     'accounts',
-    'catalog'
+    'catalog',
 ]
 
 MIDDLEWARE = [

@@ -160,6 +160,50 @@ body{
    BRAND
 ========================================= */
 
+.brand-mark{
+    display:flex;
+    align-items:center;
+    gap:12px;
+
+    margin-bottom:30px;
+}
+
+.brand-mark-icon{
+    width:38px;
+    height:38px;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,0.14);
+    backdrop-filter:blur(10px);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:15px;
+
+    flex-shrink:0;
+}
+
+.brand-mark-text{
+    display:flex;
+    flex-direction:column;
+    line-height:1.2;
+}
+
+.brand-mark-name{
+    font-weight:800;
+    font-size:14px;
+}
+
+.brand-mark-tagline{
+    font-size:10px;
+    color:rgba(255,255,255,0.75);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
 .brand-logo{
     width:78px;
     height:78px;
@@ -177,6 +221,161 @@ body{
     font-size:30px;
 
     margin-bottom:35px;
+}
+
+/* =========================================
+   FORM COMPLETION PROGRESS BAR
+========================================= */
+
+.form-progress{
+    margin-bottom:30px;
+}
+
+.form-progress-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-muted);
+}
+
+.form-progress-top span{
+    color:var(--text-main);
+}
+
+.form-progress-track{
+    width:100%;
+    height:8px;
+
+    border-radius:999px;
+
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+
+    overflow:hidden;
+}
+
+.form-progress-fill{
+    height:100%;
+    width:0%;
+
+    border-radius:999px;
+
+    background:linear-gradient(90deg,var(--primary),var(--primary-dark));
+
+    transition:width .3s ease;
+}
+
+/* =========================================
+   PASSWORD STRENGTH METER
+========================================= */
+
+.pw-meter{
+    margin-top:10px;
+}
+
+.pw-meter-track{
+    width:100%;
+    height:6px;
+
+    border-radius:999px;
+
+    background:rgba(255,255,255,0.08);
+
+    overflow:hidden;
+}
+
+.pw-meter-fill{
+    height:100%;
+    width:0%;
+
+    border-radius:999px;
+
+    background:transparent;
+
+    transition:width .25s ease, background .25s ease;
+}
+
+.pw-meter-label{
+    margin-top:6px;
+
+    font-size:12px;
+    font-weight:700;
+
+    color:var(--text-muted);
+
+    transition:color .2s ease;
+}
+
+.pw-checklist{
+    list-style:none;
+
+    margin:10px 0 0;
+    padding:0;
+
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 14px;
+}
+
+.pw-checklist li{
+    display:flex;
+    align-items:center;
+    gap:6px;
+
+    font-size:11.5px;
+    color:var(--text-muted);
+
+    transition:color .2s ease;
+}
+
+.pw-checklist li i{
+    font-size:11px;
+    color:rgba(255,255,255,0.25);
+
+    transition:color .2s ease;
+}
+
+.pw-checklist li.met{
+    color:#a7f3d0;
+}
+
+.pw-checklist li.met i{
+    color:var(--success);
+}
+
+/* =========================================
+   CONFIRM PASSWORD MATCH
+========================================= */
+
+.pw-match{
+    display:none;
+    align-items:center;
+    gap:6px;
+
+    margin-top:8px;
+
+    font-size:12px;
+    font-weight:600;
+}
+
+.pw-match.match{
+    color:#a7f3d0;
+}
+
+.pw-match.match i{
+    color:var(--success);
+}
+
+.pw-match.no-match{
+    color:#fecaca;
+}
+
+.pw-match.no-match i{
+    color:var(--danger);
 }
 
 .auth-left h1{
@@ -514,6 +713,14 @@ body{
         ====================================== -->
         <div class="auth-left">
 
+            <div class="brand-mark">
+                <div class="brand-mark-icon"><i class="fas fa-gem"></i></div>
+                <div class="brand-mark-text">
+                    <span class="brand-mark-name">Business Assistant</span>
+                    <span class="brand-mark-tagline">Smart ERP Platform</span>
+                </div>
+            </div>
+
             <div class="brand-logo">
                 <i class="fas fa-building"></i>
             </div>
@@ -577,8 +784,19 @@ body{
                 </p>
             </div>
 
+            <div class="form-progress">
+                <div class="form-progress-top">
+                    <span>Registration progress</span>
+                    <span id="formProgressPct">0%</span>
+                </div>
+                <div class="form-progress-track">
+                    <div class="form-progress-fill" id="formProgressFill"></div>
+                </div>
+            </div>
+
             <form method="POST"
-                  enctype="multipart/form-data">
+                  enctype="multipart/form-data"
+                  id="registerForm">
 
                 {% csrf_token %}
 
@@ -622,12 +840,32 @@ body{
                             <label>Password</label>
                             {{ form.password1 }}
                             {{ form.password1.errors }}
+
+                            <div class="pw-meter">
+                                <div class="pw-meter-track">
+                                    <div class="pw-meter-fill" id="pwMeterFill"></div>
+                                </div>
+                                <div class="pw-meter-label" id="pwMeterLabel">Enter a password</div>
+                            </div>
+
+                            <ul class="pw-checklist" id="pwChecklist">
+                                <li data-rule="length"><i class="fas fa-circle"></i> At least 8 characters</li>
+                                <li data-rule="upper"><i class="fas fa-circle"></i> One uppercase letter</li>
+                                <li data-rule="lower"><i class="fas fa-circle"></i> One lowercase letter</li>
+                                <li data-rule="number"><i class="fas fa-circle"></i> One number</li>
+                                <li data-rule="special"><i class="fas fa-circle"></i> One special character</li>
+                            </ul>
                         </div>
 
                         <div class="form-group">
                             <label>Confirm Password</label>
                             {{ form.password2 }}
                             {{ form.password2.errors }}
+
+                            <div class="pw-match" id="pwMatch">
+                                <i class="fas fa-circle-notch"></i>
+                                <span id="pwMatchText"></span>
+                            </div>
                         </div>
 
                     </div>
@@ -722,6 +960,136 @@ body{
     </div>
 
 </div>
+
+<script>
+(function () {
+    // =========================================
+    // LIVE PASSWORD STRENGTH + REQUIREMENTS
+    // =========================================
+    // This is a client-side UX aid only -- it does not replace or bypass
+    // Django's real password validators (AUTH_PASSWORD_VALIDATORS in
+    // settings.py still run server-side and are the actual source of
+    // truth). This just gives instant feedback while typing.
+    var pw1 = document.getElementById('id_password1');
+    var pw2 = document.getElementById('id_password2');
+
+    if (pw1) {
+        var fill = document.getElementById('pwMeterFill');
+        var label = document.getElementById('pwMeterLabel');
+        var checklist = document.getElementById('pwChecklist');
+        var matchBox = document.getElementById('pwMatch');
+        var matchText = document.getElementById('pwMatchText');
+
+        var rules = {
+            length: function (v) { return v.length >= 8; },
+            upper: function (v) { return /[A-Z]/.test(v); },
+            lower: function (v) { return /[a-z]/.test(v); },
+            number: function (v) { return /[0-9]/.test(v); },
+            special: function (v) { return /[^A-Za-z0-9]/.test(v); }
+        };
+
+        var levels = [
+            { color: '#ef4444', text: 'Weak' },
+            { color: '#f59e0b', text: 'Fair' },
+            { color: '#eab308', text: 'Good' },
+            { color: '#22c55e', text: 'Strong' },
+            { color: '#10b981', text: 'Very Strong' }
+        ];
+
+        function evaluate(v) {
+            var passed = 0;
+            Object.keys(rules).forEach(function (key) {
+                var ok = rules[key](v);
+                var li = checklist.querySelector('[data-rule="' + key + '"]');
+                if (li) {
+                    li.classList.toggle('met', ok);
+                    li.querySelector('i').className = ok ? 'fas fa-check-circle' : 'fas fa-circle';
+                }
+                if (ok) passed++;
+            });
+            return passed;
+        }
+
+        function updateMeter(v) {
+            if (!v) {
+                fill.style.width = '0%';
+                fill.style.background = 'transparent';
+                label.textContent = 'Enter a password';
+                label.style.color = '';
+                evaluate('');
+                return;
+            }
+            var passed = evaluate(v);
+            var level = levels[Math.max(passed - 1, 0)];
+            fill.style.width = ((passed / 5) * 100) + '%';
+            fill.style.background = level.color;
+            label.textContent = level.text;
+            label.style.color = level.color;
+        }
+
+        function updateMatch() {
+            if (!pw2 || !pw2.value) {
+                matchBox.style.display = 'none';
+                return;
+            }
+            matchBox.style.display = 'flex';
+            var isMatch = pw1.value === pw2.value;
+            matchBox.classList.toggle('match', isMatch);
+            matchBox.classList.toggle('no-match', !isMatch);
+            matchText.textContent = isMatch ? 'Passwords match' : 'Passwords do not match';
+            matchBox.querySelector('i').className = isMatch ? 'fas fa-check-circle' : 'fas fa-times-circle';
+        }
+
+        pw1.addEventListener('input', function () {
+            updateMeter(pw1.value);
+            updateMatch();
+        });
+
+        if (pw2) {
+            pw2.addEventListener('input', updateMatch);
+        }
+    }
+
+    // =========================================
+    // FORM COMPLETION PROGRESS BAR
+    // =========================================
+    var form = document.getElementById('registerForm');
+    var progressFill = document.getElementById('formProgressFill');
+    var progressPct = document.getElementById('formProgressPct');
+
+    if (form && progressFill) {
+        var trackedFields = Array.prototype.slice.call(
+            form.querySelectorAll('input[required], select[required], textarea[required]')
+        );
+
+        // Fall back to every visible field if the form has no [required]
+        // attributes (e.g. validation is handled purely server-side).
+        if (trackedFields.length === 0) {
+            trackedFields = Array.prototype.slice.call(
+                form.querySelectorAll('input:not([type="hidden"]), select, textarea')
+            );
+        }
+
+        function fieldIsFilled(el) {
+            if (el.type === 'file') return el.files && el.files.length > 0;
+            if (el.tagName === 'SELECT') return !!el.value;
+            return el.value.trim().length > 0;
+        }
+
+        function updateProgress() {
+            if (!trackedFields.length) return;
+            var filled = trackedFields.filter(fieldIsFilled).length;
+            var pct = Math.round((filled / trackedFields.length) * 100);
+            progressFill.style.width = pct + '%';
+            progressPct.textContent = pct + '%';
+        }
+
+        form.addEventListener('input', updateProgress);
+        form.addEventListener('change', updateProgress);
+        updateProgress();
+    }
+})();
+</script>
 
 </body>
 </html>
