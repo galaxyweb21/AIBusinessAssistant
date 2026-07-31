@@ -1,5 +1,21 @@
 #!/bin/sh
 
+#!/usr/bin/env bash
+set -o errexit
+
+echo "📦 Installing dependencies..."
+pip install -r requirements.txt
+
+echo "📁 Collecting static files..."
+python manage.py collectstatic --no-input
+
+echo "🔄 Creating database tables..."
+python manage.py makemigrations
+python manage.py migrate --no-input
+
+echo "✅ Build completed successfully!"
+
+
 DATE=$(date +%Y-%m-%d_%H-%M-%S)
 BACKUP_FILE="/backups/AIBusinessAssistant$DATE.sql"
 
