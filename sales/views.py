@@ -462,6 +462,7 @@ class InsufficientStockError(Exception):
 def sales(request):
 
     business = get_business(request)
+    user = request.user  # <-- ADD THIS LINE
 
     # =====================================
     # TODAY'S KPIs + RECENT SALES
@@ -592,7 +593,7 @@ def sales(request):
                     sale.total = Decimal('0.00')
                     sale.amount_paid = Decimal('0.00')
                     sale.change = Decimal('0.00')
-                    sale.staff = user
+                    sale.staff = user  # <-- NOW user IS DEFINED
                     sale.status = sale_type
                     sale.save()
 
@@ -645,11 +646,11 @@ def sales(request):
                                 business=business,
                                 inventory=product,
                                 previous_stock=previous_stock,
-                                quantity=-qty,               # was quantity_changed (invalid field)
+                                quantity=-qty,
                                 new_stock=product.stock_quantity,
                                 action_type='sale',
                                 reference_number=f"SALE-{sale.receipt_number}",
-                                received_by=request.user,     # was performed_by (invalid field)
+                                received_by=request.user,
                                 remarks=f"Stock deducted from sale #{sale.receipt_number}"
                             )
 
@@ -692,8 +693,8 @@ def sales(request):
                             customer_change = amount_paid - grand_total
 
                     sale.subtotal = subtotal
-                    sale.tax_amount = tax_amount            # now actually persisted
-                    sale.discount_amount = discount_amount   # now actually persisted
+                    sale.tax_amount = tax_amount
+                    sale.discount_amount = discount_amount
                     sale.total = grand_total
                     sale.amount_paid = amount_paid
                     sale.change = customer_change
@@ -738,7 +739,6 @@ def sales(request):
 
     context = {
         "form": form,
-        # "user": user,
         "business": business,
         "products": products_page,
         "search": search,

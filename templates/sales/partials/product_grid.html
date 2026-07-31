@@ -51,32 +51,36 @@
 
         <div class="product-body">
 
-            <h4 class="product-title">
+            <div class="product-info">
 
-                {{ product.product_name }}
+                <h4 class="product-title">
 
-            </h4>
+                    {{ product.product_name }}
 
-            <div class="product-category">
+                </h4>
 
-                {{ product.category }}
+                <div class="product-category">
 
-            </div>
+                    {{ product.category }}
 
-            <div class="product-meta">
+                </div>
 
-                <span>
+                <div class="product-meta">
 
-                    SKU:
-                    {{ product.sku|default:"-" }}
+                    <span>
 
-                </span>
+                        SKU:
+                        {{ product.sku|default:"-" }}
 
-                <span>
+                    </span>
 
-                    {{ product.barcode|default:"No Barcode" }}
+                    <span>
 
-                </span>
+                        {{ product.barcode|default:"No Barcode" }}
+
+                    </span>
+
+                </div>
 
             </div>
 

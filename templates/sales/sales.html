@@ -358,6 +358,13 @@
     flex:1;
 }
 
+.product-info{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-width:0;
+}
+
 .product-title{
     font-size:15px;
     font-weight:700;
@@ -447,26 +454,85 @@
 .product-grid.list-mode{
     display:flex;
     flex-direction:column;
-    gap:14px;
+    align-items:stretch;
+    gap:12px;
 }
 
 .product-grid.list-mode .enterprise-product-card{
     flex-direction:row;
-    height:130px;
+    align-items:center;
+    height:auto;
+    min-height:96px;
+    border-radius:18px;
 }
 
 .product-grid.list-mode .product-image-area{
-    width:160px;
-    height:130px;
+    width:100px;
+    height:100px;
+    margin:12px;
+    border-radius:14px;
     flex-shrink:0;
 }
 
 .product-grid.list-mode .product-body{
     flex:1;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    gap:28px;
+    padding:14px 26px 14px 4px;
+    min-width:0;
+}
+
+.product-grid.list-mode .product-info{
+    flex:1;
+    min-width:0;
+    gap:6px;
+}
+
+.product-grid.list-mode .product-title{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.product-grid.list-mode .product-meta{
+    flex-direction:row;
+    gap:18px;
+}
+
+.product-grid.list-mode .product-meta span{
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
 }
 
 .product-grid.list-mode .product-footer{
     margin-top:0;
+    flex-shrink:0;
+    justify-content:flex-end;
+    gap:26px;
+}
+
+.product-grid.list-mode .product-footer > div:first-child{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+}
+
+.product-grid.list-mode .price{
+    min-width:100px;
+    text-align:right;
+}
+
+.product-grid.list-mode .stock-count{
+    display:inline-flex;
+    align-items:center;
+    padding:4px 12px;
+    margin-top:4px;
+    border-radius:999px;
+    background:rgba(148,163,184,.12);
+    white-space:nowrap;
 }
 
 /* SKELETON LOADING */
