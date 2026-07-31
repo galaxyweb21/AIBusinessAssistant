@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-
 import dj_database_url
 from dotenv import load_dotenv
 
@@ -28,38 +27,55 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 # =========================
 # OPENAI CONFIG
 # =========================
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
 # =========================
 # BASE SETTINGS
 # =========================
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "django-insecure-local-development-key"
-)
-
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-local-development-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
+# =========================
+# ALLOWED HOSTS - FIXED
+# =========================
 if DEBUG:
     ALLOWED_HOSTS = [
         "127.0.0.1",
         "localhost",
     ]
 else:
-    ALLOWED_HOSTS = os.getenv(
-        "ALLOWED_HOSTS",
-        ""
-    ).split(",")
+    # Read from environment variable and split by comma
+    allowed_hosts = os.getenv("ALLOWED_HOSTS", "")
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(",") if host.strip()]
 
+    # If no hosts are set, add the default Render host
+    if not ALLOWED_HOSTS:
+        ALLOWED_HOSTS = ["aibusinessassistant.onrender.com"]
 
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    ""
-).split(",") if os.getenv("CSRF_TRUSTED_ORIGINS") else []
+# =========================
+# CSRF TRUSTED ORIGINS - FIXED
+# =========================
+csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(",") if origin.strip()]
 
+# If no CSRF origins are set, add default Render URL
+if not CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = ["https://aibusinessassistant.onrender.com"]
 
-# Application definition
+# =========================
+# SECURE SETTINGS FOR PRODUCTION
+# =========================
+if not DEBUG:
+    # These settings should be set in production
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# =========================
+# APPLICATION DEFINITION
+# =========================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -110,21 +126,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AIBusinessAssistant.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-
+# =========================
+# DATABASE - FIXED
+# =========================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
+    # Production - PostgreSQL on Render
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
@@ -133,6 +141,7 @@ if DATABASE_URL:
         )
     }
 else:
+    # Local Development - MySQL
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
@@ -144,10 +153,9 @@ else:
         }
     }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-
+# =========================
+# PASSWORD VALIDATION
+# =========================
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -163,75 +171,63 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
+# =========================
+# INTERNATIONALIZATION
+# =========================
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# =========================
+# STATIC FILES
+# =========================
 STATIC_URL = "/static/"
-
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+# =========================
+# MEDIA FILES
+# =========================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
+# =========================
+# DEFAULT PRIMARY KEY
+# =========================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# ================= CACHE =================
-# Used by business.context_processors.sidebar_counts to avoid re-querying
-# low-stock/pending-sales/customer counts on every page load.
-# LocMemCache is Django's built-in default (no extra dependency) and is
-# what you'd get even without this block -- it's just made explicit here.
-# NOTE: LocMemCache is per-process. If this app ever runs with multiple
-# worker processes (gunicorn/uwsgi with >1 worker), each process keeps its
-# own cache, so a sidebar count invalidated by a signal in one worker can
-# still show stale for up to CACHE_TTL_SECONDS in another. Since
-# CELERY_BROKER_URL below already points at Redis, swapping this to
-# django-redis (or django.core.cache.backends.redis.RedisCache on
-# Django 4.0+) would fix that and is a one-block change here.
+# =========================
+# CACHE
+# =========================
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
     }
 }
 
-
-# ================= MEDIA FILES =================
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_ALLOW_ALL_ORIGINS = True
-
-# STATIC_ROOT = BASE_DIR / 'media'
-
+# =========================
+# CRISPY FORMS
+# =========================
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# =========================
+# AUTH
+# =========================
 LOGIN_REDIRECT_URL = 'index'
 
+# =========================
+# CRON JOBS
+# =========================
 CRONJOBS = [
     ('*/5 * * * *', 'event.cron.update_event_statuses'),
 ]
 
+# =========================
+# LOGGING
+# =========================
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -246,41 +242,17 @@ LOGGING = {
     },
 }
 
-# For  Forget password
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'galaxyweb21@gmail.com'
-# EMAIL_HOST_PASSWORD = 'cqyxgdeujbuvzpwi'
-# DEFAULT_FROM_EMAIL = 'galaxyweb21@gmail.com'
-
-
-# For Deployment
-# **************************************************************
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-
-# CELERY CONFIG
-CELERY_BROKER_URL = 'redis://redis:6379/0'
+# =========================
+# CELERY
+# =========================
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/1'
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://redis:6379/1")
 CELERY_TIMEZONE = 'Africa/Accra'
-#
-# PAYSTACK_PUBLIC_KEY = "pk_test_xxxxxxxxxxxxxx"
-# PAYSTACK_SECRET_KEY = "sk_test_xxxxxxxxxxxxxx"
-# PAYSTACK_CALLBACK_URL = "http://127.0.0.1:8000/billing/paystack/callback/"
-# **********************************************************************
-# For Deployment Ends
 
-if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-
-    SECURE_PROXY_SSL_HEADER = (
-        "HTTP_X_FORWARDED_PROTO",
-        "https",
-    )
+# =========================
+# WHITENOISE
+# =========================
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_ALLOW_ALL_ORIGINS = True
