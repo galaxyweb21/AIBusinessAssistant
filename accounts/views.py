@@ -28,6 +28,8 @@ from dashboard.services.alerts import generate_business_alerts
 
 from datetime import timedelta
 from .get_business import get_business
+
+
 # Create your views here.
 
 
@@ -49,7 +51,6 @@ def index(request):
 
 @transaction.atomic
 def register_business(request):
-
     form = CreateUserForm()
     pform = ProfileForm()
     businessform = BusinessForm()
@@ -136,7 +137,6 @@ def register_business(request):
 @login_required
 @transaction.atomic
 def staff_profile(request):
-
     user = request.user
     staff = StaffProfile.objects.get(staff_id=user.id)
     business = get_business(request)
@@ -148,9 +148,6 @@ def staff_profile(request):
     sales = Sale.objects.filter(business=get_business(request), status='Completed')
 
     total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
-    #
-    # total_profit = SaleItem.objects.filter(sale__business=business, sale__status='Completed').aggregate(
-    #     total=Coalesce(Sum('profit'), Decimal('0.00')))['total']
 
     if request.method == 'POST':
 
@@ -248,20 +245,21 @@ def staff_profile(request):
 @login_required
 @transaction.atomic
 def business_profile(request):
-
     user = request.user
     business = get_business(request)
 
-    total_staff = StaffProfile.objects.filter( business = get_business(request)).count()
+    # =========================
+    # FIX: Get staff profile
+    # =========================
+    staff = StaffProfile.objects.get(staff_id=user.id)
 
-    total_products = Inventory.objects.filter( business = get_business(request)).count()
+    total_staff = StaffProfile.objects.filter(business=business).count()
 
-    sales = Sale.objects.filter( business = get_business(request), status='Completed')
+    total_products = Inventory.objects.filter(business=business).count()
+
+    sales = Sale.objects.filter(business=business, status='Completed')
 
     total_revenue = sales.aggregate(total=Coalesce(Sum('total'), Decimal('0.00')))['total']
-    #
-    # total_profit = SaleItem.objects.filter(sale__business=business, sale__status='Completed').aggregate(
-    #     total=Coalesce(Sum('profit'), Decimal('0.00')))['total']
 
     if request.method == 'POST':
 
@@ -296,7 +294,6 @@ def business_profile(request):
             # =========================
             # BUSINESS
             # =========================
-            # if staff.role_type == "Admin":
             business_instance = bform.save(commit=False)
             business_instance.save()
 
@@ -308,11 +305,11 @@ def business_profile(request):
 
                 user=user_instance,
 
-                action="Staff Profile Update",
+                action="Business Profile Update",
 
                 description=(
                     f"{user_instance.first_name or user_instance.username} "
-                    f"updated profile for '{user_instance.first_name}'." f"{user_instance.last_name} "
+                    f"updated business profile for '{business_instance.name}'."
                 ),
 
                 content_type=ContentType.objects.get_for_model(Business),
@@ -324,7 +321,7 @@ def business_profile(request):
 
             messages.success(
                 request,
-                'Profile updated successfully.'
+                'Business profile updated successfully.'
             )
 
             return redirect('business_profile')
@@ -357,7 +354,7 @@ def business_profile(request):
         "total_products": total_products,
         "total_revenue": total_revenue,
 
-        "title": "Staff Profile",
+        "title": "Business Profile",
     }
 
     return render(
@@ -370,7 +367,6 @@ def business_profile(request):
 @login_required
 @transaction.atomic
 def register_staff(request):
-
     user = User.objects.get(id=request.user.id)
 
     business = get_business(request)
@@ -482,7 +478,7 @@ def register_staff(request):
         "cashier_count": cashier_count,
         "today_staff": today_staff,
 
-        "title": "Business Registration",
+        "title": "Register Staff",
     }
 
     return render(
@@ -490,7 +486,6 @@ def register_staff(request):
         'accounts/register_staff.html',
         context
     )
-
 
 
 @login_required
@@ -718,9 +713,10 @@ def delete_staff(request, staff_id):
     }
 
     return render(request, "accounts/delete_staff.html", context)
+
+
 @login_required
 def staff_list_view(request):
-
     user = User.objects.get(id=request.user.id)
 
     business = get_business(request)
@@ -733,11 +729,11 @@ def staff_list_view(request):
     # BASE STAFF QUERY
     # =========================
     staff_qs = StaffProfile.objects.filter(
-        business=get_business(request)
+        business=business
     )
 
     base_qs = StaffProfile.objects.filter(
-        business=get_business(request)
+        business=business
     )
 
     # =========================
@@ -834,16 +830,16 @@ def staff_list_view(request):
                 ago = "Just now"
 
             elif diff < timedelta(hours=1):
-                mins = int(diff.total_seconds()/60)
-                ago = f"{mins} minute{'s' if mins !=1 else ''} ago"
+                mins = int(diff.total_seconds() / 60)
+                ago = f"{mins} minute{'s' if mins != 1 else ''} ago"
 
             elif diff < timedelta(days=1):
-                hrs = int(diff.total_seconds()/3600)
-                ago = f"{hrs} hour{'s' if hrs !=1 else ''} ago"
+                hrs = int(diff.total_seconds() / 3600)
+                ago = f"{hrs} hour{'s' if hrs != 1 else ''} ago"
 
             elif diff < timedelta(days=7):
                 days = diff.days
-                ago = f"{days} day{'s' if days !=1 else ''} ago"
+                ago = f"{days} day{'s' if days != 1 else ''} ago"
 
             else:
                 ago = log.created_at.strftime(
@@ -897,7 +893,3 @@ def staff_list_view(request):
         "accounts/staff_list.html",
         context
     )
-
-
-
-

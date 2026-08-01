@@ -1,12 +1,13 @@
 """
-Sidebar badge counts — low_stock_count, pending_sales, customer_count.
+Sidebar context — badge counts (low_stock_count, pending_sales,
+customer_count) AND the logged-in user's staff profile (staff).
 
 WHY A CONTEXT PROCESSOR:
 admin_sidebar.html is rendered on essentially every page (it lives in
-base/base.html), so whatever supplies these three numbers has to run on
-every request, not just some. Three options exist for that:
+base/base.html), so whatever supplies these values has to run on every
+request, not just some. Three options exist for that:
 
-  1. Add the same three queries to every view's context dict.
+  1. Add the same queries to every view's context dict.
      -> what you're trying to avoid; also guaranteed to be forgotten on
         the next new view someone adds.
   2. A template tag that queries the DB inline.
@@ -16,6 +17,14 @@ every request, not just some. Three options exist for that:
      -> runs once per request, automatically available in every
         template's context, one file to maintain. This is what's below.
 
+`staff` was added here after the sidebar's own
+`{% with staff=request.user.staffprofile %}` turned out to silently
+resolve to nothing on every request -- StaffProfile.staff is a plain
+ForeignKey, so Django's actual reverse accessor is `staffprofile_set`,
+not `.staffprofile`. Templates swallow that AttributeError silently, so
+`staff` was undefined everywhere the sidebar renders, not just in one
+section of it.
+
 PERFORMANCE:
 Without caching, that's 3 extra queries on every single page load just
 for sidebar badges nobody is looking at most of the time. Instead, the
@@ -24,17 +33,22 @@ cache framework, and proactively invalidated the moment a relevant model
 changes (see signals.py) — so the badge is never more than one save/
 delete-cycle stale, without paying the query cost on every request.
 
-Note: get_business() itself still runs one StaffProfile lookup per
-request (it's not cached internally), so this isn't a zero-query
-context processor — it's "3 queries down to 1" on a cache hit, not
-"1 down to 0". If that one lookup ever becomes worth avoiding too, the
-same cache-by-user-id approach used below for counts could wrap it.
+`staff` is deliberately NOT part of that cached entry. The count cache
+is keyed by business_id and shared across every staff member of that
+business -- correct for counts (same numbers for everyone), but wrong
+for `staff`, which is per-user. Caching it there would risk one staff
+member's role_type being served to a different staff member of the same
+business. It costs no extra query to resolve fresh each request:
+get_staff_profile() was already being queried every request via
+get_business() before this change, just discarding the object and
+keeping only .business.
 
-IMPORTANT — the get_business import below is intentionally INSIDE the
-function, not at the top of this file. accounts.models imports (directly
-or via a chain) something that eventually reaches back into this file at
-Django's app-loading time, and a top-level `from accounts.get_business
-import get_business` here turns that into a circular import:
+IMPORTANT — the get_staff_profile import below is intentionally INSIDE
+the function, not at the top of this file. accounts.models imports
+(directly or via a chain) something that eventually reaches back into
+this file at Django's app-loading time, and a top-level `from
+accounts.get_business import get_staff_profile` here turns that into a
+circular import:
 
     accounts.models (loading)
       -> ... -> business.context_processors (this file)
@@ -77,27 +91,28 @@ def sidebar_counts(request):
     """
     Registered in settings.py under TEMPLATES -> OPTIONS -> context_processors.
     Returns {} (i.e. contributes nothing) for logged-out users, or when
-    get_business() can't resolve one, so the sidebar's |default:"0"
-    filters still apply safely in those cases.
+    get_staff_profile() can't resolve one, so the sidebar's |default:"0"
+    filters and `{% if staff %}` checks still apply safely in those cases.
     """
     if not getattr(request, "user", None) or not request.user.is_authenticated:
         return {}
 
-    from accounts.get_business import get_business  # see note at top of file
+    from accounts.get_business import get_staff_profile  # see note at top of file
 
     try:
-        business = get_business(request)
+        staff = get_staff_profile(request)
     except Exception:
-        # get_business() uses get_object_or_404, which raises Http404 when
-        # the logged-in user has no StaffProfile (e.g. a superuser made via
-        # createsuperuser, or a user mid-onboarding). A context processor
-        # runs on every page — including the Django admin, since this
-        # project only defines one template backend — so it must never
-        # raise; just contribute nothing in that case.
+        # get_staff_profile() uses get_object_or_404, which raises Http404
+        # when the logged-in user has no StaffProfile (e.g. a superuser
+        # made via createsuperuser, or a user mid-onboarding). A context
+        # processor runs on every page — including the Django admin,
+        # since this project only defines one template backend — so it
+        # must never raise; just contribute nothing in that case.
         return {}
 
+    business = staff.business
     if business is None:
-        return {}
+        return {"staff": staff}
 
     key = cache_key_for(business.id)
     counts = cache.get(key)
@@ -130,4 +145,4 @@ def sidebar_counts(request):
         }
         cache.set(key, counts, CACHE_TTL_SECONDS)
 
-    return counts
+    return {"staff": staff, **counts}

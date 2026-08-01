@@ -1,7 +1,6 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% if request.user.is_authenticated %}
-{% with staff=request.user.staffprofile %}
 
 <style>
 :root {
@@ -1326,5 +1325,4 @@ if(date){
 })();
 </script>
 
-{% endwith %}
 {% endif %}
